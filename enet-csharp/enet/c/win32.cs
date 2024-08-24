@@ -109,10 +109,23 @@ namespace enet
 
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
         {
-            int sentLength = 0;
+            int totalLength = 0;
             for (int i = 0; i < bufferCount; ++i)
-                sentLength += enet_socket_send(socket, address, buffers[i].data, buffers[i].dataLength);
-            return sentLength;
+            {
+                totalLength += (int)buffers[i].dataLength;
+            }
+
+            byte* buffer = stackalloc byte[totalLength];
+
+            int offset = 0;
+
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
+                offset += (int)buffers[i].dataLength;
+            }
+
+            return enet_socket_send(socket, address, buffer, totalLength);
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_send", CallingConvention = CallingConvention.Cdecl)]
@@ -124,7 +137,13 @@ namespace enet
             {
                 int recvLength = 0;
                 for (int i = 0; i < bufferCount; ++i)
-                    recvLength += enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
+                {
+                    int recv = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
+                    if (recv <= 0)
+                        break;
+                    recvLength += recv;
+                }
+
                 return recvLength;
             }
 

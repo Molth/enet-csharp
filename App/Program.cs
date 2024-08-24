@@ -1,4 +1,6 @@
-﻿using static enet.ENet;
+﻿using System.Runtime.InteropServices;
+using System.Text;
+using static enet.ENet;
 
 #pragma warning disable CA1806
 
@@ -25,18 +27,30 @@ namespace enet
             ENetHost* host = null;
             try
             {
-                var address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
+                ENetAddress* address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
                 enet_set_ip(address, "0.0.0.0");
                 address->port = 7777;
 
                 host = enet_host_create(address, 4095, 0, 0, 0);
 
-                var netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
+                ENetPeer* peer = null;
+
+                ENetEvent* netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
                 memset(netEvent, 0, sizeof(ENetEvent));
+
+                bool connected = false;
+                byte* buffer = stackalloc byte[1024];
 
                 while (_running)
                 {
-                    var polled = false;
+                    if (connected)
+                    {
+                        var size = Encoding.UTF8.GetBytes("server", MemoryMarshal.CreateSpan(ref *buffer, 1024));
+                        var packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        enet_peer_send(peer, 0, packet);
+                    }
+
+                    bool polled = false;
                     while (!polled)
                     {
                         if (enet_host_check_events(host, netEvent) <= 0)
@@ -51,18 +65,23 @@ namespace enet
                             case ENetEventType.ENET_EVENT_TYPE_NONE:
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
-                                Console.WriteLine("1 Connected");
+                                peer = netEvent->peer;
+                                connected = true;
+                                Console.WriteLine("server Connected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
-                                Console.WriteLine("1 Disconnected");
+                                peer = null;
+                                connected = false;
+                                Console.WriteLine("server Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine("1 Received");
+                                Console.WriteLine($"server Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent->packet->data, (int)netEvent->packet->dataLength))}");
+                                enet_packet_destroy(netEvent->packet);
                                 break;
                         }
                     }
 
-                    Thread.Sleep(1);
+                    Thread.Sleep(1000);
                 }
             }
             finally
@@ -79,20 +98,30 @@ namespace enet
             ENetHost* host = null;
             try
             {
-                var address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
+                ENetAddress* address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
                 enet_set_ip(address, "127.0.0.1");
                 address->port = 7777;
 
                 host = enet_host_create(null, 1, 0, 0, 0);
 
-                enet_host_connect(host, address, 0, 0);
+                var peer = enet_host_connect(host, address, 0, 0);
 
-                var netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
+                ENetEvent* netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
                 memset(netEvent, 0, sizeof(ENetEvent));
+
+                bool connected = false;
+                byte* buffer = stackalloc byte[1024];
 
                 while (_running)
                 {
-                    var polled = false;
+                    if (connected)
+                    {
+                        var size = Encoding.UTF8.GetBytes("client", MemoryMarshal.CreateSpan(ref *buffer, 1024));
+                        var packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        enet_peer_send(peer, 0, packet);
+                    }
+
+                    bool polled = false;
                     while (!polled)
                     {
                         if (enet_host_check_events(host, netEvent) <= 0)
@@ -107,18 +136,21 @@ namespace enet
                             case ENetEventType.ENET_EVENT_TYPE_NONE:
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
-                                Console.WriteLine("2 Connected");
+                                connected = true;
+                                Console.WriteLine("client Connected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
-                                Console.WriteLine("2 Disconnected");
+                                connected = false;
+                                Console.WriteLine("client Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine("2 Received");
+                                Console.WriteLine($"client Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent->packet->data, (int)netEvent->packet->dataLength))}");
+                                enet_packet_destroy(netEvent->packet);
                                 break;
                         }
                     }
 
-                    Thread.Sleep(1);
+                    Thread.Sleep(1000);
                 }
             }
             finally
