@@ -1,4 +1,5 @@
-﻿using size_t = nint;
+﻿using System.Buffers.Binary;
+using size_t = nint;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
 
@@ -10,24 +11,24 @@ namespace enet
 
         public const long ENET_SOCKET_NULL = INVALID_SOCKET;
 
-        public static enet_uint16 ENET_HOST_TO_NET_16(enet_uint16 value)
+        public static enet_uint16 ENET_HOST_TO_NET_16(enet_uint16 host)
         {
-            return value;
+            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
         }
 
-        public static enet_uint32 ENET_HOST_TO_NET_32(enet_uint32 value)
+        public static enet_uint32 ENET_HOST_TO_NET_32(enet_uint32 host)
         {
-            return value;
+            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
         }
 
-        public static enet_uint16 ENET_NET_TO_HOST_16(enet_uint16 value)
+        public static enet_uint16 ENET_NET_TO_HOST_16(enet_uint16 host)
         {
-            return value;
+            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
         }
 
-        public static enet_uint32 ENET_NET_TO_HOST_32(enet_uint32 value)
+        public static enet_uint32 ENET_NET_TO_HOST_32(enet_uint32 host)
         {
-            return value;
+            return BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
         }
     }
 
