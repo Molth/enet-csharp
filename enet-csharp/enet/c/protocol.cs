@@ -1007,7 +1007,7 @@ namespace enet
             enet_uint16 peerID, flags;
             enet_uint8 sessionID;
 
-            if (host->receivedDataLength < 0)
+            if (host->receivedDataLength < 2)
                 return 0;
 
             header = (ENetProtocolHeader*)host->receivedData;
@@ -1018,7 +1018,7 @@ namespace enet
             enet_uint32 newPeerID = peerID;
             newPeerID &= ~ ((enet_uint32)ENET_PROTOCOL_HEADER_FLAG_MASK | (enet_uint32)ENET_PROTOCOL_HEADER_SESSION_MASK);
             peerID = (enet_uint16)newPeerID;
-            headerSize = (((flags & (enet_uint32)ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) != 0) ? sizeof(ENetProtocolHeader) : 0);
+            headerSize = (((flags & (enet_uint32)ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) != 0) ? sizeof(ENetProtocolHeader) : 2);
             if (host->checksum != null)
                 headerSize += sizeof(enet_uint32);
 
@@ -1670,7 +1670,7 @@ namespace enet
                     host->buffers->dataLength = sizeof(ENetProtocolHeader);
                 }
                 else
-                    host->buffers->dataLength = 0;
+                    host->buffers->dataLength = 2;
 
                 shouldCompress = 0;
                 if (host->compressor.context != null && host->compressor.compress != null)

@@ -98,6 +98,13 @@ namespace enet
             return total;
         }
 
-        //TODO: Complete compress next
+        public static void ENET_CONTEXT_RESCALE(ENetSymbol* context, uint minimum)
+        {
+            context->total = context->symbols != 0 ? enet_symbol_rescale(context + context->symbols) : (enet_uint16)0;
+            context->escapes -= (enet_uint16)(context->escapes >> 1);
+            context->total += (enet_uint16)(context->escapes + 256 * minimum);
+        }
+
+        //TODO: (maybe) complete compress next
     }
 }

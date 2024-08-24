@@ -45,8 +45,8 @@ namespace enet
                 {
                     if (connected)
                     {
-                        var size = Encoding.UTF8.GetBytes("server", MemoryMarshal.CreateSpan(ref *buffer, 1024));
-                        var packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        int size = Encoding.UTF8.GetBytes("server", MemoryMarshal.CreateSpan(ref *buffer, 1024));
+                        ENetPacket* packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
                         enet_peer_send(peer, 0, packet);
                     }
 
@@ -81,6 +81,7 @@ namespace enet
                         }
                     }
 
+                    enet_host_flush(host);
                     Thread.Sleep(1000);
                 }
             }
@@ -104,7 +105,7 @@ namespace enet
 
                 host = enet_host_create(null, 1, 0, 0, 0);
 
-                var peer = enet_host_connect(host, address, 0, 0);
+                ENetPeer* peer = enet_host_connect(host, address, 0, 0);
 
                 ENetEvent* netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
                 memset(netEvent, 0, sizeof(ENetEvent));
@@ -116,8 +117,8 @@ namespace enet
                 {
                     if (connected)
                     {
-                        var size = Encoding.UTF8.GetBytes("client", MemoryMarshal.CreateSpan(ref *buffer, 1024));
-                        var packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        int size = Encoding.UTF8.GetBytes("client", MemoryMarshal.CreateSpan(ref *buffer, 1024));
+                        ENetPacket* packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
                         enet_peer_send(peer, 0, packet);
                     }
 
@@ -150,6 +151,7 @@ namespace enet
                         }
                     }
 
+                    enet_host_flush(host);
                     Thread.Sleep(1000);
                 }
             }

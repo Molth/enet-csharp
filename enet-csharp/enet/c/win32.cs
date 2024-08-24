@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ENetSocket = long;
 using size_t = nint;
 using enet_uint32 = uint;
+using static enet.ENetSocketWait;
 
 #pragma warning disable CA1401
 #pragma warning disable CA2101
@@ -12,12 +13,13 @@ using enet_uint32 = uint;
 // ReSharper disable RedundantDefaultMemberInitializer
 // ReSharper disable SuggestVarOrType_BuiltInTypes
 // ReSharper disable RedundantEmptySwitchSection
+// ReSharper disable ConvertIfStatementToSwitchStatement
 
 namespace enet
 {
     public static unsafe partial class ENet
     {
-#if __IOS__ || UNITY_IOS && !UNITY_EDITOR
+#if __IOS__ || (UNITY_IOS && !UNITY_EDITOR)
         private const string NATIVE_LIBRARY = "__Internal";
 #elif METRO
         private const string NATIVE_LIBRARY = "libnanosockets";
@@ -109,6 +111,16 @@ namespace enet
 
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
         {
+            if (bufferCount == 0)
+            {
+                return 0;
+            }
+
+            if (bufferCount == 1)
+            {
+                return enet_socket_send(socket, address, buffers[0].data, buffers[0].dataLength);
+            }
+
             int totalLength = 0;
             for (int i = 0; i < bufferCount; ++i)
             {
@@ -133,21 +145,16 @@ namespace enet
 
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
         {
-            if (enet_socket_poll(socket, 0) > 0)
+            int recvLength = 0;
+            for (int i = 0; i < bufferCount; ++i)
             {
-                int recvLength = 0;
-                for (int i = 0; i < bufferCount; ++i)
-                {
-                    int recv = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
-                    if (recv <= 0)
-                        break;
-                    recvLength += recv;
-                }
-
-                return recvLength;
+                int recv = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
+                if (recv <= 0)
+                    break;
+                recvLength += recv;
             }
 
-            return 0;
+            return recvLength;
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_receive", CallingConvention = CallingConvention.Cdecl)]
@@ -155,6 +162,10 @@ namespace enet
 
         public static int enet_socket_wait(ENetSocket socket, enet_uint32* condition, enet_uint32 timeout)
         {
+            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_SEND) != 0)
+                return 0;
+            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_RECEIVE) != 0)
+                return enet_socket_poll(socket, timeout) > 0 ? 0 : -1;
             return 0;
         }
 
