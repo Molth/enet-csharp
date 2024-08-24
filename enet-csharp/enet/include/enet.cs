@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
@@ -66,7 +67,7 @@ namespace enet
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
-    public struct ENetIP
+    public struct ENetIP : IEquatable<ENetIP>
     {
         [FieldOffset(0)] public ulong high;
         [FieldOffset(8)] public ulong low;
@@ -86,10 +87,24 @@ namespace enet
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 24)]
-    public struct ENetAddress
+    public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
         [FieldOffset(0)] public ENetIP host;
         [FieldOffset(16)] public enet_uint16 port;
+
+        public bool Equals(ENetAddress other) => host == other.host && port == other.port;
+        public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
+        public override int GetHashCode() => host.GetHashCode() + port;
+
+        public override string ToString()
+        {
+            var buffer = stackalloc enet_uint8[64];
+            _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
+            return new string((sbyte*)buffer) + ":" + port;
+        }
+
+        public static bool operator ==(ENetAddress left, ENetAddress right) => left.host == right.host && left.port == right.port;
+        public static bool operator !=(ENetAddress left, ENetAddress right) => left.host != right.host || left.port != right.port;
     }
 
     public enum ENetPacketFlag
