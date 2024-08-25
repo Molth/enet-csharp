@@ -19,6 +19,12 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+        public static int enet_host_ping(ENetHost* host, ENetAddress* address)
+        {
+            var buffer = stackalloc enet_uint8[1];
+            return enet_socket_send(host->socket, address, buffer, 1);
+        }
+
         public static ENetHost* enet_host_create(ENetAddress* address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
         {
             ENetHost* host;
