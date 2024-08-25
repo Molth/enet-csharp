@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using size_t = nint;
 using enet_uint8 = byte;
 
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -28,19 +28,10 @@ namespace enet
 #endif
         }
 
-        public static void memcpy(void* dst, void* src, size_t size)
-        {
-            Unsafe.CopyBlock(dst, src, (uint)size);
-        }
+        public static void memcpy(void* dst, void* src, size_t size) => Unsafe.CopyBlock(dst, src, (uint)size);
 
-        public static void memset(void* dst, enet_uint8 val, size_t size)
-        {
-            Unsafe.InitBlock(dst, val, (uint)size);
-        }
+        public static void memset(void* dst, enet_uint8 val, size_t size) => Unsafe.InitBlock(dst, val, (uint)size);
 
-        public static long timeGetTime()
-        {
-            return Stopwatch.GetTimestamp() * 1000L / Stopwatch.Frequency;
-        }
+        public static long timeGetTime() => Stopwatch.GetTimestamp() * 1000L / Stopwatch.Frequency;
     }
 }

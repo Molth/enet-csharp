@@ -11,14 +11,7 @@ using static enet.ENetProtocolFlag;
 using static enet.ENetSocketWait;
 using unsafe ENetListIterator = enet.ENetListNode*;
 
-// ReSharper disable JoinDeclarationAndInitializer
-// ReSharper disable TooWideLocalVariableScope
-// ReSharper disable RedundantAssignment
-// ReSharper disable RedundantEmptySwitchSection
-// ReSharper disable SuggestVarOrType_Elsewhere
-// ReSharper disable RedundantExplicitArraySize
-// ReSharper disable NegativeEqualityExpression
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -41,10 +34,7 @@ namespace enet
             sizeof(ENetProtocolSendFragment)
         };
 
-        public static size_t enet_protocol_command_size(enet_uint8 commandNumber)
-        {
-            return commandSizes[commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK];
-        }
+        public static size_t enet_protocol_command_size(enet_uint8 commandNumber) => commandSizes[commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK];
 
         public static void enet_protocol_change_state(ENetHost* host, ENetPeer* peer, ENetPeerState state)
         {
@@ -347,8 +337,7 @@ namespace enet
             if (channelCount > host->channelLimit)
                 channelCount = host->channelLimit;
             peer->channels = (ENetChannel*)enet_malloc(channelCount * sizeof(ENetChannel));
-            if (peer->channels == null)
-                return null;
+
             peer->channelCount = channelCount;
             peer->state = ENET_PEER_STATE_ACKNOWLEDGING_CONNECT;
             peer->connectID = command->connect.connectID;

@@ -1,7 +1,6 @@
 ﻿using unsafe ENetListIterator = enet.ENetListNode*;
 
-// ReSharper disable UseSymbolAlias
-// ReSharper disable RedundantCast
+// ReSharper disable ALL
 
 namespace enet
 {

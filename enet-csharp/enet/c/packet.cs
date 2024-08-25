@@ -3,11 +3,7 @@ using enet_uint8 = byte;
 using enet_uint32 = uint;
 using static enet.ENetPacketFlag;
 
-// ReSharper disable JoinDeclarationAndInitializer
-// ReSharper disable UseCollectionExpression
-// ReSharper disable RedundantExplicitArraySize
-// ReSharper disable NegativeEqualityExpression
-// ReSharper disable SuggestVarOrType_Elsewhere
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -16,8 +12,6 @@ namespace enet
         public static ENetPacket* enet_packet_create(void* data, size_t dataLength, enet_uint32 flags)
         {
             ENetPacket* packet = (ENetPacket*)enet_malloc(sizeof(ENetPacket));
-            if (packet == null)
-                return null;
 
             if ((flags & (enet_uint32)ENET_PACKET_FLAG_NO_ALLOCATE) != 0)
                 packet->data = (enet_uint8*)data;
@@ -26,11 +20,6 @@ namespace enet
             else
             {
                 packet->data = (enet_uint8*)enet_malloc(dataLength);
-                if (packet->data == null)
-                {
-                    enet_free(packet);
-                    return null;
-                }
 
                 if (data != null)
                     memcpy(packet->data, data, dataLength);
@@ -70,8 +59,6 @@ namespace enet
             }
 
             newData = (enet_uint8*)enet_malloc(dataLength);
-            if (newData == null)
-                return -1;
 
             if (packet->data != null)
             {

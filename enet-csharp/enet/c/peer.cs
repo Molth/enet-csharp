@@ -9,11 +9,7 @@ using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;
 using static enet.ENetPeerFlag;
 
-// ReSharper disable RedundantEmptySwitchSection
-// ReSharper disable JoinDeclarationAndInitializer
-// ReSharper disable TooWideLocalVariableScope
-// ReSharper disable NegativeEqualityExpression
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -118,17 +114,6 @@ namespace enet
                         fragmentLength = (size_t)(packet->dataLength - fragmentOffset);
 
                     fragment = (ENetOutgoingCommand*)enet_malloc(sizeof(ENetOutgoingCommand));
-                    if (fragment == null)
-                    {
-                        while (!enet_list_empty(&fragments))
-                        {
-                            fragment = (ENetOutgoingCommand*)enet_list_remove(enet_list_begin(&fragments));
-
-                            enet_free(fragment);
-                        }
-
-                        return -1;
-                    }
 
                     fragment->fragmentOffset = fragmentOffset;
                     fragment->fragmentLength = (enet_uint16)fragmentLength;
@@ -510,8 +495,6 @@ namespace enet
             }
 
             acknowledgement = (ENetAcknowledgement*)enet_malloc(sizeof(ENetAcknowledgement));
-            if (acknowledgement == null)
-                return null;
 
             peer->outgoingDataTotal += (enet_uint32)sizeof(ENetProtocolAcknowledge);
 
@@ -593,8 +576,6 @@ namespace enet
         public static ENetOutgoingCommand* enet_peer_queue_outgoing_command(ENetPeer* peer, ENetProtocol* command, ENetPacket* packet, enet_uint32 offset, enet_uint16 length)
         {
             ENetOutgoingCommand* outgoingCommand = (ENetOutgoingCommand*)enet_malloc(sizeof(ENetOutgoingCommand));
-            if (outgoingCommand == null)
-                return null;
 
             outgoingCommand->command = *command;
             outgoingCommand->fragmentOffset = offset;
@@ -852,8 +833,6 @@ namespace enet
                 goto notifyError;
 
             incomingCommand = (ENetIncomingCommand*)enet_malloc(sizeof(ENetIncomingCommand));
-            if (incomingCommand == null)
-                goto notifyError;
 
             incomingCommand->reliableSequenceNumber = command->header.reliableSequenceNumber;
             incomingCommand->unreliableSequenceNumber = (enet_uint16)(unreliableSequenceNumber & 0xFFFF);
@@ -867,12 +846,6 @@ namespace enet
             {
                 if (fragmentCount <= ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT)
                     incomingCommand->fragments = (enet_uint32*)enet_malloc((size_t)((fragmentCount + 31) / 32 * sizeof(enet_uint32)));
-                if (incomingCommand->fragments == null)
-                {
-                    enet_free(incomingCommand);
-
-                    goto notifyError;
-                }
 
                 memset(incomingCommand->fragments, 0, (size_t)((fragmentCount + 31) / 32 * sizeof(enet_uint32)));
             }

@@ -1,7 +1,6 @@
 ﻿using size_t = nint;
 
-// ReSharper disable MemberHidesStaticFromOuterClass
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {

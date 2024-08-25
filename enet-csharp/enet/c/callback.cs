@@ -3,7 +3,7 @@ using ENetVersion = uint;
 
 #pragma warning disable CA2211
 
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -28,21 +28,10 @@ namespace enet
             return enet_initialize();
         }
 
-        public static ENetVersion enet_linked_version()
-        {
-            return ENET_VERSION;
-        }
+        public static ENetVersion enet_linked_version() => ENET_VERSION;
 
-        public static void* enet_malloc(size_t size)
-        {
-            void* memory = callbacks.malloc(size);
+        public static void* enet_malloc(size_t size) => callbacks.malloc(size);
 
-            return memory;
-        }
-
-        public static void enet_free(void* memory)
-        {
-            callbacks.free(memory);
-        }
+        public static void enet_free(void* memory) => callbacks.free(memory);
     }
 }

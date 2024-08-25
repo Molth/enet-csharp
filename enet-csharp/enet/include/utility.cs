@@ -1,5 +1,7 @@
 ﻿using enet_uint32 = uint;
 
+// ReSharper disable ALL
+
 namespace enet
 {
     public static partial class ENet

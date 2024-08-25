@@ -7,8 +7,7 @@ using enet_uint32 = uint;
 using ENetSocket = long;
 using static enet.ENet;
 
-// ReSharper disable ArrangeObjectCreationWhenTypeEvident
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -67,7 +66,7 @@ namespace enet
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
-    public struct ENetIP : IEquatable<ENetIP>
+    public unsafe struct ENetIP : IEquatable<ENetIP>
     {
         [FieldOffset(0)] public ulong high;
         [FieldOffset(8)] public ulong low;
@@ -76,6 +75,12 @@ namespace enet
         {
             this.high = high;
             this.low = low;
+        }
+
+        public void CopyTo(enet_uint8* buffer)
+        {
+            *(ulong*)buffer = high;
+            *(ulong*)(buffer + 8) = low;
         }
 
         public bool Equals(ENetIP other) => high == other.high && low == other.low;

@@ -1,9 +1,7 @@
 ﻿using size_t = nint;
 using unsafe ENetListIterator = enet.ENetListNode*;
 
-// ReSharper disable SuggestVarOrType_Elsewhere
-// ReSharper disable UseSymbolAlias
-// ReSharper disable RedundantCast
+// ReSharper disable ALL
 
 namespace enet
 {

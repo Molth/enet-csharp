@@ -3,7 +3,7 @@ using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
 
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {

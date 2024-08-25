@@ -8,12 +8,7 @@ using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 
-// ReSharper disable JoinDeclarationAndInitializer
-// ReSharper disable ConvertIfStatementToConditionalTernaryExpression
-// ReSharper disable TooWideLocalVariableScope
-// ReSharper disable RedundantAssignment
-// ReSharper disable NegativeEqualityExpression
-// ReSharper disable InconsistentNaming
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -34,8 +29,7 @@ namespace enet
                 return null;
 
             host = (ENetHost*)enet_malloc(sizeof(ENetHost));
-            if (host == null)
-                return null;
+
             memset(host, 0, sizeof(ENetHost));
 
             host->commands = (ENetProtocol*)enet_malloc((size_t)(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS * sizeof(ENetProtocol)));
@@ -51,18 +45,6 @@ namespace enet
             memset(host->packetData[1], 0, (size_t)ENET_PROTOCOL_MAXIMUM_MTU);
 
             host->peers = (ENetPeer*)enet_malloc(peerCount * sizeof(ENetPeer));
-            if (host->peers == null)
-            {
-                enet_free(host->commands);
-                enet_free(host->buffers);
-                enet_free(host->packetData[0]);
-                enet_free(host->packetData[1]);
-                enet_free(host->packetData);
-
-                enet_free(host);
-
-                return null;
-            }
 
             memset(host->peers, 0, peerCount * sizeof(ENetPeer));
 
@@ -213,8 +195,7 @@ namespace enet
                 return null;
 
             currentPeer->channels = (ENetChannel*)enet_malloc(channelCount * sizeof(ENetChannel));
-            if (currentPeer->channels == null)
-                return null;
+
             currentPeer->channelCount = channelCount;
             currentPeer->state = ENET_PEER_STATE_CONNECTING;
             currentPeer->address = *address;
@@ -434,6 +415,7 @@ namespace enet
                 if (bandwidth == 0)
                     bandwidthLimit = 0;
                 else
+                {
                     while (peersRemaining > 0 && needsAdjustment != 0)
                     {
                         needsAdjustment = 0;
@@ -458,6 +440,7 @@ namespace enet
                             bandwidth -= peer->outgoingBandwidth;
                         }
                     }
+                }
 
                 for (peer = host->peers;
                      peer < &host->peers[host->peerCount];

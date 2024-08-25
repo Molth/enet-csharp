@@ -10,10 +10,7 @@ using static enet.ENetSocketWait;
 #pragma warning disable CA2211
 #pragma warning disable SYSLIB1054
 
-// ReSharper disable RedundantDefaultMemberInitializer
-// ReSharper disable SuggestVarOrType_BuiltInTypes
-// ReSharper disable RedundantEmptySwitchSection
-// ReSharper disable ConvertIfStatementToSwitchStatement
+// ReSharper disable ALL
 
 namespace enet
 {
@@ -37,15 +34,9 @@ namespace enet
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_deinitialize", CallingConvention = CallingConvention.Cdecl)]
         public static extern void enet_deinitialize();
 
-        public static enet_uint32 enet_host_random_seed()
-        {
-            return (enet_uint32)timeGetTime();
-        }
+        public static enet_uint32 enet_host_random_seed() => (enet_uint32)timeGetTime();
 
-        public static enet_uint32 enet_time_get()
-        {
-            return (enet_uint32)timeGetTime() - timeBase;
-        }
+        public static enet_uint32 enet_time_get() => (enet_uint32)timeGetTime() - timeBase;
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_bind", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_bind(ENetSocket socket, ENetAddress* address);
@@ -53,10 +44,7 @@ namespace enet
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_get_address(ENetSocket socket, ENetAddress* address);
 
-        public static ENetSocket enet_socket_create(ENetSocketType type)
-        {
-            return enet_socket_create(0, 0);
-        }
+        public static ENetSocket enet_socket_create(ENetSocketType type) => enet_socket_create(0, 0);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_create", CallingConvention = CallingConvention.Cdecl)]
         public static extern ENetSocket enet_socket_create(int sendBufferSize, int receiveBufferSize);
@@ -112,32 +100,24 @@ namespace enet
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
         {
             if (bufferCount == 0)
-            {
                 return 0;
-            }
-
-            if (bufferCount == 1)
-            {
+            else if (bufferCount == 1)
                 return enet_socket_send(socket, address, buffers[0].data, buffers[0].dataLength);
-            }
-
-            int totalLength = 0;
-            for (int i = 0; i < bufferCount; ++i)
+            else
             {
-                totalLength += (int)buffers[i].dataLength;
+                int totalLength = 0;
+                for (int i = 0; i < bufferCount; ++i)
+                    totalLength += (int)buffers[i].dataLength;
+                byte* buffer = stackalloc byte[totalLength];
+                int offset = 0;
+                for (int i = 0; i < bufferCount; ++i)
+                {
+                    memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
+                    offset += (int)buffers[i].dataLength;
+                }
+
+                return enet_socket_send(socket, address, buffer, totalLength);
             }
-
-            byte* buffer = stackalloc byte[totalLength];
-
-            int offset = 0;
-
-            for (int i = 0; i < bufferCount; ++i)
-            {
-                memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
-                offset += (int)buffers[i].dataLength;
-            }
-
-            return enet_socket_send(socket, address, buffer, totalLength);
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_send", CallingConvention = CallingConvention.Cdecl)]
@@ -148,10 +128,10 @@ namespace enet
             int recvLength = 0;
             for (int i = 0; i < bufferCount; ++i)
             {
-                int recv = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
-                if (recv <= 0)
+                int len = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
+                if (len <= 0)
                     break;
-                recvLength += recv;
+                recvLength += len;
             }
 
             return recvLength;

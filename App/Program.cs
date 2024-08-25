@@ -4,6 +4,8 @@ using static enet.ENet;
 
 #pragma warning disable CA1806
 
+// ReSharper disable ALL
+
 namespace enet
 {
     public sealed unsafe class Program
@@ -27,16 +29,15 @@ namespace enet
             ENetHost* host = null;
             try
             {
-                ENetAddress* address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
-                enet_set_ip(address, "0.0.0.0");
-                address->port = 7777;
+                ENetAddress address = new ENetAddress();
+                enet_set_ip(&address, "0.0.0.0");
+                address.port = 7777;
 
-                host = enet_host_create(address, 4095, 0, 0, 0);
+                host = enet_host_create(&address, 4095, 0, 0, 0);
 
                 ENetPeer* peer = null;
 
-                ENetEvent* netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
-                memset(netEvent, 0, sizeof(ENetEvent));
+                ENetEvent netEvent = new ENetEvent();
 
                 bool connected = false;
                 byte* buffer = stackalloc byte[1024];
@@ -53,19 +54,19 @@ namespace enet
                     bool polled = false;
                     while (!polled)
                     {
-                        if (enet_host_check_events(host, netEvent) <= 0)
+                        if (enet_host_check_events(host, &netEvent) <= 0)
                         {
-                            if (enet_host_service(host, netEvent, 1) <= 0)
+                            if (enet_host_service(host, &netEvent, 1) <= 0)
                                 break;
                             polled = true;
                         }
 
-                        switch (netEvent->type)
+                        switch (netEvent.type)
                         {
                             case ENetEventType.ENET_EVENT_TYPE_NONE:
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
-                                peer = netEvent->peer;
+                                peer = netEvent.peer;
                                 connected = true;
                                 Console.WriteLine("server Connected");
                                 break;
@@ -75,8 +76,8 @@ namespace enet
                                 Console.WriteLine("server Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine($"server Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent->packet->data, (int)netEvent->packet->dataLength))}");
-                                enet_packet_destroy(netEvent->packet);
+                                Console.WriteLine($"server Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent.packet->data, (int)netEvent.packet->dataLength))}");
+                                enet_packet_destroy(netEvent.packet);
                                 break;
                         }
                     }
@@ -99,16 +100,15 @@ namespace enet
             ENetHost* host = null;
             try
             {
-                ENetAddress* address = (ENetAddress*)enet_malloc(sizeof(ENetAddress));
-                enet_set_ip(address, "127.0.0.1");
-                address->port = 7777;
+                ENetAddress address = new ENetAddress();
+                enet_set_ip(&address, "127.0.0.1");
+                address.port = 7777;
 
                 host = enet_host_create(null, 1, 0, 0, 0);
 
-                ENetPeer* peer = enet_host_connect(host, address, 0, 0);
+                ENetPeer* peer = enet_host_connect(host, &address, 0, 0);
 
-                ENetEvent* netEvent = (ENetEvent*)enet_malloc(sizeof(ENetEvent));
-                memset(netEvent, 0, sizeof(ENetEvent));
+                ENetEvent netEvent = new ENetEvent();
 
                 bool connected = false;
                 byte* buffer = stackalloc byte[1024];
@@ -125,14 +125,14 @@ namespace enet
                     bool polled = false;
                     while (!polled)
                     {
-                        if (enet_host_check_events(host, netEvent) <= 0)
+                        if (enet_host_check_events(host, &netEvent) <= 0)
                         {
-                            if (enet_host_service(host, netEvent, 1) <= 0)
+                            if (enet_host_service(host, &netEvent, 1) <= 0)
                                 break;
                             polled = true;
                         }
 
-                        switch (netEvent->type)
+                        switch (netEvent.type)
                         {
                             case ENetEventType.ENET_EVENT_TYPE_NONE:
                                 break;
@@ -145,8 +145,8 @@ namespace enet
                                 Console.WriteLine("client Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine($"client Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent->packet->data, (int)netEvent->packet->dataLength))}");
-                                enet_packet_destroy(netEvent->packet);
+                                Console.WriteLine($"client Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent.packet->data, (int)netEvent.packet->dataLength))}");
+                                enet_packet_destroy(netEvent.packet);
                                 break;
                         }
                     }
