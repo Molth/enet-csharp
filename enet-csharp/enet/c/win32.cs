@@ -19,8 +19,6 @@ namespace enet
     {
 #if __IOS__ || (UNITY_IOS && !UNITY_EDITOR)
         private const string NATIVE_LIBRARY = "__Internal";
-#elif METRO
-        private const string NATIVE_LIBRARY = "libnanosockets";
 #else
         private const string NATIVE_LIBRARY = "nanosockets";
 #endif
