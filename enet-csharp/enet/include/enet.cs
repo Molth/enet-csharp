@@ -87,6 +87,13 @@ namespace enet
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
         public override int GetHashCode() => ((16337 + (int)high) ^ ((int)(high >> 32) * 31 + (int)low) ^ (int)(low >> 32)) * 31;
 
+        public override string ToString()
+        {
+            var buffer = stackalloc enet_uint8[64];
+            _ = enet_get_ip((ENetIP*)Unsafe.AsPointer(ref this), buffer, 64);
+            return new string((sbyte*)buffer);
+        }
+
         public static bool operator ==(ENetIP left, ENetIP right) => left.high == right.high && left.low == right.low;
         public static bool operator !=(ENetIP left, ENetIP right) => left.high != right.high || left.low != right.low;
     }

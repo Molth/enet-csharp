@@ -152,5 +152,8 @@ namespace enet
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get_ip", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_get_ip(ENetAddress* address, void* buffer, int length);
+
+        [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get_ip", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int enet_get_ip(ENetIP* address, void* buffer, int length);
     }
 }

@@ -67,6 +67,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
+                                Console.WriteLine(peer->address.host.ToString());
                                 connected = true;
                                 Console.WriteLine("server Connected");
                                 break;
