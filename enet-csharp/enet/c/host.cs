@@ -14,7 +14,7 @@ namespace enet
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
             var buffer = stackalloc byte[1];
-            return enet_socket_send(host->socket, address, buffer, 1);
+            return enet_socket_send(host->socket, address, buffer, 1) > 0 ? 0 : -1;
         }
 
         public static ENetHost* enet_host_create(ENetAddress* address, nint peerCount, nint channelLimit, uint incomingBandwidth, uint outgoingBandwidth)
