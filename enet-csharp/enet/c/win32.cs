@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ENetSocket = long;
 using size_t = nint;
 using enet_uint32 = uint;
+using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
 
 #pragma warning disable CA1401
@@ -44,7 +45,13 @@ namespace enet
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_get_address(ENetSocket socket, ENetAddress* address);
 
-        public static ENetSocket enet_socket_create(ENetSocketType type) => enet_socket_create(0, 0);
+        public static ENetSocket enet_socket_create(ENetSocketType type)
+        {
+            if (type == ENET_SOCKET_TYPE_DATAGRAM)
+                return enet_socket_create(0, 0);
+
+            return INVALID_SOCKET;
+        }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_create", CallingConvention = CallingConvention.Cdecl)]
         public static extern ENetSocket enet_socket_create(int sendBufferSize, int receiveBufferSize);
