@@ -1,10 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using size_t = nint;
-using enet_uint8 = byte;
-using enet_uint16 = ushort;
-using enet_uint32 = uint;
-using ENetSocket = long;
 using static enet.ENet;
 
 // ReSharper disable ALL
@@ -13,14 +9,14 @@ namespace enet
 {
     public static partial class ENet
     {
-        public const enet_uint32 ENET_VERSION_MAJOR = 1;
-        public const enet_uint32 ENET_VERSION_MINOR = 3;
-        public const enet_uint32 ENET_VERSION_PATCH = 18;
-        public static enet_uint32 ENET_VERSION_CREATE(enet_uint32 major, enet_uint32 minor, enet_uint32 patch) => (((major) << 16) | ((minor) << 8) | (patch));
-        public static enet_uint32 ENET_VERSION_GET_MAJOR(enet_uint32 version) => (((version) >> 16) & 0xFF);
-        public static enet_uint32 ENET_VERSION_GET_MINOR(enet_uint32 version) => (((version) >> 8) & 0xFF);
-        public static enet_uint32 ENET_VERSION_GET_PATCH(enet_uint32 version) => ((version) & 0xFF);
-        public static readonly enet_uint32 ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
+        public const uint ENET_VERSION_MAJOR = 1;
+        public const uint ENET_VERSION_MINOR = 3;
+        public const uint ENET_VERSION_PATCH = 18;
+        public static uint ENET_VERSION_CREATE(uint major, uint minor, uint patch) => (((major) << 16) | ((minor) << 8) | (patch));
+        public static uint ENET_VERSION_GET_MAJOR(uint version) => (((version) >> 16) & 0xFF);
+        public static uint ENET_VERSION_GET_MINOR(uint version) => (((version) >> 8) & 0xFF);
+        public static uint ENET_VERSION_GET_PATCH(uint version) => ((version) & 0xFF);
+        public static readonly uint ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
     }
 
     public enum ENetSocketType
@@ -62,7 +58,7 @@ namespace enet
     {
         public static readonly ENetIP ENET_HOST_ANY = new ENetIP(0, 0);
         public static readonly ENetIP ENET_HOST_BROADCAST = new ENetIP(0, 0xFFFFFFFFFFFF0000);
-        public const enet_uint32 ENET_PORT_ANY = 0;
+        public const uint ENET_PORT_ANY = 0;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
@@ -77,7 +73,7 @@ namespace enet
             this.low = low;
         }
 
-        public void CopyTo(enet_uint8* buffer)
+        public void CopyTo(byte* buffer)
         {
             *(ulong*)buffer = high;
             *(ulong*)(buffer + 8) = low;
@@ -95,7 +91,7 @@ namespace enet
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
         [FieldOffset(0)] public ENetIP host;
-        [FieldOffset(16)] public enet_uint16 port;
+        [FieldOffset(16)] public UInt16 port;
 
         public bool Equals(ENetAddress other) => host == other.host && port == other.port;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
@@ -103,7 +99,7 @@ namespace enet
 
         public override string ToString()
         {
-            var buffer = stackalloc enet_uint8[64];
+            var buffer = stackalloc byte[64];
             _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
             return new string((sbyte*)buffer) + ":" + port;
         }
@@ -123,10 +119,10 @@ namespace enet
 
     public unsafe struct ENetPacket
     {
-        public size_t referenceCount;
-        public enet_uint32 flags;
-        public enet_uint8* data;
-        public size_t dataLength;
+        public nint referenceCount;
+        public uint flags;
+        public byte* data;
+        public nint dataLength;
         public delegate* managed<ENetPacket*, void> freeCallback;
         public void* userData;
     }
@@ -134,21 +130,21 @@ namespace enet
     public struct ENetAcknowledgement
     {
         public ENetListNode acknowledgementList;
-        public enet_uint32 sentTime;
+        public uint sentTime;
         public ENetProtocol command;
     }
 
     public unsafe struct ENetOutgoingCommand
     {
         public ENetListNode outgoingCommandList;
-        public enet_uint16 reliableSequenceNumber;
-        public enet_uint16 unreliableSequenceNumber;
-        public enet_uint32 sentTime;
-        public enet_uint32 roundTripTimeout;
-        public enet_uint32 queueTime;
-        public enet_uint32 fragmentOffset;
-        public enet_uint16 fragmentLength;
-        public enet_uint16 sendAttempts;
+        public ushort reliableSequenceNumber;
+        public ushort unreliableSequenceNumber;
+        public uint sentTime;
+        public uint roundTripTimeout;
+        public uint queueTime;
+        public uint fragmentOffset;
+        public ushort fragmentLength;
+        public ushort sendAttempts;
         public ENetProtocol command;
         public ENetPacket* packet;
     }
@@ -156,12 +152,12 @@ namespace enet
     public unsafe struct ENetIncomingCommand
     {
         public ENetListNode incomingCommandList;
-        public enet_uint16 reliableSequenceNumber;
-        public enet_uint16 unreliableSequenceNumber;
+        public ushort reliableSequenceNumber;
+        public ushort unreliableSequenceNumber;
         public ENetProtocol command;
-        public enet_uint32 fragmentCount;
-        public enet_uint32 fragmentsRemaining;
-        public enet_uint32* fragments;
+        public uint fragmentCount;
+        public uint fragmentsRemaining;
+        public uint* fragments;
         public ENetPacket* packet;
     }
 
@@ -181,44 +177,44 @@ namespace enet
 
     public static partial class ENet
     {
-        public const enet_uint32 ENET_BUFFER_MAXIMUM = (1 + 2 * ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS);
+        public const uint ENET_BUFFER_MAXIMUM = (1 + 2 * ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS);
 
-        public const enet_uint32 ENET_HOST_RECEIVE_BUFFER_SIZE = 256 * 1024;
-        public const enet_uint32 ENET_HOST_SEND_BUFFER_SIZE = 256 * 1024;
-        public const enet_uint32 ENET_HOST_BANDWIDTH_THROTTLE_INTERVAL = 1000;
-        public const enet_uint32 ENET_HOST_DEFAULT_MTU = 1392;
-        public const enet_uint32 ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE = 32 * 1024 * 1024;
-        public const enet_uint32 ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA = 32 * 1024 * 1024;
-        public const enet_uint32 ENET_PEER_DEFAULT_ROUND_TRIP_TIME = 500;
-        public const enet_uint32 ENET_PEER_DEFAULT_PACKET_THROTTLE = 32;
-        public const enet_uint32 ENET_PEER_PACKET_THROTTLE_SCALE = 32;
-        public const enet_uint32 ENET_PEER_PACKET_THROTTLE_COUNTER = 7;
-        public const enet_uint32 ENET_PEER_PACKET_THROTTLE_ACCELERATION = 2;
-        public const enet_uint32 ENET_PEER_PACKET_THROTTLE_DECELERATION = 2;
-        public const enet_uint32 ENET_PEER_PACKET_THROTTLE_INTERVAL = 5000;
-        public const enet_uint32 ENET_PEER_PACKET_LOSS_SCALE = (1 << 16);
-        public const enet_uint32 ENET_PEER_PACKET_LOSS_INTERVAL = 10000;
-        public const enet_uint32 ENET_PEER_WINDOW_SIZE_SCALE = 64 * 1024;
-        public const enet_uint32 ENET_PEER_TIMEOUT_LIMIT = 32;
-        public const enet_uint32 ENET_PEER_TIMEOUT_MINIMUM = 5000;
-        public const enet_uint32 ENET_PEER_TIMEOUT_MAXIMUM = 30000;
-        public const enet_uint32 ENET_PEER_PING_INTERVAL = 500;
-        public const enet_uint32 ENET_PEER_UNSEQUENCED_WINDOWS = 64;
-        public const enet_uint32 ENET_PEER_UNSEQUENCED_WINDOW_SIZE = 1024;
-        public const enet_uint32 ENET_PEER_FREE_UNSEQUENCED_WINDOWS = 32;
-        public const enet_uint32 ENET_PEER_RELIABLE_WINDOWS = 16;
-        public const enet_uint32 ENET_PEER_RELIABLE_WINDOW_SIZE = 0x1000;
-        public const enet_uint32 ENET_PEER_FREE_RELIABLE_WINDOWS = 8;
+        public const uint ENET_HOST_RECEIVE_BUFFER_SIZE = 256 * 1024;
+        public const uint ENET_HOST_SEND_BUFFER_SIZE = 256 * 1024;
+        public const uint ENET_HOST_BANDWIDTH_THROTTLE_INTERVAL = 1000;
+        public const uint ENET_HOST_DEFAULT_MTU = 1392;
+        public const uint ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE = 32 * 1024 * 1024;
+        public const uint ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA = 32 * 1024 * 1024;
+        public const uint ENET_PEER_DEFAULT_ROUND_TRIP_TIME = 500;
+        public const uint ENET_PEER_DEFAULT_PACKET_THROTTLE = 32;
+        public const uint ENET_PEER_PACKET_THROTTLE_SCALE = 32;
+        public const uint ENET_PEER_PACKET_THROTTLE_COUNTER = 7;
+        public const uint ENET_PEER_PACKET_THROTTLE_ACCELERATION = 2;
+        public const uint ENET_PEER_PACKET_THROTTLE_DECELERATION = 2;
+        public const uint ENET_PEER_PACKET_THROTTLE_INTERVAL = 5000;
+        public const uint ENET_PEER_PACKET_LOSS_SCALE = (1 << 16);
+        public const uint ENET_PEER_PACKET_LOSS_INTERVAL = 10000;
+        public const uint ENET_PEER_WINDOW_SIZE_SCALE = 64 * 1024;
+        public const uint ENET_PEER_TIMEOUT_LIMIT = 32;
+        public const uint ENET_PEER_TIMEOUT_MINIMUM = 5000;
+        public const uint ENET_PEER_TIMEOUT_MAXIMUM = 30000;
+        public const uint ENET_PEER_PING_INTERVAL = 500;
+        public const uint ENET_PEER_UNSEQUENCED_WINDOWS = 64;
+        public const uint ENET_PEER_UNSEQUENCED_WINDOW_SIZE = 1024;
+        public const uint ENET_PEER_FREE_UNSEQUENCED_WINDOWS = 32;
+        public const uint ENET_PEER_RELIABLE_WINDOWS = 16;
+        public const uint ENET_PEER_RELIABLE_WINDOW_SIZE = 0x1000;
+        public const uint ENET_PEER_FREE_RELIABLE_WINDOWS = 8;
     }
 
     public unsafe struct ENetChannel
     {
-        public enet_uint16 outgoingReliableSequenceNumber;
-        public enet_uint16 outgoingUnreliableSequenceNumber;
-        public enet_uint16 usedReliableWindows;
-        public fixed enet_uint16 reliableWindows[(int)ENET_PEER_RELIABLE_WINDOWS];
-        public enet_uint16 incomingReliableSequenceNumber;
-        public enet_uint16 incomingUnreliableSequenceNumber;
+        public ushort outgoingReliableSequenceNumber;
+        public ushort outgoingUnreliableSequenceNumber;
+        public ushort usedReliableWindows;
+        public fixed ushort reliableWindows[(int)ENET_PEER_RELIABLE_WINDOWS];
+        public ushort incomingReliableSequenceNumber;
+        public ushort incomingUnreliableSequenceNumber;
         public ENetList incomingReliableCommands;
         public ENetList incomingUnreliableCommands;
     }
@@ -233,112 +229,112 @@ namespace enet
     {
         public ENetListNode dispatchList;
         public ENetHost* host;
-        public enet_uint16 outgoingPeerID;
-        public enet_uint16 incomingPeerID;
-        public enet_uint32 connectID;
-        public enet_uint8 outgoingSessionID;
-        public enet_uint8 incomingSessionID;
+        public ushort outgoingPeerID;
+        public ushort incomingPeerID;
+        public uint connectID;
+        public byte outgoingSessionID;
+        public byte incomingSessionID;
         public ENetAddress address;
         public void* data;
         public ENetPeerState state;
         public ENetChannel* channels;
-        public size_t channelCount;
-        public enet_uint32 incomingBandwidth;
-        public enet_uint32 outgoingBandwidth;
-        public enet_uint32 incomingBandwidthThrottleEpoch;
-        public enet_uint32 outgoingBandwidthThrottleEpoch;
-        public enet_uint32 incomingDataTotal;
-        public enet_uint32 outgoingDataTotal;
-        public enet_uint32 lastSendTime;
-        public enet_uint32 lastReceiveTime;
-        public enet_uint32 nextTimeout;
-        public enet_uint32 earliestTimeout;
-        public enet_uint32 packetLossEpoch;
-        public enet_uint32 packetsSent;
-        public enet_uint32 packetsLost;
-        public enet_uint32 packetLoss;
-        public enet_uint32 packetLossVariance;
-        public enet_uint32 packetThrottle;
-        public enet_uint32 packetThrottleLimit;
-        public enet_uint32 packetThrottleCounter;
-        public enet_uint32 packetThrottleEpoch;
-        public enet_uint32 packetThrottleAcceleration;
-        public enet_uint32 packetThrottleDeceleration;
-        public enet_uint32 packetThrottleInterval;
-        public enet_uint32 pingInterval;
-        public enet_uint32 timeoutLimit;
-        public enet_uint32 timeoutMinimum;
-        public enet_uint32 timeoutMaximum;
-        public enet_uint32 lastRoundTripTime;
-        public enet_uint32 lowestRoundTripTime;
-        public enet_uint32 lastRoundTripTimeVariance;
-        public enet_uint32 highestRoundTripTimeVariance;
-        public enet_uint32 roundTripTime;
-        public enet_uint32 roundTripTimeVariance;
-        public enet_uint32 mtu;
-        public enet_uint32 windowSize;
-        public enet_uint32 reliableDataInTransit;
-        public enet_uint16 outgoingReliableSequenceNumber;
+        public nint channelCount;
+        public uint incomingBandwidth;
+        public uint outgoingBandwidth;
+        public uint incomingBandwidthThrottleEpoch;
+        public uint outgoingBandwidthThrottleEpoch;
+        public uint incomingDataTotal;
+        public uint outgoingDataTotal;
+        public uint lastSendTime;
+        public uint lastReceiveTime;
+        public uint nextTimeout;
+        public uint earliestTimeout;
+        public uint packetLossEpoch;
+        public uint packetsSent;
+        public uint packetsLost;
+        public uint packetLoss;
+        public uint packetLossVariance;
+        public uint packetThrottle;
+        public uint packetThrottleLimit;
+        public uint packetThrottleCounter;
+        public uint packetThrottleEpoch;
+        public uint packetThrottleAcceleration;
+        public uint packetThrottleDeceleration;
+        public uint packetThrottleInterval;
+        public uint pingInterval;
+        public uint timeoutLimit;
+        public uint timeoutMinimum;
+        public uint timeoutMaximum;
+        public uint lastRoundTripTime;
+        public uint lowestRoundTripTime;
+        public uint lastRoundTripTimeVariance;
+        public uint highestRoundTripTimeVariance;
+        public uint roundTripTime;
+        public uint roundTripTimeVariance;
+        public uint mtu;
+        public uint windowSize;
+        public uint reliableDataInTransit;
+        public ushort outgoingReliableSequenceNumber;
         public ENetList acknowledgements;
         public ENetList sentReliableCommands;
         public ENetList outgoingSendReliableCommands;
         public ENetList outgoingCommands;
         public ENetList dispatchedCommands;
-        public enet_uint16 flags;
-        public enet_uint16 reserved;
-        public enet_uint16 incomingUnsequencedGroup;
-        public enet_uint16 outgoingUnsequencedGroup;
-        public fixed enet_uint32 unsequencedWindow[(int)ENET_PEER_UNSEQUENCED_WINDOW_SIZE / 32];
-        public enet_uint32 eventData;
-        public size_t totalWaitingData;
+        public ushort flags;
+        public ushort reserved;
+        public ushort incomingUnsequencedGroup;
+        public ushort outgoingUnsequencedGroup;
+        public fixed uint unsequencedWindow[(int)ENET_PEER_UNSEQUENCED_WINDOW_SIZE / 32];
+        public uint eventData;
+        public nint totalWaitingData;
     }
 
     public unsafe struct ENetCompressor
     {
         public void* context;
-        public delegate* managed<void*, ENetBuffer*, size_t, size_t, enet_uint8*, size_t, size_t> compress;
-        public delegate* managed<void*, enet_uint8*, size_t, enet_uint8*, size_t, size_t> decompress;
+        public delegate* managed<void*, ENetBuffer*, nint, nint, byte*, nint, nint> compress;
+        public delegate* managed<void*, byte*, nint, byte*, nint, nint> decompress;
         public delegate* managed<void*, void> destroy;
     }
 
     public unsafe struct ENetHost
     {
-        public ENetSocket socket;
+        public long socket;
         public ENetAddress address;
-        public enet_uint32 incomingBandwidth;
-        public enet_uint32 outgoingBandwidth;
-        public enet_uint32 bandwidthThrottleEpoch;
-        public enet_uint32 mtu;
-        public enet_uint32 randomSeed;
+        public uint incomingBandwidth;
+        public uint outgoingBandwidth;
+        public uint bandwidthThrottleEpoch;
+        public uint mtu;
+        public uint randomSeed;
         public int recalculateBandwidthLimits;
         public ENetPeer* peers;
-        public size_t peerCount;
-        public size_t channelLimit;
-        public enet_uint32 serviceTime;
+        public nint peerCount;
+        public nint channelLimit;
+        public uint serviceTime;
         public ENetList dispatchQueue;
-        public enet_uint32 totalQueued;
-        public size_t packetSize;
-        public enet_uint16 headerFlags;
+        public uint totalQueued;
+        public nint packetSize;
+        public ushort headerFlags;
         public ENetProtocol* commands;
-        public size_t commandCount;
+        public nint commandCount;
         public ENetBuffer* buffers;
-        public size_t bufferCount;
-        public delegate* managed<ENetBuffer*, size_t, enet_uint32> checksum;
+        public nint bufferCount;
+        public delegate* managed<ENetBuffer*, nint, uint> checksum;
         public ENetCompressor compressor;
-        public enet_uint8** packetData;
+        public byte** packetData;
         public ENetAddress receivedAddress;
-        public enet_uint8* receivedData;
-        public size_t receivedDataLength;
-        public enet_uint32 totalSentData;
-        public enet_uint32 totalSentPackets;
-        public enet_uint32 totalReceivedData;
-        public enet_uint32 totalReceivedPackets;
+        public byte* receivedData;
+        public nint receivedDataLength;
+        public uint totalSentData;
+        public uint totalSentPackets;
+        public uint totalReceivedData;
+        public uint totalReceivedPackets;
         public delegate* managed<ENetHost*, ENetEvent*, int> intercept;
-        public size_t connectedPeers;
-        public size_t bandwidthLimitedPeers;
-        public size_t duplicatePeers;
-        public size_t maximumPacketSize;
-        public size_t maximumWaitingData;
+        public nint connectedPeers;
+        public nint bandwidthLimitedPeers;
+        public nint duplicatePeers;
+        public nint maximumPacketSize;
+        public nint maximumWaitingData;
     }
 
     public enum ENetEventType
@@ -353,8 +349,8 @@ namespace enet
     {
         public ENetEventType type;
         public ENetPeer* peer;
-        public enet_uint8 channelID;
-        public enet_uint32 data;
+        public byte channelID;
+        public uint data;
         public ENetPacket* packet;
     }
 }

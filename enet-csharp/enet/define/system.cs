@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using size_t = nint;
-using enet_uint8 = byte;
 
 // ReSharper disable ALL
 
@@ -10,7 +9,7 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static void* malloc(size_t size)
+        public static void* malloc(nint size)
         {
 #if NET6_0_OR_GREATER
             return NativeMemory.Alloc((nuint)size);
@@ -24,13 +23,13 @@ namespace enet
 #if NET6_0_OR_GREATER
             NativeMemory.Free(memory);
 #else
-            Marshal.FreeHGlobal((size_t)memory);
+            Marshal.FreeHGlobal((nint)memory);
 #endif
         }
 
-        public static void memcpy(void* dst, void* src, size_t size) => Unsafe.CopyBlock(dst, src, (uint)size);
+        public static void memcpy(void* dst, void* src, nint size) => Unsafe.CopyBlock(dst, src, (uint)size);
 
-        public static void memset(void* dst, enet_uint8 val, size_t size) => Unsafe.InitBlock(dst, val, (uint)size);
+        public static void memset(void* dst, byte val, nint size) => Unsafe.InitBlock(dst, val, (uint)size);
 
         public static long timeGetTime() => Stopwatch.GetTimestamp() * 1000L / Stopwatch.Frequency;
     }

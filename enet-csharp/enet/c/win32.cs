@@ -1,8 +1,6 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using ENetSocket = long;
-using size_t = nint;
-using enet_uint32 = uint;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
 
@@ -27,7 +25,7 @@ namespace enet
 
         public const int SOCKET_ERROR = -1;
 
-        public static enet_uint32 timeBase = 0;
+        public static uint timeBase = 0;
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_initialize", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_initialize();
@@ -35,17 +33,17 @@ namespace enet
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_deinitialize", CallingConvention = CallingConvention.Cdecl)]
         public static extern void enet_deinitialize();
 
-        public static enet_uint32 enet_host_random_seed() => (enet_uint32)timeGetTime();
+        public static uint enet_host_random_seed() => (uint)timeGetTime();
 
-        public static enet_uint32 enet_time_get() => (enet_uint32)timeGetTime() - timeBase;
+        public static uint enet_time_get() => (uint)timeGetTime() - timeBase;
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_bind", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_bind(ENetSocket socket, ENetAddress* address);
+        public static extern int enet_socket_bind(long socket, ENetAddress* address);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_get_address(ENetSocket socket, ENetAddress* address);
+        public static extern int enet_socket_get_address(long socket, ENetAddress* address);
 
-        public static ENetSocket enet_socket_create(ENetSocketType type)
+        public static long enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
                 return enet_socket_create(0, 0);
@@ -54,9 +52,9 @@ namespace enet
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_create", CallingConvention = CallingConvention.Cdecl)]
-        public static extern ENetSocket enet_socket_create(int sendBufferSize, int receiveBufferSize);
+        public static extern long enet_socket_create(int sendBufferSize, int receiveBufferSize);
 
-        public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
+        public static int enet_socket_set_option(long socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
             switch (option)
@@ -96,15 +94,15 @@ namespace enet
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_set_nonblocking", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_set_nonblocking(ENetSocket socket, byte nonBlocking);
+        public static extern int enet_socket_set_nonblocking(long socket, byte nonBlocking);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_set_option", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_set_option(ENetSocket socket, SocketOptionLevel level, SocketOptionName optionName, int* optionValue, int optionLength);
+        public static extern int enet_socket_set_option(long socket, SocketOptionLevel level, SocketOptionName optionName, int* optionValue, int optionLength);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_destroy", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void enet_socket_destroy(ENetSocket* socket);
+        public static extern void enet_socket_destroy(long* socket);
 
-        public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
+        public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nint bufferCount)
         {
             if (bufferCount == 0)
                 return 0;
@@ -128,24 +126,24 @@ namespace enet
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_send", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_send(ENetSocket socket, ENetAddress* address, void* buffer, size_t bufferLength);
+        public static extern int enet_socket_send(long socket, ENetAddress* address, void* buffer, nint bufferLength);
 
-        public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffer) => enet_socket_receive(socket, address, buffer->data, buffer->dataLength);
+        public static int enet_socket_receive(long socket, ENetAddress* address, ENetBuffer* buffer) => enet_socket_receive(socket, address, buffer->data, buffer->dataLength);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_receive", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_receive(ENetSocket socket, ENetAddress* address, void* buffer, size_t bufferLength);
+        public static extern int enet_socket_receive(long socket, ENetAddress* address, void* buffer, nint bufferLength);
 
-        public static int enet_socket_wait(ENetSocket socket, enet_uint32* condition, enet_uint32 timeout)
+        public static int enet_socket_wait(long socket, uint* condition, uint timeout)
         {
-            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_SEND) != 0)
+            if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
                 return 0;
-            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_RECEIVE) != 0)
+            if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
                 return enet_socket_poll(socket, timeout) > 0 ? 0 : -1;
             return 0;
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_poll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_poll(ENetSocket socket, enet_uint32 timeout);
+        public static extern int enet_socket_poll(long socket, uint timeout);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_set_ip", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_set_ip(ENetAddress* address, string ip);

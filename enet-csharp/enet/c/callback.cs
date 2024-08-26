@@ -1,5 +1,4 @@
-﻿using size_t = nint;
-using ENetVersion = uint;
+﻿using System;
 
 #pragma warning disable CA2211
 
@@ -11,7 +10,7 @@ namespace enet
     {
         public static ENetCallbacks callbacks = new(&malloc, &free);
 
-        public static int enet_initialize_with_callbacks(ENetVersion version, ENetCallbacks* inits)
+        public static int enet_initialize_with_callbacks(uint version, ENetCallbacks* inits)
         {
             if (version < ENET_VERSION_CREATE(1, 3, 0))
                 return -1;
@@ -28,9 +27,9 @@ namespace enet
             return enet_initialize();
         }
 
-        public static ENetVersion enet_linked_version() => ENET_VERSION;
+        public static uint enet_linked_version() => ENET_VERSION;
 
-        public static void* enet_malloc(size_t size) => callbacks.malloc(size);
+        public static void* enet_malloc(nint size) => callbacks.malloc(size);
 
         public static void enet_free(void* memory) => callbacks.free(memory);
     }
