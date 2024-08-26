@@ -123,19 +123,7 @@ namespace enet
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_send", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_send(ENetSocket socket, ENetAddress* address, void* buffer, size_t bufferLength);
 
-        public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
-        {
-            int recvLength = 0;
-            for (int i = 0; i < bufferCount; ++i)
-            {
-                int len = enet_socket_receive(socket, address, buffers[i].data, buffers[i].dataLength);
-                if (len <= 0)
-                    break;
-                recvLength += len;
-            }
-
-            return recvLength;
-        }
+        public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffer) => enet_socket_receive(socket, address, buffer->data, buffer->dataLength);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_receive", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_receive(ENetSocket socket, ENetAddress* address, void* buffer, size_t bufferLength);
