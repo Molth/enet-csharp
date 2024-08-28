@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Security.Cryptography;
 using static enet.ENet;
 
 #pragma warning disable CA1806
@@ -8,13 +7,13 @@ using static enet.ENet;
 
 namespace enet
 {
-    public sealed unsafe class Program
+    public sealed unsafe class TestWave
     {
         private static bool _running;
 
-        private static void Main() => TestWave.Start();
+        public const int INTERVAL = 1;
 
-        private static void Start()
+        public static void Start()
         {
             Console.CancelKeyPress += (sender, args) => _running = false;
             _running = true;
@@ -41,18 +40,10 @@ namespace enet
 
                 ENetEvent netEvent = new ENetEvent();
 
-                bool connected = false;
                 byte* buffer = stackalloc byte[1024];
 
                 while (_running)
                 {
-                    if (connected)
-                    {
-                        int size = Encoding.UTF8.GetBytes("server", MemoryMarshal.CreateSpan(ref *buffer, 1024));
-                        ENetPacket* packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
-                        enet_peer_send(peer, 0, packet);
-                    }
-
                     bool polled = false;
                     while (!polled)
                     {
@@ -69,24 +60,20 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                Console.WriteLine(peer->address.host.ToString());
-                                connected = true;
-                                Console.WriteLine("server Connected");
+                                Console.WriteLine($"server Connected {peer->address.host.ToString()}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 peer = null;
-                                connected = false;
                                 Console.WriteLine("server Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine($"server Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent.packet->data, (int)netEvent.packet->dataLength))}");
-                                enet_packet_destroy(netEvent.packet);
+                                enet_peer_send(peer, 0, netEvent.packet);
                                 break;
                         }
                     }
 
                     enet_host_flush(host);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(INTERVAL);
                 }
             }
             finally
@@ -114,17 +101,13 @@ namespace enet
                 ENetEvent netEvent = new ENetEvent();
 
                 bool connected = false;
-                byte* buffer = stackalloc byte[1024];
+                byte* buffer = stackalloc byte[2048];
+                var sent = false;
+                var reached = false;
+                var count = 0;
 
                 while (_running)
                 {
-                    if (connected)
-                    {
-                        int size = Encoding.UTF8.GetBytes("client", MemoryMarshal.CreateSpan(ref *buffer, 1024));
-                        ENetPacket* packet = enet_packet_create(buffer, size, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
-                        enet_peer_send(peer, 0, packet);
-                    }
-
                     bool polled = false;
                     while (!polled)
                     {
@@ -148,14 +131,71 @@ namespace enet
                                 Console.WriteLine("client Disconnected");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                Console.WriteLine($"client Received {Encoding.UTF8.GetString(MemoryMarshal.CreateReadOnlySpan(ref *netEvent.packet->data, (int)netEvent.packet->dataLength))}");
+                                sent = false;
+                                if ((int)netEvent.packet->dataLength == count)
+                                {
+                                    for (int i = 0; i < count; ++i)
+                                    {
+                                        if (netEvent.packet->data[i] != buffer[i])
+                                        {
+                                            Console.ForegroundColor = ConsoleColor.Red;
+                                            Console.WriteLine("data not same");
+                                            Console.ForegroundColor = ConsoleColor.White;
+                                            goto label;
+                                        }
+                                    }
+
+                                    Console.WriteLine("same");
+                                }
+                                else
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine($"length not same");
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                    Console.WriteLine((int)netEvent.packet->dataLength + " " + count);
+                                }
+
+                                label:
                                 enet_packet_destroy(netEvent.packet);
                                 break;
                         }
                     }
 
+                    if (connected && !sent)
+                    {
+                        sent = true;
+                        if (!reached)
+                        {
+                            count++;
+                            if (count == 1200)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Cyan;
+                                Console.WriteLine("reached max");
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Thread.Sleep(1000);
+                                reached = true;
+                            }
+                        }
+                        else
+                        {
+                            count--;
+                            if (count == 1)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Cyan;
+                                Console.WriteLine("reached min");
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Thread.Sleep(1000);
+                                reached = false;
+                            }
+                        }
+
+                        RandomNumberGenerator.Fill(new Span<byte>(buffer, count));
+                        ENetPacket* packet = enet_packet_create(buffer, count, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        enet_peer_send(peer, 0, packet);
+                    }
+
                     enet_host_flush(host);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(INTERVAL);
                 }
             }
             finally
