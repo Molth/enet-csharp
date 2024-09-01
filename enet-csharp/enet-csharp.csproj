@@ -10,7 +10,6 @@
 
     <ItemGroup>
       <Folder Include="enet\" />
-      <Folder Include="plugins\" />
     </ItemGroup>
 
 </Project>

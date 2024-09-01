@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Net;
+using System.Security.Cryptography;
 using static enet.ENet;
 
 #pragma warning disable CA1806
@@ -31,8 +32,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_set_ip(&address, "0.0.0.0");
-                address.port = 7777;
+                enet_set_ip(&address, new IPEndPoint(IPAddress.Any, 7777));
 
                 host = enet_host_create(&address, 4095, 0, 0, 0);
 
@@ -60,7 +60,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                Console.WriteLine($"server Connected {peer->address.host.ToString()}");
+                                Console.WriteLine($"server Connected {peer->address.ToString()}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 peer = null;
@@ -91,8 +91,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_set_ip(&address, "127.0.0.1");
-                address.port = 7777;
+                enet_set_ip(&address, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7777));
 
                 host = enet_host_create(null, 1, 0, 0, 0);
 
@@ -145,7 +144,7 @@ namespace enet
                                         }
                                     }
 
-                                    Console.WriteLine("same");
+                                    Console.WriteLine($"same {count}");
                                 }
                                 else
                                 {

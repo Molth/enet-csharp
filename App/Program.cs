@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using static enet.ENet;
 
@@ -32,8 +33,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_set_ip(&address, "0.0.0.0");
-                address.port = 7777;
+                enet_set_ip(&address, new IPEndPoint(IPAddress.Any, 7777));
 
                 host = enet_host_create(&address, 4095, 0, 0, 0);
 
@@ -69,7 +69,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                Console.WriteLine(peer->address.host.ToString());
+                                Console.WriteLine(peer->address.ToString());
                                 connected = true;
                                 Console.WriteLine("server Connected");
                                 break;
@@ -104,8 +104,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_set_ip(&address, "127.0.0.1");
-                address.port = 7777;
+                enet_set_ip(&address, new IPEndPoint(IPAddress.Parse("127.0.0.1"), 7777));
 
                 host = enet_host_create(null, 1, 0, 0, 0);
 

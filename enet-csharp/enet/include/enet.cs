@@ -1,10 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using size_t = nint;
+﻿using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
-using ENetSocket = long;
 using static enet.ENet;
 
 // ReSharper disable ALL
@@ -60,63 +57,7 @@ namespace enet
 
     public static partial class ENet
     {
-        public static readonly ENetIP ENET_HOST_ANY = new ENetIP(0, 0);
-        public static readonly ENetIP ENET_HOST_BROADCAST = new ENetIP(0, 0xFFFFFFFFFFFF0000);
         public const enet_uint32 ENET_PORT_ANY = 0;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
-    public unsafe struct ENetIP : IEquatable<ENetIP>
-    {
-        [FieldOffset(0)] public ulong high;
-        [FieldOffset(8)] public ulong low;
-
-        public ENetIP(ulong high, ulong low)
-        {
-            this.high = high;
-            this.low = low;
-        }
-
-        public void CopyTo(enet_uint8* buffer)
-        {
-            *(ulong*)buffer = high;
-            *(ulong*)(buffer + 8) = low;
-        }
-
-        public bool Equals(ENetIP other) => high == other.high && low == other.low;
-        public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
-        public override int GetHashCode() => ((16337 + (int)high) ^ ((int)(high >> 32) * 31 + (int)low) ^ (int)(low >> 32)) * 31;
-
-        public override string ToString()
-        {
-            var buffer = stackalloc enet_uint8[64];
-            _ = enet_get_ip((ENetIP*)Unsafe.AsPointer(ref this), buffer, 64);
-            return new string((sbyte*)buffer);
-        }
-
-        public static bool operator ==(ENetIP left, ENetIP right) => left.high == right.high && left.low == right.low;
-        public static bool operator !=(ENetIP left, ENetIP right) => left.high != right.high || left.low != right.low;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 24)]
-    public unsafe struct ENetAddress : IEquatable<ENetAddress>
-    {
-        [FieldOffset(0)] public ENetIP host;
-        [FieldOffset(16)] public enet_uint16 port;
-
-        public bool Equals(ENetAddress other) => host == other.host && port == other.port;
-        public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
-        public override int GetHashCode() => host.GetHashCode() + port;
-
-        public override string ToString()
-        {
-            var buffer = stackalloc enet_uint8[64];
-            _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
-            return new string((sbyte*)buffer) + ":" + port;
-        }
-
-        public static bool operator ==(ENetAddress left, ENetAddress right) => left.host == right.host && left.port == right.port;
-        public static bool operator !=(ENetAddress left, ENetAddress right) => left.host != right.host || left.port != right.port;
     }
 
     public enum ENetPacketFlag

@@ -312,6 +312,9 @@ namespace enet
 
         public static void enet_peer_reset(ENetPeer* peer)
         {
+            if (peer->address.handle.IsAllocated)
+                peer->address.handle.Free();
+
             enet_peer_on_disconnect(peer);
 
             peer->outgoingPeerID = (enet_uint16)ENET_PROTOCOL_MAXIMUM_PEER_ID;

@@ -1,4 +1,6 @@
-﻿using size_t = nint;
+﻿using System.Net;
+using System.Runtime.InteropServices;
+using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -321,10 +323,9 @@ namespace enet
                         peer = currentPeer;
                 }
                 else if (currentPeer->state != ENET_PEER_STATE_CONNECTING &&
-                         currentPeer->address.host == host->receivedAddress.host)
+                         currentPeer->address.Equals(host->receivedAddress))
                 {
-                    if (currentPeer->address.port == host->receivedAddress.port &&
-                        currentPeer->connectID == command->connect.connectID)
+                    if (currentPeer->connectID == command->connect.connectID)
                         return null;
 
                     ++duplicatePeers;
@@ -341,7 +342,9 @@ namespace enet
             peer->channelCount = channelCount;
             peer->state = ENET_PEER_STATE_ACKNOWLEDGING_CONNECT;
             peer->connectID = command->connect.connectID;
-            peer->address = host->receivedAddress;
+            if (peer->address.handle.IsAllocated)
+                peer->address.handle.Free();
+            peer->address.handle = GCHandle.Alloc(host->receivedAddress.ipEndPoint);
             peer->mtu = host->mtu;
             peer->outgoingPeerID = ENET_NET_TO_HOST_16(command->connect.outgoingPeerID);
             peer->incomingBandwidth = ENET_NET_TO_HOST_32(command->connect.incomingBandwidth);
@@ -1021,11 +1024,10 @@ namespace enet
 
                 if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                     peer->state == ENET_PEER_STATE_ZOMBIE ||
-                    ((host->receivedAddress.host != peer->address.host ||
-                      host->receivedAddress.port != peer->address.port) &&
-                     peer->address.host != ENET_HOST_BROADCAST) ||
-                    (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
-                     sessionID != peer->incomingSessionID))
+                    ((!host->receivedAddress.Equals(peer->address) &&
+                      peer->address.ipEndPoint.Address != IPAddress.Broadcast) ||
+                     (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
+                      sessionID != peer->incomingSessionID)))
                     return 0;
             }
 
@@ -1068,8 +1070,9 @@ namespace enet
 
             if (peer != null)
             {
-                peer->address.host = host->receivedAddress.host;
-                peer->address.port = host->receivedAddress.port;
+                if (peer->address.handle.IsAllocated)
+                    peer->address.handle.Free();
+                peer->address.handle = GCHandle.Alloc(host->receivedAddress.ipEndPoint);
                 peer->incomingDataTotal += (enet_uint32)host->receivedDataLength;
             }
 

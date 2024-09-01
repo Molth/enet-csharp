@@ -1,4 +1,6 @@
-﻿using size_t = nint;
+﻿using System.Net;
+using System.Runtime.InteropServices;
+using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -16,7 +18,7 @@ namespace enet
     {
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
-            var buffer = stackalloc enet_uint8[1];
+            enet_uint8* buffer = stackalloc enet_uint8[1];
             return enet_socket_send(host->socket, address, buffer, 1) > 0 ? 0 : -1;
         }
 
@@ -87,8 +89,7 @@ namespace enet
             host->commandCount = 0;
             host->bufferCount = 0;
             host->checksum = null;
-            host->receivedAddress.host = ENET_HOST_ANY;
-            host->receivedAddress.port = 0;
+            host->receivedAddress.handle = GCHandle.Alloc(new IPEndPoint(IPAddress.Any, 0));
             host->receivedData = null;
             host->receivedDataLength = 0;
 
@@ -198,7 +199,9 @@ namespace enet
 
             currentPeer->channelCount = channelCount;
             currentPeer->state = ENET_PEER_STATE_CONNECTING;
-            currentPeer->address = *address;
+            if (currentPeer->address.handle.IsAllocated)
+                currentPeer->address.handle.Free();
+            currentPeer->address.handle = GCHandle.Alloc(address->ipEndPoint);
             currentPeer->connectID = enet_host_random(host);
             currentPeer->mtu = host->mtu;
 
