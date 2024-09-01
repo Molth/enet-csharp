@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security;
 using size_t = nint;
 using enet_uint32 = uint;
 using static enet.ENetSocketType;
@@ -15,6 +16,7 @@ using static enet.ENetSocketWait;
 
 namespace enet
 {
+    [SuppressUnmanagedCodeSecurity]
     public static unsafe partial class ENet
     {
         public const int SOCKET_ERROR = -1;
