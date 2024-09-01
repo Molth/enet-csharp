@@ -171,7 +171,7 @@ namespace enet
             if (!sock.Poll(0, SelectMode.SelectRead))
                 return -1;
             EndPoint socketAddress = address->ipEndPoint;
-            EndPoint? socketAddressSnapshot = socketAddress;
+            EndPoint socketAddressSnapshot = socketAddress;
             int received;
             try
             {
