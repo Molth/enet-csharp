@@ -1,5 +1,4 @@
-﻿using System;
-using static enet.ENetSocketOption;
+﻿using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;

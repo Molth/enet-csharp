@@ -1,5 +1,4 @@
-﻿using System;
-using static enet.ENetPeerState;
+﻿using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;

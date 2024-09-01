@@ -1,6 +1,4 @@
-﻿using System;
-
-#pragma warning disable CA2211
+﻿#pragma warning disable CA2211
 
 // ReSharper disable ALL
 

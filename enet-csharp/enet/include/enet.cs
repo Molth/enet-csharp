@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using static enet.ENet;
 
+#pragma warning disable CS8632
+
 // ReSharper disable ALL
 
 namespace enet

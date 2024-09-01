@@ -1,6 +1,4 @@
-﻿
-
-// ReSharper disable ALL
+﻿// ReSharper disable ALL
 
 namespace enet
 {
