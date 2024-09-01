@@ -1,5 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security;
 using ENetSocket = long;
 using size_t = nint;
 using enet_uint32 = uint;
@@ -15,6 +16,7 @@ using static enet.ENetSocketWait;
 
 namespace enet
 {
+    [SuppressUnmanagedCodeSecurity]
     public static unsafe partial class ENet
     {
 #if __IOS__ || (UNITY_IOS && !UNITY_EDITOR)
