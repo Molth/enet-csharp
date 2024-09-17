@@ -1,4 +1,6 @@
-﻿using size_t = nint;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -34,7 +36,7 @@ namespace enet
             sizeof(ENetProtocolSendFragment)
         };
 
-        public static size_t enet_protocol_command_size(enet_uint8 commandNumber) => commandSizes[commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK];
+        public static size_t enet_protocol_command_size(enet_uint8 commandNumber) => Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK);
 
         public static void enet_protocol_change_state(ENetHost* host, ENetPeer* peer, ENetPeerState state)
         {
@@ -1089,7 +1091,7 @@ namespace enet
                 if (commandNumber >= (enet_uint32)ENET_PROTOCOL_COMMAND_COUNT)
                     break;
 
-                commandSize = commandSizes[commandNumber];
+                commandSize = Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), commandNumber);
                 if (commandSize == 0 || currentData + commandSize > &host->receivedData[host->receivedDataLength])
                     break;
 
@@ -1457,7 +1459,7 @@ namespace enet
                     canPing = 0;
                 }
 
-                commandSize = commandSizes[(int)(outgoingCommand->command.header.command & (enet_uint32)ENET_PROTOCOL_COMMAND_MASK)];
+                commandSize = Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), (int)(outgoingCommand->command.header.command & (enet_uint32)ENET_PROTOCOL_COMMAND_MASK));
                 if (command >= &host->commands[ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS] ||
                     buffer + 1 >= &host->buffers[ENET_BUFFER_MAXIMUM] ||
                     peer->mtu - host->packetSize < commandSize ||

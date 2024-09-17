@@ -1,4 +1,6 @@
-﻿using size_t = nint;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint32 = uint;
 using static enet.ENetPacketFlag;
@@ -121,7 +123,7 @@ namespace enet
 
                 while (data < dataEnd)
                 {
-                    crc = (crc >> 8) ^ crcTable[(int)((crc & 0xFF) ^ *data++)];
+                    crc = (crc >> 8) ^ Unsafe.Add(ref MemoryMarshal.GetReference(crcTable), (int)((crc & 0xFF) ^ *data++));
                 }
 
                 ++buffers;
