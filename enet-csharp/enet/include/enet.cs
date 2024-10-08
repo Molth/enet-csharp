@@ -16,11 +16,11 @@ namespace enet
         public const enet_uint32 ENET_VERSION_MAJOR = 1;
         public const enet_uint32 ENET_VERSION_MINOR = 3;
         public const enet_uint32 ENET_VERSION_PATCH = 18;
-        public static readonly enet_uint32 ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
         public static enet_uint32 ENET_VERSION_CREATE(enet_uint32 major, enet_uint32 minor, enet_uint32 patch) => (((major) << 16) | ((minor) << 8) | (patch));
         public static enet_uint32 ENET_VERSION_GET_MAJOR(enet_uint32 version) => (((version) >> 16) & 0xFF);
         public static enet_uint32 ENET_VERSION_GET_MINOR(enet_uint32 version) => (((version) >> 8) & 0xFF);
         public static enet_uint32 ENET_VERSION_GET_PATCH(enet_uint32 version) => ((version) & 0xFF);
+        public static readonly enet_uint32 ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
     }
 
     public enum ENetSocketType
