@@ -16,11 +16,11 @@ namespace enet
         public const enet_uint32 ENET_VERSION_MAJOR = 1;
         public const enet_uint32 ENET_VERSION_MINOR = 3;
         public const enet_uint32 ENET_VERSION_PATCH = 18;
+        public static readonly enet_uint32 ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
         public static enet_uint32 ENET_VERSION_CREATE(enet_uint32 major, enet_uint32 minor, enet_uint32 patch) => (((major) << 16) | ((minor) << 8) | (patch));
         public static enet_uint32 ENET_VERSION_GET_MAJOR(enet_uint32 version) => (((version) >> 16) & 0xFF);
         public static enet_uint32 ENET_VERSION_GET_MINOR(enet_uint32 version) => (((version) >> 8) & 0xFF);
         public static enet_uint32 ENET_VERSION_GET_PATCH(enet_uint32 version) => ((version) & 0xFF);
-        public static readonly enet_uint32 ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
     }
 
     public enum ENetSocketType
@@ -326,13 +326,15 @@ namespace enet
         public enet_uint32 totalQueued;
         public size_t packetSize;
         public enet_uint16 headerFlags;
-        public ENetProtocol* commands;
+        public ENetProtocols commands_t;
+        public ENetProtocol* commands => (ENetProtocol*)Unsafe.AsPointer(ref commands_t);
         public size_t commandCount;
-        public ENetBuffer* buffers;
+        public ENetBuffers buffers_t;
+        public ENetBuffer* buffers => (ENetBuffer*)Unsafe.AsPointer(ref buffers_t);
         public size_t bufferCount;
         public delegate* managed<ENetBuffer*, size_t, enet_uint32> checksum;
         public ENetCompressor compressor;
-        public enet_uint8** packetData;
+        public ENetPacketData packetData;
         public ENetAddress receivedAddress;
         public enet_uint8* receivedData;
         public size_t receivedDataLength;
@@ -346,6 +348,124 @@ namespace enet
         public size_t duplicatePeers;
         public size_t maximumPacketSize;
         public size_t maximumWaitingData;
+    }
+
+    public struct ENetProtocols
+    {
+        public ENetProtocol command0;
+        public ENetProtocol command1;
+        public ENetProtocol command2;
+        public ENetProtocol command3;
+        public ENetProtocol command4;
+        public ENetProtocol command5;
+        public ENetProtocol command6;
+        public ENetProtocol command7;
+        public ENetProtocol command8;
+        public ENetProtocol command9;
+        public ENetProtocol command10;
+        public ENetProtocol command11;
+        public ENetProtocol command12;
+        public ENetProtocol command13;
+        public ENetProtocol command14;
+        public ENetProtocol command15;
+        public ENetProtocol command16;
+        public ENetProtocol command17;
+        public ENetProtocol command18;
+        public ENetProtocol command19;
+        public ENetProtocol command20;
+        public ENetProtocol command21;
+        public ENetProtocol command22;
+        public ENetProtocol command23;
+        public ENetProtocol command24;
+        public ENetProtocol command25;
+        public ENetProtocol command26;
+        public ENetProtocol command27;
+        public ENetProtocol command28;
+        public ENetProtocol command29;
+        public ENetProtocol command30;
+        public ENetProtocol command31;
+    }
+
+    public struct ENetBuffers
+    {
+        public ENetBuffer buffer0;
+        public ENetBuffer buffer1;
+        public ENetBuffer buffer2;
+        public ENetBuffer buffer3;
+        public ENetBuffer buffer4;
+        public ENetBuffer buffer5;
+        public ENetBuffer buffer6;
+        public ENetBuffer buffer7;
+        public ENetBuffer buffer8;
+        public ENetBuffer buffer9;
+        public ENetBuffer buffer10;
+        public ENetBuffer buffer11;
+        public ENetBuffer buffer12;
+        public ENetBuffer buffer13;
+        public ENetBuffer buffer14;
+        public ENetBuffer buffer15;
+        public ENetBuffer buffer16;
+        public ENetBuffer buffer17;
+        public ENetBuffer buffer18;
+        public ENetBuffer buffer19;
+        public ENetBuffer buffer20;
+        public ENetBuffer buffer21;
+        public ENetBuffer buffer22;
+        public ENetBuffer buffer23;
+        public ENetBuffer buffer24;
+        public ENetBuffer buffer25;
+        public ENetBuffer buffer26;
+        public ENetBuffer buffer27;
+        public ENetBuffer buffer28;
+        public ENetBuffer buffer29;
+        public ENetBuffer buffer30;
+        public ENetBuffer buffer31;
+        public ENetBuffer buffer32;
+        public ENetBuffer buffer33;
+        public ENetBuffer buffer34;
+        public ENetBuffer buffer35;
+        public ENetBuffer buffer36;
+        public ENetBuffer buffer37;
+        public ENetBuffer buffer38;
+        public ENetBuffer buffer39;
+        public ENetBuffer buffer40;
+        public ENetBuffer buffer41;
+        public ENetBuffer buffer42;
+        public ENetBuffer buffer43;
+        public ENetBuffer buffer44;
+        public ENetBuffer buffer45;
+        public ENetBuffer buffer46;
+        public ENetBuffer buffer47;
+        public ENetBuffer buffer48;
+        public ENetBuffer buffer49;
+        public ENetBuffer buffer50;
+        public ENetBuffer buffer51;
+        public ENetBuffer buffer52;
+        public ENetBuffer buffer53;
+        public ENetBuffer buffer54;
+        public ENetBuffer buffer55;
+        public ENetBuffer buffer56;
+        public ENetBuffer buffer57;
+        public ENetBuffer buffer58;
+        public ENetBuffer buffer59;
+        public ENetBuffer buffer60;
+        public ENetBuffer buffer61;
+        public ENetBuffer buffer62;
+        public ENetBuffer buffer63;
+        public ENetBuffer buffer64;
+    }
+
+    public unsafe struct ENetPacketData
+    {
+        public ENetPacketDataBuffer buffer0;
+        public ENetPacketDataBuffer buffer1;
+
+        public enet_uint8* this[size_t i] => ((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this))[i].data;
+    }
+
+    public unsafe struct ENetPacketDataBuffer
+    {
+        public fixed enet_uint8 data[(int)ENET_PROTOCOL_MAXIMUM_MTU];
     }
 
     public enum ENetEventType

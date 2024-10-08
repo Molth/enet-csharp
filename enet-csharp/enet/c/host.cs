@@ -29,27 +29,12 @@ namespace enet
                 return null;
 
             host = (ENetHost*)enet_malloc(sizeof(ENetHost));
-
             memset(host, 0, sizeof(ENetHost));
 
-            host->commands = (ENetProtocol*)enet_malloc((size_t)(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS * sizeof(ENetProtocol)));
-            memset(host->commands, 0, (size_t)(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS * sizeof(ENetProtocol)));
-
-            host->buffers = (ENetBuffer*)enet_malloc((size_t)(ENET_BUFFER_MAXIMUM * sizeof(ENetBuffer)));
-            memset(host->buffers, 0, (size_t)(ENET_BUFFER_MAXIMUM * sizeof(ENetBuffer)));
-
-            host->packetData = (enet_uint8**)enet_malloc(2 * sizeof(enet_uint8*));
-            host->packetData[0] = (enet_uint8*)enet_malloc((size_t)ENET_PROTOCOL_MAXIMUM_MTU);
-            host->packetData[1] = (enet_uint8*)enet_malloc((size_t)ENET_PROTOCOL_MAXIMUM_MTU);
-            memset(host->packetData[0], 0, (size_t)ENET_PROTOCOL_MAXIMUM_MTU);
-            memset(host->packetData[1], 0, (size_t)ENET_PROTOCOL_MAXIMUM_MTU);
-
             host->peers = (ENetPeer*)enet_malloc(peerCount * sizeof(ENetPeer));
-
             memset(host->peers, 0, peerCount * sizeof(ENetPeer));
 
             host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-
             if (host->socket == ENET_SOCKET_NULL || (address != null && enet_socket_bind(host->socket, address) < 0))
             {
                 if (host->socket != ENET_SOCKET_NULL)
@@ -154,13 +139,6 @@ namespace enet
                 (host->compressor.destroy)(host->compressor.context);
 
             enet_free(host->peers);
-
-            enet_free(host->commands);
-            enet_free(host->buffers);
-            enet_free(host->packetData[0]);
-            enet_free(host->packetData[1]);
-            enet_free(host->packetData);
-
             enet_free(host);
         }
 
