@@ -77,12 +77,6 @@ namespace enet
             this.low = low;
         }
 
-        public void CopyTo(enet_uint8* buffer)
-        {
-            *(ulong*)buffer = high;
-            *(ulong*)(buffer + 8) = low;
-        }
-
         public bool Equals(ENetIP other) => high == other.high && low == other.low;
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
         public override int GetHashCode() => ((16337 + (int)high) ^ ((int)(high >> 32) * 31 + (int)low) ^ (int)(low >> 32)) * 31;
