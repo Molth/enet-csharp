@@ -165,7 +165,7 @@ namespace enet
         public enet_uint32 fragmentOffset;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 48)]
+    [StructLayout(LayoutKind.Explicit)]
     public struct ENetProtocol
     {
         [FieldOffset(0)] public ENetProtocolCommandHeader header;
