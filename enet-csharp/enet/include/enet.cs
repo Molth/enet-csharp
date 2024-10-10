@@ -350,6 +350,15 @@ namespace enet
         public size_t maximumWaitingData;
     }
 
+    [AttributeUsage(AttributeTargets.Struct)]
+    public sealed class ENetArrayAttribute : Attribute
+    {
+        public ENetArrayAttribute(enet_uint32 length)
+        {
+        }
+    }
+
+    [ENetArray(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS)]
     public struct ENetProtocols
     {
         public ENetProtocol command0;
@@ -386,6 +395,7 @@ namespace enet
         public ENetProtocol command31;
     }
 
+    [ENetArray(ENET_BUFFER_MAXIMUM)]
     public struct ENetBuffers
     {
         public ENetBuffer buffer0;
@@ -455,12 +465,13 @@ namespace enet
         public ENetBuffer buffer64;
     }
 
+    [ENetArray(2)]
     public unsafe struct ENetPacketData
     {
         public ENetPacketDataBuffer buffer0;
         public ENetPacketDataBuffer buffer1;
 
-        public enet_uint8* this[size_t i] => ((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this))[i].data;
+        public enet_uint8* this[int i] => ((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this))[i].data;
     }
 
     public unsafe struct ENetPacketDataBuffer
