@@ -9,7 +9,7 @@ namespace enet
         public delegate* managed<size_t, void*> malloc;
         public delegate* managed<void*, void> free;
 
-        public ENetCallbacks(delegate*<size_t, void*> malloc, delegate*<void*, void> free)
+        public ENetCallbacks(delegate* managed<size_t, void*> malloc, delegate* managed<void*, void> free)
         {
             this.malloc = malloc;
             this.free = free;

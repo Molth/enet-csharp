@@ -1,4 +1,5 @@
-﻿using System.Buffers.Binary;
+﻿using System;
+using System.Buffers.Binary;
 using size_t = nint;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;

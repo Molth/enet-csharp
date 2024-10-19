@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using size_t = nint;
 using enet_uint8 = byte;
@@ -113,6 +114,7 @@ namespace enet
         public static bool operator !=(ENetAddress left, ENetAddress right) => left.host != right.host || left.port != right.port;
     }
 
+    [Flags]
     public enum ENetPacketFlag
     {
         ENET_PACKET_FLAG_RELIABLE = (1 << 0),
