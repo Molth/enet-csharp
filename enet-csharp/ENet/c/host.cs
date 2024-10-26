@@ -16,7 +16,7 @@ namespace enet
     {
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
-            var buffer = stackalloc enet_uint8[1];
+            enet_uint8* buffer = stackalloc enet_uint8[1];
             return enet_socket_send(host->socket, address, buffer, 1) > 0 ? 0 : -1;
         }
 

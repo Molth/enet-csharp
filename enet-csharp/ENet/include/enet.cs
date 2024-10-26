@@ -84,7 +84,7 @@ namespace enet
 
         public override string ToString()
         {
-            var buffer = stackalloc enet_uint8[64];
+            enet_uint8* buffer = stackalloc enet_uint8[64];
             _ = enet_get_ip((ENetIP*)Unsafe.AsPointer(ref this), buffer, 64);
             return new string((sbyte*)buffer);
         }
@@ -105,7 +105,7 @@ namespace enet
 
         public override string ToString()
         {
-            var buffer = stackalloc enet_uint8[64];
+            enet_uint8* buffer = stackalloc enet_uint8[64];
             _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
             return new string((sbyte*)buffer) + ":" + port;
         }
