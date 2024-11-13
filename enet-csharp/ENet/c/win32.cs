@@ -5,6 +5,7 @@ using ENetSocket = long;
 using size_t = nuint;
 using enet_uint8 = byte;
 using enet_uint32 = uint;
+using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
 
@@ -62,31 +63,31 @@ namespace enet
             int result = SOCKET_ERROR;
             switch (option)
             {
-                case ENetSocketOption.ENET_SOCKOPT_NONBLOCK:
+                case ENET_SOCKOPT_NONBLOCK:
                     result = enet_socket_set_nonblocking(socket, (enet_uint8)value);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_BROADCAST:
+                case ENET_SOCKOPT_BROADCAST:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_RCVBUF:
+                case ENET_SOCKOPT_RCVBUF:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_SNDBUF:
+                case ENET_SOCKOPT_SNDBUF:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.SendBuffer, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_REUSEADDR:
+                case ENET_SOCKOPT_REUSEADDR:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_RCVTIMEO:
+                case ENET_SOCKOPT_RCVTIMEO:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_SNDTIMEO:
+                case ENET_SOCKOPT_SNDTIMEO:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.SendTimeout, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_NODELAY:
+                case ENET_SOCKOPT_NODELAY:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.NoDelay, &value, 4);
                     break;
-                case ENetSocketOption.ENET_SOCKOPT_TTL:
+                case ENET_SOCKOPT_TTL:
                     result = enet_socket_set_option(socket, SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, &value, 4);
                     break;
                 default:
