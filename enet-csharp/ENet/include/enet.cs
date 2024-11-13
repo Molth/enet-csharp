@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-#if NET8_0_OR_GREATER
+#if NET7_0_OR_GREATER
 using System.Runtime.Intrinsics;
 #endif
 using size_t = nuint;
@@ -79,7 +79,7 @@ namespace enet
 
         public bool Equals(ENetIP other)
         {
-#if NET8_0_OR_GREATER
+#if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
                 return Vector128.LoadUnsafe<enet_uint8>(ref Unsafe.As<ENetIP, enet_uint8>(ref this)) == Vector128.LoadUnsafe<enet_uint8>(ref Unsafe.As<ENetIP, enet_uint8>(ref other));
 #endif
