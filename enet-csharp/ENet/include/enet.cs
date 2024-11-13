@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+#if NET8_0_OR_GREATER
+using System.Runtime.Intrinsics;
+#endif
 using size_t = nint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
@@ -61,26 +64,37 @@ namespace enet
 
     public static partial class ENet
     {
-        public static readonly ENetIP ENET_HOST_ANY = new ENetIP(0, 0);
-        public static readonly ENetIP ENET_HOST_BROADCAST = new ENetIP(0, 0xFFFFFFFFFFFF0000);
+        public static readonly ENetIP ENET_HOST_ANY = new ENetIP();
+        public static readonly ENetIP ENET_HOST_BROADCAST = new ENetIP(stackalloc enet_uint8[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255 });
         public const enet_uint32 ENET_PORT_ANY = 0;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
     public unsafe struct ENetIP : IEquatable<ENetIP>
     {
-        [FieldOffset(0)] public ulong high;
-        [FieldOffset(8)] public ulong low;
+        [FieldOffset(0)] public fixed enet_uint8 ipv6[16];
+        [FieldOffset(12)] public fixed enet_uint8 ipv4[4];
 
-        public ENetIP(ulong high, ulong low)
+        public ENetIP(ReadOnlySpan<enet_uint8> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, enet_uint8>(ref this), ref MemoryMarshal.GetReference(buffer), (enet_uint32)buffer.Length);
+
+        public bool Equals(ENetIP other)
         {
-            this.high = high;
-            this.low = low;
+#if NET8_0_OR_GREATER
+            if (Vector128.IsHardwareAccelerated)
+                return Vector128.LoadUnsafe<enet_uint8>(ref Unsafe.As<ENetIP, enet_uint8>(ref this)) == Vector128.LoadUnsafe<enet_uint8>(ref Unsafe.As<ENetIP, enet_uint8>(ref other));
+#endif
+            ref int left = ref Unsafe.As<ENetIP, int>(ref this);
+            ref int right = ref Unsafe.As<ENetIP, int>(ref other);
+            return left == right && Unsafe.Add<int>(ref left, 1) == Unsafe.Add<int>(ref right, 1) && Unsafe.Add<int>(ref left, 2) == Unsafe.Add<int>(ref right, 2) && Unsafe.Add<int>(ref left, 3) == Unsafe.Add<int>(ref right, 3);
         }
 
-        public bool Equals(ENetIP other) => high == other.high && low == other.low;
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
-        public override int GetHashCode() => ((16337 + (int)high) ^ ((int)(high >> 32) * 31 + (int)low) ^ (int)(low >> 32)) * 31;
+
+        public override int GetHashCode()
+        {
+            ref int local = ref Unsafe.As<ENetIP, int>(ref this);
+            return local ^ Unsafe.Add<int>(ref local, 1) ^ Unsafe.Add<int>(ref local, 2) ^ Unsafe.Add<int>(ref local, 3);
+        }
 
         public override string ToString()
         {
@@ -89,29 +103,37 @@ namespace enet
             return new string((sbyte*)buffer);
         }
 
-        public static bool operator ==(ENetIP left, ENetIP right) => left.high == right.high && left.low == right.low;
-        public static bool operator !=(ENetIP left, ENetIP right) => left.high != right.high || left.low != right.low;
+        public static bool operator ==(ENetIP left, ENetIP right) => left.Equals(right);
+        public static bool operator !=(ENetIP left, ENetIP right) => !left.Equals(right);
+
+        public static implicit operator Span<enet_uint8>(ENetIP ip) => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetIP, enet_uint8>(ref ip), 16);
+        public static implicit operator ReadOnlySpan<enet_uint8>(ENetIP ip) => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, enet_uint8>(ref ip), 16);
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 24)]
+    [StructLayout(LayoutKind.Explicit, Size = 20)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
         [FieldOffset(0)] public ENetIP host;
         [FieldOffset(16)] public enet_uint16 port;
 
-        public bool Equals(ENetAddress other) => host == other.host && port == other.port;
+        public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
-        public override int GetHashCode() => host.GetHashCode() + port;
+
+        public override int GetHashCode()
+        {
+            ref int local = ref Unsafe.As<ENetAddress, int>(ref this);
+            return local ^ Unsafe.Add<int>(ref local, 1) ^ Unsafe.Add<int>(ref local, 2) ^ Unsafe.Add<int>(ref local, 3) ^ Unsafe.Add<int>(ref local, 4);
+        }
 
         public override string ToString()
         {
             enet_uint8* buffer = stackalloc enet_uint8[64];
-            _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
+            _ = enet_get_ip((ENetAddress*)Unsafe.AsPointer(ref this.host), buffer, 64);
             return new string((sbyte*)buffer) + ":" + port;
         }
 
-        public static bool operator ==(ENetAddress left, ENetAddress right) => left.host == right.host && left.port == right.port;
-        public static bool operator !=(ENetAddress left, ENetAddress right) => left.host != right.host || left.port != right.port;
+        public static bool operator ==(ENetAddress left, ENetAddress right) => left.Equals(right);
+        public static bool operator !=(ENetAddress left, ENetAddress right) => !left.Equals(right);
     }
 
     [Flags]
