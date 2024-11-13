@@ -24,7 +24,7 @@ namespace enet
 #if NET6_0_OR_GREATER
             NativeMemory.Free(memory);
 #else
-            Marshal.FreeHGlobal((size_t)memory);
+            Marshal.FreeHGlobal((nint)memory);
 #endif
         }
 
