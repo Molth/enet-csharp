@@ -28,9 +28,9 @@ namespace enet
 #endif
         }
 
-        public static void memcpy(void* dst, void* src, size_t size) => Unsafe.CopyBlock(dst, src, (uint)size);
+        public static void memcpy(void* dst, void* src, size_t size) => Unsafe.CopyBlockUnaligned(dst, src, (uint)size);
 
-        public static void memset(void* dst, enet_uint8 val, size_t size) => Unsafe.InitBlock(dst, val, (uint)size);
+        public static void memset(void* dst, enet_uint8 val, size_t size) => Unsafe.InitBlockUnaligned(dst, val, (uint)size);
 
         public static long timeGetTime() => Stopwatch.GetTimestamp() * 1000L / Stopwatch.Frequency;
     }
