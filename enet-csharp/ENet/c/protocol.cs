@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using size_t = nint;
+using size_t = nuint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -23,18 +23,18 @@ namespace enet
         public static ReadOnlySpan<size_t> commandSizes => new size_t[(int)ENET_PROTOCOL_COMMAND_COUNT]
         {
             0,
-            sizeof(ENetProtocolAcknowledge),
-            sizeof(ENetProtocolConnect),
-            sizeof(ENetProtocolVerifyConnect),
-            sizeof(ENetProtocolDisconnect),
-            sizeof(ENetProtocolPing),
-            sizeof(ENetProtocolSendReliable),
-            sizeof(ENetProtocolSendUnreliable),
-            sizeof(ENetProtocolSendFragment),
-            sizeof(ENetProtocolSendUnsequenced),
-            sizeof(ENetProtocolBandwidthLimit),
-            sizeof(ENetProtocolThrottleConfigure),
-            sizeof(ENetProtocolSendFragment)
+            (size_t)sizeof(ENetProtocolAcknowledge),
+            (size_t)sizeof(ENetProtocolConnect),
+            (size_t)sizeof(ENetProtocolVerifyConnect),
+            (size_t)sizeof(ENetProtocolDisconnect),
+            (size_t)sizeof(ENetProtocolPing),
+            (size_t)sizeof(ENetProtocolSendReliable),
+            (size_t)sizeof(ENetProtocolSendUnreliable),
+            (size_t)sizeof(ENetProtocolSendFragment),
+            (size_t)sizeof(ENetProtocolSendUnsequenced),
+            (size_t)sizeof(ENetProtocolBandwidthLimit),
+            (size_t)sizeof(ENetProtocolThrottleConfigure),
+            (size_t)sizeof(ENetProtocolSendFragment)
         };
 
         public static size_t enet_protocol_command_size(enet_uint8 commandNumber) => Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK);
@@ -339,7 +339,7 @@ namespace enet
 
             if (channelCount > host->channelLimit)
                 channelCount = host->channelLimit;
-            peer->channels = (ENetChannel*)enet_malloc(channelCount * sizeof(ENetChannel));
+            peer->channels = (ENetChannel*)enet_malloc(channelCount * (size_t)sizeof(ENetChannel));
 
             peer->channelCount = channelCount;
             peer->state = ENET_PEER_STATE_ACKNOWLEDGING_CONNECT;
@@ -1010,7 +1010,7 @@ namespace enet
             enet_uint32 newPeerID = peerID;
             newPeerID &= ~ ((enet_uint32)ENET_PROTOCOL_HEADER_FLAG_MASK | (enet_uint32)ENET_PROTOCOL_HEADER_SESSION_MASK);
             peerID = (enet_uint16)newPeerID;
-            headerSize = (((flags & (enet_uint32)ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) != 0) ? sizeof(ENetProtocolHeader) : 2);
+            headerSize = (((flags & (enet_uint32)ENET_PROTOCOL_HEADER_FLAG_SENT_TIME) != 0) ? (size_t)sizeof(ENetProtocolHeader) : 2);
             if (host->checksum != null)
                 headerSize += sizeof(enet_uint32);
 
@@ -1235,7 +1235,7 @@ namespace enet
                     return 0;
 
                 host->receivedData = host->packetData[0];
-                host->receivedDataLength = receivedLength;
+                host->receivedDataLength = (size_t)receivedLength;
 
                 host->totalReceivedData += (enet_uint32)receivedLength;
                 host->totalReceivedPackets++;
@@ -1288,7 +1288,7 @@ namespace enet
             {
                 if (command >= &host->commands[ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS] ||
                     buffer >= &host->buffers[ENET_BUFFER_MAXIMUM] ||
-                    peer->mtu - host->packetSize < sizeof(ENetProtocolAcknowledge))
+                    peer->mtu - host->packetSize < (size_t)sizeof(ENetProtocolAcknowledge))
                 {
                     enet_uint32 flags = peer->flags;
                     flags |= (enet_uint32)ENET_PEER_FLAG_CONTINUE_SENDING;
@@ -1302,7 +1302,7 @@ namespace enet
                 currentAcknowledgement = enet_list_next(currentAcknowledgement);
 
                 buffer->data = command;
-                buffer->dataLength = sizeof(ENetProtocolAcknowledge);
+                buffer->dataLength = (size_t)sizeof(ENetProtocolAcknowledge);
 
                 host->packetSize += buffer->dataLength;
 
@@ -1608,7 +1608,7 @@ namespace enet
                 host->headerFlags = 0;
                 host->commandCount = 0;
                 host->bufferCount = 1;
-                host->packetSize = sizeof(ENetProtocolHeader);
+                host->packetSize = (size_t)sizeof(ENetProtocolHeader);
 
                 if (!enet_list_empty(&currentPeer->acknowledgements))
                     enet_protocol_send_acknowledgements(host, currentPeer);
@@ -1629,7 +1629,7 @@ namespace enet
                      enet_protocol_check_outgoing_commands(host, currentPeer, &sentUnreliableCommands) != 0) &&
                     enet_list_empty(&currentPeer->sentReliableCommands) &&
                     ENET_TIME_DIFFERENCE(host->serviceTime, currentPeer->lastReceiveTime) >= currentPeer->pingInterval &&
-                    currentPeer->mtu - host->packetSize >= sizeof(ENetProtocolPing))
+                    currentPeer->mtu - host->packetSize >= (size_t)sizeof(ENetProtocolPing))
                 {
                     enet_peer_ping(currentPeer);
                     enet_protocol_check_outgoing_commands(host, currentPeer, &sentUnreliableCommands);
@@ -1658,7 +1658,7 @@ namespace enet
                 {
                     header->sentTime = ENET_HOST_TO_NET_16((enet_uint16)(host->serviceTime & 0xFFFF));
 
-                    host->buffers->dataLength = sizeof(ENetProtocolHeader);
+                    host->buffers->dataLength = (size_t)sizeof(ENetProtocolHeader);
                 }
                 else
                     host->buffers->dataLength = 2;
@@ -1666,7 +1666,7 @@ namespace enet
                 shouldCompress = 0;
                 if (host->compressor.context != null && host->compressor.compress != null)
                 {
-                    size_t originalSize = host->packetSize - sizeof(ENetProtocolHeader),
+                    size_t originalSize = host->packetSize - (size_t)sizeof(ENetProtocolHeader),
                         compressedSize = host->compressor.compress(host->compressor.context,
                             &host->buffers[1], host->bufferCount - 1,
                             originalSize,

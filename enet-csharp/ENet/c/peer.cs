@@ -1,4 +1,4 @@
-﻿using size_t = nint;
+﻿using size_t = nuint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -113,7 +113,7 @@ namespace enet
                     if (packet->dataLength - fragmentOffset < fragmentLength)
                         fragmentLength = (size_t)(packet->dataLength - fragmentOffset);
 
-                    fragment = (ENetOutgoingCommand*)enet_malloc(sizeof(ENetOutgoingCommand));
+                    fragment = (ENetOutgoingCommand*)enet_malloc((size_t)sizeof(ENetOutgoingCommand));
 
                     fragment->fragmentOffset = fragmentOffset;
                     fragment->fragmentLength = (enet_uint16)fragmentLength;
@@ -494,7 +494,7 @@ namespace enet
                     return null;
             }
 
-            acknowledgement = (ENetAcknowledgement*)enet_malloc(sizeof(ENetAcknowledgement));
+            acknowledgement = (ENetAcknowledgement*)enet_malloc((size_t)sizeof(ENetAcknowledgement));
 
             peer->outgoingDataTotal += (enet_uint32)sizeof(ENetProtocolAcknowledge);
 
@@ -575,7 +575,7 @@ namespace enet
 
         public static ENetOutgoingCommand* enet_peer_queue_outgoing_command(ENetPeer* peer, ENetProtocol* command, ENetPacket* packet, enet_uint32 offset, enet_uint16 length)
         {
-            ENetOutgoingCommand* outgoingCommand = (ENetOutgoingCommand*)enet_malloc(sizeof(ENetOutgoingCommand));
+            ENetOutgoingCommand* outgoingCommand = (ENetOutgoingCommand*)enet_malloc((size_t)sizeof(ENetOutgoingCommand));
 
             outgoingCommand->command = *command;
             outgoingCommand->fragmentOffset = offset;
@@ -832,7 +832,7 @@ namespace enet
             if (packet == null)
                 goto notifyError;
 
-            incomingCommand = (ENetIncomingCommand*)enet_malloc(sizeof(ENetIncomingCommand));
+            incomingCommand = (ENetIncomingCommand*)enet_malloc((size_t)sizeof(ENetIncomingCommand));
 
             incomingCommand->reliableSequenceNumber = command->header.reliableSequenceNumber;
             incomingCommand->unreliableSequenceNumber = (enet_uint16)(unreliableSequenceNumber & 0xFFFF);

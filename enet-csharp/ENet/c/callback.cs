@@ -1,4 +1,4 @@
-﻿using size_t = nint;
+﻿using size_t = nuint;
 using ENetVersion = uint;
 
 #pragma warning disable CA2211

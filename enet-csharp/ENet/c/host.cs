@@ -1,4 +1,4 @@
-﻿using size_t = nint;
+﻿using size_t = nuint;
 using enet_uint8 = byte;
 using enet_uint16 = ushort;
 using enet_uint32 = uint;
@@ -28,11 +28,11 @@ namespace enet
             if (peerCount > ENET_PROTOCOL_MAXIMUM_PEER_ID)
                 return null;
 
-            host = (ENetHost*)enet_malloc(sizeof(ENetHost));
-            memset(host, 0, sizeof(ENetHost));
+            host = (ENetHost*)enet_malloc((size_t)sizeof(ENetHost));
+            memset(host, 0, (size_t)sizeof(ENetHost));
 
-            host->peers = (ENetPeer*)enet_malloc(peerCount * sizeof(ENetPeer));
-            memset(host->peers, 0, peerCount * sizeof(ENetPeer));
+            host->peers = (ENetPeer*)enet_malloc(peerCount * (size_t)sizeof(ENetPeer));
+            memset(host->peers, 0, peerCount * (size_t)sizeof(ENetPeer));
 
             host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
             if (host->socket == ENET_SOCKET_NULL || (address != null && enet_socket_bind(host->socket, address) < 0))
@@ -172,7 +172,7 @@ namespace enet
             if (currentPeer >= &host->peers[host->peerCount])
                 return null;
 
-            currentPeer->channels = (ENetChannel*)enet_malloc(channelCount * sizeof(ENetChannel));
+            currentPeer->channels = (ENetChannel*)enet_malloc(channelCount * (size_t)sizeof(ENetChannel));
 
             currentPeer->channelCount = channelCount;
             currentPeer->state = ENET_PEER_STATE_CONNECTING;

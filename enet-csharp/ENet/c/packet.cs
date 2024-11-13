@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using size_t = nint;
+using size_t = nuint;
 using enet_uint8 = byte;
 using enet_uint32 = uint;
 using static enet.ENetPacketFlag;
@@ -14,7 +14,7 @@ namespace enet
     {
         public static ENetPacket* enet_packet_create(void* data, size_t dataLength, enet_uint32 flags)
         {
-            ENetPacket* packet = (ENetPacket*)enet_malloc(sizeof(ENetPacket));
+            ENetPacket* packet = (ENetPacket*)enet_malloc((size_t)sizeof(ENetPacket));
 
             if ((flags & (enet_uint32)ENET_PACKET_FLAG_NO_ALLOCATE) != 0)
                 packet->data = (enet_uint8*)data;

@@ -1,4 +1,4 @@
-﻿using size_t = nint;
+﻿using size_t = nuint;
 using unsafe ENetListIterator = enet.ENetListNode*;
 
 // ReSharper disable ALL

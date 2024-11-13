@@ -2,7 +2,8 @@
 using System.Runtime.InteropServices;
 using System.Security;
 using ENetSocket = long;
-using size_t = nint;
+using size_t = nuint;
+using enet_uint8 = byte;
 using enet_uint32 = uint;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
@@ -62,7 +63,7 @@ namespace enet
             switch (option)
             {
                 case ENetSocketOption.ENET_SOCKOPT_NONBLOCK:
-                    result = enet_socket_set_nonblocking(socket, (byte)value);
+                    result = enet_socket_set_nonblocking(socket, (enet_uint8)value);
                     break;
                 case ENetSocketOption.ENET_SOCKOPT_BROADCAST:
                     result = enet_socket_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value, 4);
@@ -96,7 +97,7 @@ namespace enet
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_set_nonblocking", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int enet_socket_set_nonblocking(ENetSocket socket, byte nonBlocking);
+        public static extern int enet_socket_set_nonblocking(ENetSocket socket, enet_uint8 nonBlocking);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_set_option", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_socket_set_option(ENetSocket socket, SocketOptionLevel level, SocketOptionName optionName, int* optionValue, int optionLength);
@@ -112,15 +113,15 @@ namespace enet
                 return enet_socket_send(socket, address, buffers[0].data, buffers[0].dataLength);
             else
             {
-                int totalLength = 0;
-                for (int i = 0; i < bufferCount; ++i)
-                    totalLength += (int)buffers[i].dataLength;
-                byte* buffer = stackalloc byte[totalLength];
-                int offset = 0;
-                for (int i = 0; i < bufferCount; ++i)
+                size_t totalLength = 0;
+                for (size_t i = 0; i < bufferCount; ++i)
+                    totalLength += buffers[i].dataLength;
+                enet_uint8* buffer = stackalloc enet_uint8[(int)totalLength];
+                size_t offset = 0;
+                for (size_t i = 0; i < bufferCount; ++i)
                 {
                     memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
-                    offset += (int)buffers[i].dataLength;
+                    offset += buffers[i].dataLength;
                 }
 
                 return enet_socket_send(socket, address, buffer, totalLength);
