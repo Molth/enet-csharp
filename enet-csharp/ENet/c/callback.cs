@@ -9,7 +9,7 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static ENetCallbacks callbacks = new(&malloc, &free);
+        public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free);
 
         public static int enet_initialize_with_callbacks(ENetVersion version, ENetCallbacks* inits)
         {
