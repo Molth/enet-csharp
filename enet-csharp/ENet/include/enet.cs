@@ -90,11 +90,7 @@ namespace enet
 
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            ref int local = ref Unsafe.As<ENetIP, int>(ref this);
-            return local ^ Unsafe.Add<int>(ref local, 1) ^ Unsafe.Add<int>(ref local, 2) ^ Unsafe.Add<int>(ref local, 3);
-        }
+        public override int GetHashCode() => enet_xxhash_32((enet_uint8*)Unsafe.AsPointer(ref this), 16);
 
         public override string ToString()
         {
@@ -119,11 +115,7 @@ namespace enet
         public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            ref int local = ref Unsafe.As<ENetAddress, int>(ref this);
-            return local ^ Unsafe.Add<int>(ref local, 1) ^ Unsafe.Add<int>(ref local, 2) ^ Unsafe.Add<int>(ref local, 3) ^ Unsafe.Add<int>(ref local, 4);
-        }
+        public override int GetHashCode() => host.GetHashCode() ^ (int)port;
 
         public override string ToString()
         {

@@ -3,6 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using size_t = nuint;
 using enet_uint8 = byte;
+#if !NET6_0_OR_GREATER
+using ssize_t = nint;
+#endif
 
 // ReSharper disable ALL
 
@@ -15,7 +18,7 @@ namespace enet
 #if NET6_0_OR_GREATER
             return NativeMemory.Alloc((nuint)size);
 #else
-            return (void*)Marshal.AllocHGlobal((nint)size);
+            return (void*)Marshal.AllocHGlobal((ssize_t)size);
 #endif
         }
 
@@ -24,7 +27,7 @@ namespace enet
 #if NET6_0_OR_GREATER
             NativeMemory.Free(memory);
 #else
-            Marshal.FreeHGlobal((nint)memory);
+            Marshal.FreeHGlobal((ssize_t)memory);
 #endif
         }
 
