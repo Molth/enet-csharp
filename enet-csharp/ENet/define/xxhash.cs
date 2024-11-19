@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using size_t = nuint;
 using ssize_t = nint;
 using enet_uint8 = byte;
 using enet_uint32 = uint;
@@ -9,7 +10,7 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static int xxhash_32(void* buffer, enet_uint32 byteCount, enet_uint32 seed)
+        public static int xxhash_32(void* buffer, size_t byteCount, enet_uint32 seed)
         {
             enet_uint32 num1 = 0;
             enet_uint32 num2 = 0;

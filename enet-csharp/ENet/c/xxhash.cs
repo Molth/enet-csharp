@@ -1,4 +1,5 @@
-﻿using enet_uint32 = uint;
+﻿using size_t = nuint;
+using enet_uint32 = uint;
 
 // ReSharper disable ALL
 
@@ -8,6 +9,6 @@ namespace enet
     {
         public const enet_uint32 ENET_XXHASH_SEED = 0;
 
-        public static int enet_xxhash_32(void* buffer, enet_uint32 byteCount) => xxhash_32(buffer, byteCount, ENET_XXHASH_SEED);
+        public static int enet_xxhash_32(void* buffer, size_t byteCount) => xxhash_32(buffer, byteCount, ENET_XXHASH_SEED);
     }
 }
