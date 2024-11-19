@@ -481,7 +481,7 @@ namespace enet
         public ENetPacketDataBuffer buffer0;
         public ENetPacketDataBuffer buffer1;
 
-        public enet_uint8* this[int i] => ((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this))[i].data;
+        public enet_uint8* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this)) + i)->data;
     }
 
     public unsafe struct ENetPacketDataBuffer
