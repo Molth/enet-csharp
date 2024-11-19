@@ -9,7 +9,7 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static int xxhash_32(enet_uint8* buffer, enet_uint32 byteCount, enet_uint32 seed)
+        public static int xxhash_32(void* buffer, enet_uint32 byteCount, enet_uint32 seed)
         {
             enet_uint32 num1 = 0;
             enet_uint32 num2 = 0;
@@ -19,7 +19,7 @@ namespace enet
             enet_uint32 num6 = 0;
             enet_uint32 num7 = 0;
             enet_uint32 num8 = 0;
-            ref enet_uint8 local1 = ref *buffer;
+            ref enet_uint8 local1 = ref *(enet_uint8*)buffer;
 #if NET6_0_OR_GREATER
             ref enet_uint8 local2 = ref Unsafe.Add(ref local1, byteCount);
 #else

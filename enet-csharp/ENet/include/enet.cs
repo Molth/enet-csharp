@@ -90,7 +90,7 @@ namespace enet
 
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
 
-        public override int GetHashCode() => enet_xxhash_32((enet_uint8*)Unsafe.AsPointer(ref this), 16);
+        public override int GetHashCode() => enet_xxhash_32(Unsafe.AsPointer(ref this), 16);
 
         public override string ToString()
         {
