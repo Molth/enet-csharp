@@ -26,7 +26,9 @@ namespace enet
         public static void enet_socket_destroy(ENetSocket* socket) => ENet.enet_socket_destroy(socket);
 
         public static int enet_address_set_host_ip(ENetIP* address, string hostName) => ENet.enet_address_set_host_ip(address, hostName);
+        public static int enet_address_set_host(ENetIP* address, string hostName) => ENet.enet_address_set_host(address, hostName);
         public static int enet_address_get_host_ip(ENetIP* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host_ip(address, hostName, nameLength);
+        public static int enet_address_get_host(ENetIP* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host(address, hostName, nameLength);
 
         public static ENetPacket* enet_packet_create(void* data, size_t dataLength, enet_uint32 flags) => ENet.enet_packet_create(data, dataLength, flags);
         public static void enet_packet_destroy(ENetPacket* packet) => ENet.enet_packet_destroy(packet);
