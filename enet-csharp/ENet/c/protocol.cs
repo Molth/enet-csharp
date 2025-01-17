@@ -1223,7 +1223,8 @@ namespace enet
 
                 receivedLength = enet_socket_receive(host->socket,
                     &host->receivedAddress,
-                    &buffer);
+                    &buffer,
+                    1);
 
                 if (receivedLength == -2)
                     continue;
