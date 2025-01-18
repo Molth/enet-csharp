@@ -659,7 +659,8 @@ namespace enet
 
             fragmentLength = ENET_NET_TO_HOST_16(command->sendFragment.dataLength);
             *currentData += fragmentLength;
-            if (fragmentLength > host->maximumPacketSize ||
+            if (fragmentLength <= 0 ||
+                fragmentLength > host->maximumPacketSize ||
                 *currentData < host->receivedData ||
                 *currentData > &host->receivedData[host->receivedDataLength])
                 return -1;
@@ -689,6 +690,7 @@ namespace enet
             if (fragmentCount > ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT ||
                 fragmentNumber >= fragmentCount ||
                 totalLength > host->maximumPacketSize ||
+                totalLength < fragmentCount ||
                 fragmentOffset >= totalLength ||
                 fragmentLength > totalLength - fragmentOffset)
                 return -1;
