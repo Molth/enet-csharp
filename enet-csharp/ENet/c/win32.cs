@@ -191,24 +191,24 @@ namespace enet
         public static int enet_address_set_host_ip(ENetIP* address, ReadOnlySpan<char> hostName)
         {
             int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            Span<byte> buffer = stackalloc byte[byteCount];
-            Encoding.ASCII.GetBytes(hostName, buffer);
-            return nanosockets_address_set_ip(address, ref MemoryMarshal.GetReference(buffer));
+            enet_uint8* buffer = stackalloc enet_uint8[byteCount];
+            Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
+            return nanosockets_address_set_ip(address, buffer);
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_set_ip", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int nanosockets_address_set_ip(ENetIP* address, ref byte hostName);
+        public static extern int nanosockets_address_set_ip(ENetIP* address, enet_uint8* hostName);
 
         public static int enet_address_set_host(ENetIP* address, ReadOnlySpan<char> hostName)
         {
             int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            Span<byte> buffer = stackalloc byte[byteCount];
-            Encoding.ASCII.GetBytes(hostName, buffer);
-            return nanosockets_address_set_hostname(address, ref MemoryMarshal.GetReference(buffer));
+            enet_uint8* buffer = stackalloc enet_uint8[byteCount];
+            Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
+            return nanosockets_address_set_hostname(address, buffer);
         }
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_set_hostname", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int nanosockets_address_set_hostname(ENetIP* address, ref byte hostName);
+        public static extern int nanosockets_address_set_hostname(ENetIP* address, enet_uint8* hostName);
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_address_get_ip", CallingConvention = CallingConvention.Cdecl)]
         public static extern int enet_address_get_host_ip(ENetIP* address, enet_uint8* hostName, size_t nameLength);
