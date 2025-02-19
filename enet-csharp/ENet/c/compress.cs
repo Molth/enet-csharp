@@ -214,7 +214,7 @@ namespace enet
                         }
                     }
                     ;
-                    *parent = (enet_uint16)(symbol - &rangeCoder->symbols[0]);
+                    *parent = (enet_uint16)(symbol - rangeCoder->symbols);
                     parent = &symbol->parent;
                     total = subcontext->total;
 
@@ -372,7 +372,7 @@ namespace enet
                     }
                 }
                 ;
-                *parent = (enet_uint16)(symbol - &rangeCoder->symbols[0]);
+                *parent = (enet_uint16)(symbol - rangeCoder->symbols);
                 parent = &symbol->parent;
                 total = root->total;
 
@@ -593,7 +593,7 @@ namespace enet
                         }
                         ;
                     }
-                    bottom = (enet_uint16)(symbol - &rangeCoder->symbols[0]);
+                    bottom = (enet_uint16)(symbol - rangeCoder->symbols);
                     {
                         decodeLow += (enet_uint32)((subcontext->escapes + under) * decodeRange);
                         decodeRange *= (count);
@@ -757,7 +757,7 @@ namespace enet
                     }
                     ;
                 }
-                bottom = (enet_uint16)(symbol - &rangeCoder->symbols[0]);
+                bottom = (enet_uint16)(symbol - rangeCoder->symbols);
                 {
                     decodeLow += (enet_uint32)((root->escapes + under) * decodeRange);
                     decodeRange *= (count);
@@ -878,7 +878,7 @@ namespace enet
                         }
                     }
                     ;
-                    *parent = (enet_uint16)(symbol - &rangeCoder->symbols[0]);
+                    *parent = (enet_uint16)(symbol - rangeCoder->symbols);
                     parent = &symbol->parent;
                     if (count <= 0)
                     {
