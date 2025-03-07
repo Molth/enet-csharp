@@ -59,16 +59,16 @@ namespace enet
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ip(ENetIP* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ip(address, hostName);
+        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ip(address, hostName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host(ENetIP* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host(address, hostName);
+        public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host(address, hostName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host_ip(ENetIP* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host_ip(address, hostName, nameLength);
+        public static int enet_address_get_host_ip(ENetAddress* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host_ip(address, hostName, nameLength);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host(ENetIP* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host(address, hostName, nameLength);
+        public static int enet_address_get_host(ENetAddress* address, enet_uint8* hostName, size_t nameLength) => ENet.enet_address_get_host(address, hostName, nameLength);
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

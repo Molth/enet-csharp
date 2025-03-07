@@ -95,7 +95,7 @@ namespace enet
         public override string ToString()
         {
             enet_uint8* buffer = stackalloc enet_uint8[64];
-            _ = enet_address_get_host_ip((ENetIP*)Unsafe.AsPointer(ref this), buffer, 64);
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
             return new string((sbyte*)buffer);
         }
 
@@ -120,7 +120,7 @@ namespace enet
         public override string ToString()
         {
             enet_uint8* buffer = stackalloc enet_uint8[64];
-            _ = enet_address_get_host_ip((ENetIP*)Unsafe.AsPointer(ref this.host), buffer, 64);
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref this.host), buffer, 64);
             return new string((sbyte*)buffer) + ":" + port;
         }
 

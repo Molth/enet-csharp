@@ -7,6 +7,7 @@ using static enet.ENetSocketType;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
+using static NanoSockets.NanoSockets;
 
 // ReSharper disable ALL
 
