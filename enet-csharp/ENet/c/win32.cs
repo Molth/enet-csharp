@@ -9,7 +9,7 @@ using enet_uint32 = uint;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
-using static NanoSockets.NanoSockets;
+using static NanoSockets.UDP;
 
 #pragma warning disable CA1401
 #pragma warning disable CA2101

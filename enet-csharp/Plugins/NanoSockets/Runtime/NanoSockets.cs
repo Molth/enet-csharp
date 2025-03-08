@@ -43,7 +43,7 @@ namespace NanoSockets
     }
 
     [SuppressUnmanagedCodeSecurity]
-    public static unsafe class NanoSockets
+    public static unsafe class UDP
     {
 #if __IOS__ || (UNITY_IOS && !UNITY_EDITOR)
         private const string NATIVE_LIBRARY = "__Internal";
