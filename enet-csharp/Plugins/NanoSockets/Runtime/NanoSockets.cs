@@ -16,7 +16,7 @@ namespace NanoSockets
     {
         [FieldOffset(0)] public fixed byte S_un_b[4];
         [FieldOffset(0)] public fixed ushort S_un_w[2];
-        [FieldOffset(0)] public ulong S_addr;
+        [FieldOffset(0)] public uint S_addr;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 16)]
