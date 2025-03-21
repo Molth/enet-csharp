@@ -9,6 +9,8 @@ using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;
 using static enet.ENetPeerFlag;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

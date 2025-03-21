@@ -15,6 +15,7 @@ using static NanoSockets.UDP;
 #pragma warning disable CA2101
 #pragma warning disable CA2211
 #pragma warning disable SYSLIB1054
+#pragma warning disable CS1591
 
 // ReSharper disable ALL
 

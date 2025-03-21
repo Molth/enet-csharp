@@ -7,6 +7,8 @@ using enet_uint8 = byte;
 using ssize_t = nint;
 #endif
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

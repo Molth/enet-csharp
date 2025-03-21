@@ -7,6 +7,8 @@ using enet_uint32 = uint;
 using ENetSocket = long;
 using ENetVersion = uint;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

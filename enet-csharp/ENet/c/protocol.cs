@@ -14,6 +14,8 @@ using static enet.ENetProtocolFlag;
 using static enet.ENetSocketWait;
 using unsafe ENetListIterator = enet.ENetListNode*;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

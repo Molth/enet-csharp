@@ -1,6 +1,7 @@
 ﻿using size_t = nuint;
 using ENetVersion = uint;
 
+#pragma warning disable CS1591
 #pragma warning disable CA2211
 
 // ReSharper disable ALL

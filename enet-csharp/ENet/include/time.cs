@@ -1,5 +1,7 @@
 ﻿using enet_uint32 = uint;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

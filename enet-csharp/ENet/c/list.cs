@@ -1,6 +1,8 @@
 ﻿using size_t = nuint;
 using unsafe ENetListIterator = enet.ENetListNode*;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

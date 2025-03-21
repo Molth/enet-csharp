@@ -6,6 +6,8 @@ using enet_uint8 = byte;
 using enet_uint32 = uint;
 using static enet.ENetPacketFlag;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet

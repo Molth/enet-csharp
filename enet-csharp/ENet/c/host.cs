@@ -8,6 +8,8 @@ using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 
+#pragma warning disable CS1591
+
 // ReSharper disable ALL
 
 namespace enet
