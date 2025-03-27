@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet_best</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -25,26 +25,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="Plugins\NanoSockets\Windows\nanosockets.dll">
+        <Content Include="Plugins\NanoSockets\Windows\nanosockets.dll">
             <Pack>true</Pack>
             <PackagePath>runtimes/any/native/nanosockets.dll</PackagePath>
             <Link>nanosockets.dll</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
 
-        <None Include="Plugins\NanoSockets\Linux\libnanosockets.so">
+        <Content Include="Plugins\NanoSockets\Linux\libnanosockets.so">
             <Pack>true</Pack>
             <PackagePath>runtimes/any/native/libnanosockets.so</PackagePath>
             <Link>libnanosockets.so</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
 
-        <None Include="Plugins\NanoSockets\macOS\libnanosockets.dylib">
+        <Content Include="Plugins\NanoSockets\macOS\libnanosockets.dylib">
             <Pack>true</Pack>
             <PackagePath>runtimes/any/native/libnanosockets.dylib</PackagePath>
             <Link>libnanosockets.dylib</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
