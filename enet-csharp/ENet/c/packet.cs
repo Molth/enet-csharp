@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using size_t = nuint;
-using enet_uint8 = byte;
-using enet_uint32 = uint;
 using static enet.ENetPacketFlag;
 
 #pragma warning disable CS1591
@@ -14,17 +11,17 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static ENetPacket* enet_packet_create(void* data, size_t dataLength, enet_uint32 flags)
+        public static ENetPacket* enet_packet_create(void* data, nuint dataLength, uint flags)
         {
-            ENetPacket* packet = (ENetPacket*)enet_malloc((size_t)sizeof(ENetPacket));
+            ENetPacket* packet = (ENetPacket*)enet_malloc((nuint)sizeof(ENetPacket));
 
-            if ((flags & (enet_uint32)ENET_PACKET_FLAG_NO_ALLOCATE) != 0)
-                packet->data = (enet_uint8*)data;
+            if ((flags & (uint)ENET_PACKET_FLAG_NO_ALLOCATE) != 0)
+                packet->data = (byte*)data;
             else if (dataLength <= 0)
                 packet->data = null;
             else
             {
-                packet->data = (enet_uint8*)enet_malloc(dataLength);
+                packet->data = (byte*)enet_malloc(dataLength);
 
                 if (data != null)
                     memcpy(packet->data, data, dataLength);
@@ -46,24 +43,24 @@ namespace enet
 
             if (packet->freeCallback != null)
                 (packet->freeCallback)(packet);
-            if (!((packet->flags & (enet_uint32)ENET_PACKET_FLAG_NO_ALLOCATE) != 0) &&
+            if (!((packet->flags & (uint)ENET_PACKET_FLAG_NO_ALLOCATE) != 0) &&
                 packet->data != null)
                 enet_free(packet->data);
             enet_free(packet);
         }
 
-        public static int enet_packet_resize(ENetPacket* packet, size_t dataLength)
+        public static int enet_packet_resize(ENetPacket* packet, nuint dataLength)
         {
-            enet_uint8* newData;
+            byte* newData;
 
-            if (dataLength <= packet->dataLength || ((packet->flags & (enet_uint32)ENET_PACKET_FLAG_NO_ALLOCATE) != 0))
+            if (dataLength <= packet->dataLength || ((packet->flags & (uint)ENET_PACKET_FLAG_NO_ALLOCATE) != 0))
             {
                 packet->dataLength = dataLength;
 
                 return 0;
             }
 
-            newData = (enet_uint8*)enet_malloc(dataLength);
+            newData = (byte*)enet_malloc(dataLength);
 
             if (packet->data != null)
             {
@@ -79,7 +76,7 @@ namespace enet
             return 0;
         }
 
-        public static ReadOnlySpan<enet_uint32> crcTable => new enet_uint32[256]
+        public static ReadOnlySpan<uint> crcTable => new uint[256]
         {
             0, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
             0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
@@ -115,14 +112,14 @@ namespace enet
             0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
         };
 
-        public static enet_uint32 enet_crc32(ENetBuffer* buffers, size_t bufferCount)
+        public static uint enet_crc32(ENetBuffer* buffers, nuint bufferCount)
         {
-            enet_uint32 crc = 0xFFFFFFFF;
+            uint crc = 0xFFFFFFFF;
 
             while (bufferCount-- > 0)
             {
-                enet_uint8* data = (enet_uint8*)buffers->data;
-                enet_uint8* dataEnd = &data[buffers->dataLength];
+                byte* data = (byte*)buffers->data;
+                byte* dataEnd = &data[buffers->dataLength];
 
                 while (data < dataEnd)
                 {

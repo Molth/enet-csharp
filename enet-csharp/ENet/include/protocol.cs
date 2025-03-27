@@ -1,7 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using enet_uint8 = byte;
-using enet_uint16 = ushort;
-using enet_uint32 = uint;
 
 #pragma warning disable CS1591
 
@@ -11,15 +8,15 @@ namespace enet
 {
     public static partial class ENet
     {
-        public const enet_uint32 ENET_PROTOCOL_MINIMUM_MTU = 576;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_MTU = 4096;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS = 32;
-        public const enet_uint32 ENET_PROTOCOL_MINIMUM_WINDOW_SIZE = 4096;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE = 65536;
-        public const enet_uint32 ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT = 1;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT = 255;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_PEER_ID = 0xFFF;
-        public const enet_uint32 ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT = 1024 * 1024;
+        public const uint ENET_PROTOCOL_MINIMUM_MTU = 576;
+        public const uint ENET_PROTOCOL_MAXIMUM_MTU = 4096;
+        public const uint ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS = 32;
+        public const uint ENET_PROTOCOL_MINIMUM_WINDOW_SIZE = 4096;
+        public const uint ENET_PROTOCOL_MAXIMUM_WINDOW_SIZE = 65536;
+        public const uint ENET_PROTOCOL_MINIMUM_CHANNEL_COUNT = 1;
+        public const uint ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT = 255;
+        public const uint ENET_PROTOCOL_MAXIMUM_PEER_ID = 0xFFF;
+        public const uint ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT = 1024 * 1024;
     }
 
     public enum ENetProtocolCommand
@@ -57,78 +54,78 @@ namespace enet
 
     public struct ENetProtocolHeader
     {
-        public enet_uint16 peerID;
-        public enet_uint16 sentTime;
+        public ushort peerID;
+        public ushort sentTime;
     }
 
     public struct ENetProtocolCommandHeader
     {
-        public enet_uint8 command;
-        public enet_uint8 channelID;
-        public enet_uint16 reliableSequenceNumber;
+        public byte command;
+        public byte channelID;
+        public ushort reliableSequenceNumber;
     }
 
     public struct ENetProtocolAcknowledge
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 receivedReliableSequenceNumber;
-        public enet_uint16 receivedSentTime;
+        public ushort receivedReliableSequenceNumber;
+        public ushort receivedSentTime;
     }
 
     public struct ENetProtocolConnect
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 outgoingPeerID;
-        public enet_uint8 incomingSessionID;
-        public enet_uint8 outgoingSessionID;
-        public enet_uint32 mtu;
-        public enet_uint32 windowSize;
-        public enet_uint32 channelCount;
-        public enet_uint32 incomingBandwidth;
-        public enet_uint32 outgoingBandwidth;
-        public enet_uint32 packetThrottleInterval;
-        public enet_uint32 packetThrottleAcceleration;
-        public enet_uint32 packetThrottleDeceleration;
-        public enet_uint32 connectID;
-        public enet_uint32 data;
+        public ushort outgoingPeerID;
+        public byte incomingSessionID;
+        public byte outgoingSessionID;
+        public uint mtu;
+        public uint windowSize;
+        public uint channelCount;
+        public uint incomingBandwidth;
+        public uint outgoingBandwidth;
+        public uint packetThrottleInterval;
+        public uint packetThrottleAcceleration;
+        public uint packetThrottleDeceleration;
+        public uint connectID;
+        public uint data;
     }
 
     public struct ENetProtocolVerifyConnect
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 outgoingPeerID;
-        public enet_uint8 incomingSessionID;
-        public enet_uint8 outgoingSessionID;
-        public enet_uint32 mtu;
-        public enet_uint32 windowSize;
-        public enet_uint32 channelCount;
-        public enet_uint32 incomingBandwidth;
-        public enet_uint32 outgoingBandwidth;
-        public enet_uint32 packetThrottleInterval;
-        public enet_uint32 packetThrottleAcceleration;
-        public enet_uint32 packetThrottleDeceleration;
-        public enet_uint32 connectID;
+        public ushort outgoingPeerID;
+        public byte incomingSessionID;
+        public byte outgoingSessionID;
+        public uint mtu;
+        public uint windowSize;
+        public uint channelCount;
+        public uint incomingBandwidth;
+        public uint outgoingBandwidth;
+        public uint packetThrottleInterval;
+        public uint packetThrottleAcceleration;
+        public uint packetThrottleDeceleration;
+        public uint connectID;
     }
 
     public struct ENetProtocolBandwidthLimit
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint32 incomingBandwidth;
-        public enet_uint32 outgoingBandwidth;
+        public uint incomingBandwidth;
+        public uint outgoingBandwidth;
     }
 
     public struct ENetProtocolThrottleConfigure
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint32 packetThrottleInterval;
-        public enet_uint32 packetThrottleAcceleration;
-        public enet_uint32 packetThrottleDeceleration;
+        public uint packetThrottleInterval;
+        public uint packetThrottleAcceleration;
+        public uint packetThrottleDeceleration;
     }
 
     public struct ENetProtocolDisconnect
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint32 data;
+        public uint data;
     }
 
     public struct ENetProtocolPing
@@ -139,32 +136,32 @@ namespace enet
     public struct ENetProtocolSendReliable
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 dataLength;
+        public ushort dataLength;
     }
 
     public struct ENetProtocolSendUnreliable
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 unreliableSequenceNumber;
-        public enet_uint16 dataLength;
+        public ushort unreliableSequenceNumber;
+        public ushort dataLength;
     }
 
     public struct ENetProtocolSendUnsequenced
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 unsequencedGroup;
-        public enet_uint16 dataLength;
+        public ushort unsequencedGroup;
+        public ushort dataLength;
     }
 
     public struct ENetProtocolSendFragment
     {
         public ENetProtocolCommandHeader header;
-        public enet_uint16 startSequenceNumber;
-        public enet_uint16 dataLength;
-        public enet_uint32 fragmentCount;
-        public enet_uint32 fragmentNumber;
-        public enet_uint32 totalLength;
-        public enet_uint32 fragmentOffset;
+        public ushort startSequenceNumber;
+        public ushort dataLength;
+        public uint fragmentCount;
+        public uint fragmentNumber;
+        public uint totalLength;
+        public uint fragmentOffset;
     }
 
     [StructLayout(LayoutKind.Explicit)]

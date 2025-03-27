@@ -1,6 +1,4 @@
-﻿using enet_uint32 = uint;
-
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 
 // ReSharper disable ALL
 
@@ -8,8 +6,8 @@ namespace enet
 {
     public static partial class ENet
     {
-        public static enet_uint32 ENET_MAX(enet_uint32 x, enet_uint32 y) => ((x) > (y) ? (x) : (y));
-        public static enet_uint32 ENET_MIN(enet_uint32 x, enet_uint32 y) => ((x) < (y) ? (x) : (y));
-        public static enet_uint32 ENET_DIFFERENCE(enet_uint32 x, enet_uint32 y) => ((x) < (y) ? (y) - (x) : (x) - (y));
+        public static uint ENET_MAX(uint x, uint y) => ((x) > (y) ? (x) : (y));
+        public static uint ENET_MIN(uint x, uint y) => ((x) < (y) ? (x) : (y));
+        public static uint ENET_DIFFERENCE(uint x, uint y) => ((x) < (y) ? (y) - (x) : (x) - (y));
     }
 }

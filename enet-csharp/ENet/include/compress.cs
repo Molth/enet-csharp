@@ -1,7 +1,4 @@
-﻿using enet_uint8 = byte;
-using enet_uint16 = ushort;
-
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 
 // ReSharper disable ALL
 
@@ -9,16 +6,16 @@ namespace enet
 {
     public struct ENetSymbol
     {
-        public enet_uint8 value;
-        public enet_uint8 count;
-        public enet_uint16 under;
-        public enet_uint16 left;
-        public enet_uint16 right;
+        public byte value;
+        public byte count;
+        public ushort under;
+        public ushort left;
+        public ushort right;
 
-        public enet_uint16 symbols;
-        public enet_uint16 escapes;
-        public enet_uint16 total;
-        public enet_uint16 parent;
+        public ushort symbols;
+        public ushort escapes;
+        public ushort total;
+        public ushort parent;
     }
 
     [ENetArray(4096)]

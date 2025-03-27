@@ -2,10 +2,6 @@
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
-using ENetSocket = long;
-using size_t = nuint;
-using enet_uint8 = byte;
-using enet_uint32 = uint;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
@@ -25,23 +21,23 @@ namespace enet
     {
         public const int SOCKET_ERROR = -1;
 
-        public static enet_uint32 timeBase = 0;
+        public static uint timeBase = 0;
 
         public static int enet_initialize() => nanosockets_initialize();
 
         public static void enet_deinitialize() => nanosockets_deinitialize();
 
-        public static enet_uint32 enet_host_random_seed() => (enet_uint32)timeGetTime();
+        public static uint enet_host_random_seed() => (uint)timeGetTime();
 
-        public static enet_uint32 enet_time_get() => (enet_uint32)timeGetTime() - timeBase;
+        public static uint enet_time_get() => (uint)timeGetTime() - timeBase;
 
-        public static void enet_time_set(enet_uint32 newTimeBase) => timeBase = (enet_uint32)timeGetTime() - newTimeBase;
+        public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
-        public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => nanosockets_bind(socket, address);
+        public static int enet_socket_bind(long socket, ENetAddress* address) => nanosockets_bind(socket, address);
 
-        public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => nanosockets_address_get(socket, address);
+        public static int enet_socket_get_address(long socket, ENetAddress* address) => nanosockets_address_get(socket, address);
 
-        public static ENetSocket enet_socket_create(ENetSocketType type)
+        public static long enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
                 return nanosockets_create(0, 0);
@@ -49,13 +45,13 @@ namespace enet
             return INVALID_SOCKET;
         }
 
-        public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
+        public static int enet_socket_set_option(long socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
-                    result = enet_socket_set_nonblocking(socket, (enet_uint8)value);
+                    result = enet_socket_set_nonblocking(socket, (byte)value);
                     break;
                 case ENET_SOCKOPT_BROADCAST:
                     result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value, 4);
@@ -88,11 +84,11 @@ namespace enet
             return result == SOCKET_ERROR ? -1 : 0;
         }
 
-        public static int enet_socket_set_nonblocking(ENetSocket socket, enet_uint8 nonBlocking) => nanosockets_set_nonblocking(socket, nonBlocking);
+        public static int enet_socket_set_nonblocking(long socket, byte nonBlocking) => nanosockets_set_nonblocking(socket, nonBlocking);
 
-        public static void enet_socket_destroy(ENetSocket* socket) => nanosockets_destroy(socket);
+        public static void enet_socket_destroy(long* socket) => nanosockets_destroy(socket);
 
-        public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
+        public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             if (bufferCount == 0)
                 return 0;
@@ -100,12 +96,12 @@ namespace enet
                 return nanosockets_send(socket, address, buffers[0].data, (int)buffers[0].dataLength);
             else
             {
-                size_t totalLength = 0;
-                for (size_t i = 0; i < bufferCount; ++i)
+                nuint totalLength = 0;
+                for (nuint i = 0; i < bufferCount; ++i)
                     totalLength += buffers[i].dataLength;
-                enet_uint8* buffer = stackalloc enet_uint8[(int)totalLength];
-                size_t offset = 0;
-                for (size_t i = 0; i < bufferCount; ++i)
+                byte* buffer = stackalloc byte[(int)totalLength];
+                nuint offset = 0;
+                for (nuint i = 0; i < bufferCount; ++i)
                 {
                     memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
                     offset += buffers[i].dataLength;
@@ -115,7 +111,7 @@ namespace enet
             }
         }
 
-        public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, size_t bufferCount)
+        public static int enet_socket_receive(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             if (bufferCount == 0)
                 return 0;
@@ -123,22 +119,22 @@ namespace enet
                 return nanosockets_receive(socket, address, buffers->data, (int)buffers->dataLength);
             else
             {
-                size_t totalLength = 0;
-                for (size_t i = 0; i < bufferCount; ++i)
+                nuint totalLength = 0;
+                for (nuint i = 0; i < bufferCount; ++i)
                     totalLength += buffers[i].dataLength;
-                enet_uint8* buffer = stackalloc enet_uint8[(int)totalLength];
+                byte* buffer = stackalloc byte[(int)totalLength];
                 int result = nanosockets_receive(socket, address, buffer, (int)totalLength);
                 if (result <= 0)
                     return result;
                 int offset = 0;
                 int length;
-                for (size_t i = 0; i < bufferCount; ++i)
+                for (nuint i = 0; i < bufferCount; ++i)
                 {
                     length = result - offset;
                     if (length < (int)buffers[i].dataLength)
                     {
                         if (length > 0)
-                            memcpy(buffers[i].data, buffer + offset, (size_t)length);
+                            memcpy(buffers[i].data, buffer + offset, (nuint)length);
                         break;
                     }
                     else
@@ -152,21 +148,21 @@ namespace enet
             }
         }
 
-        public static int enet_socket_wait(ENetSocket socket, enet_uint32* condition, enet_uint32 timeout)
+        public static int enet_socket_wait(long socket, uint* condition, uint timeout)
         {
-            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_SEND) != 0)
+            if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
                 return 0;
-            if ((*condition & (enet_uint32)ENET_SOCKET_WAIT_RECEIVE) != 0)
+            if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
                 return enet_socket_poll(socket, timeout) > 0 ? 0 : -1;
             return 0;
         }
 
-        public static int enet_socket_poll(ENetSocket socket, enet_uint32 timeout) => nanosockets_poll(socket, timeout);
+        public static int enet_socket_poll(long socket, uint timeout) => nanosockets_poll(socket, timeout);
 
         public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
             int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            enet_uint8* buffer = stackalloc enet_uint8[byteCount];
+            byte* buffer = stackalloc byte[byteCount];
             Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
             return nanosockets_address_set_ip(address, buffer);
         }
@@ -174,13 +170,13 @@ namespace enet
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
             int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            enet_uint8* buffer = stackalloc enet_uint8[byteCount];
+            byte* buffer = stackalloc byte[byteCount];
             Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
             return nanosockets_address_set_hostname(address, buffer);
         }
 
-        public static int enet_address_get_host_ip(ENetAddress* address, enet_uint8* hostName, size_t nameLength) => nanosockets_address_get_ip(address, hostName, (int)nameLength);
+        public static int enet_address_get_host_ip(ENetAddress* address, byte* hostName, nuint nameLength) => nanosockets_address_get_ip(address, hostName, (int)nameLength);
 
-        public static int enet_address_get_host(ENetAddress* address, enet_uint8* hostName, size_t nameLength) => nanosockets_address_get_hostname(address, hostName, (int)nameLength);
+        public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength) => nanosockets_address_get_hostname(address, hostName, (int)nameLength);
     }
 }

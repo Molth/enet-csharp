@@ -1,7 +1,4 @@
-﻿using size_t = nuint;
-using unsafe ENetListIterator = enet.ENetListNode*;
-
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 
 // ReSharper disable ALL
 
@@ -15,9 +12,9 @@ namespace enet
             list->sentinel.previous = &list->sentinel;
         }
 
-        public static ENetListIterator enet_list_insert(ENetListIterator position, void* data)
+        public static ENetListNode* enet_list_insert(ENetListNode* position, void* data)
         {
-            ENetListIterator result = (ENetListIterator)data;
+            ENetListNode* result = (ENetListNode*)data;
 
             result->previous = position->previous;
             result->next = position;
@@ -28,7 +25,7 @@ namespace enet
             return result;
         }
 
-        public static void* enet_list_remove(ENetListIterator position)
+        public static void* enet_list_remove(ENetListNode* position)
         {
             position->previous->next = position->next;
             position->next->previous = position->previous;
@@ -36,10 +33,10 @@ namespace enet
             return position;
         }
 
-        public static ENetListIterator enet_list_move(ENetListIterator position, void* dataFirst, void* dataLast)
+        public static ENetListNode* enet_list_move(ENetListNode* position, void* dataFirst, void* dataLast)
         {
-            ENetListIterator first = (ENetListIterator)dataFirst,
-                last = (ENetListIterator)dataLast;
+            ENetListNode* first = (ENetListNode*)dataFirst,
+                last = (ENetListNode*)dataLast;
 
             first->previous->next = last->next;
             last->next->previous = first->previous;
@@ -53,10 +50,10 @@ namespace enet
             return first;
         }
 
-        public static size_t enet_list_size(ENetList* list)
+        public static nuint enet_list_size(ENetList* list)
         {
-            size_t size = 0;
-            ENetListIterator position;
+            nuint size = 0;
+            ENetListNode* position;
 
             for (position = enet_list_begin(list);
                  position != enet_list_end(list);

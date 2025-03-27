@@ -1,7 +1,4 @@
-﻿using size_t = nuint;
-using ENetVersion = uint;
-
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 #pragma warning disable CA2211
 
 // ReSharper disable ALL
@@ -12,7 +9,7 @@ namespace enet
     {
         public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free);
 
-        public static int enet_initialize_with_callbacks(ENetVersion version, ENetCallbacks* inits)
+        public static int enet_initialize_with_callbacks(uint version, ENetCallbacks* inits)
         {
             if (version < ENET_VERSION_CREATE(1, 3, 0))
                 return -1;
@@ -29,9 +26,9 @@ namespace enet
             return enet_initialize();
         }
 
-        public static ENetVersion enet_linked_version() => ENET_VERSION;
+        public static uint enet_linked_version() => ENET_VERSION;
 
-        public static void* enet_malloc(size_t size) => callbacks.malloc(size);
+        public static void* enet_malloc(nuint size) => callbacks.malloc(size);
 
         public static void enet_free(void* memory) => callbacks.free(memory);
     }

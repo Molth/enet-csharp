@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Buffers.Binary;
-using size_t = nuint;
-using enet_uint16 = ushort;
-using enet_uint32 = uint;
 
 #pragma warning disable CS1591
 
@@ -16,18 +13,18 @@ namespace enet
 
         public const long ENET_SOCKET_NULL = INVALID_SOCKET;
 
-        public static enet_uint16 ENET_HOST_TO_NET_16(enet_uint16 host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
+        public static ushort ENET_HOST_TO_NET_16(ushort host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
 
-        public static enet_uint32 ENET_HOST_TO_NET_32(enet_uint32 host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
+        public static uint ENET_HOST_TO_NET_32(uint host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
 
-        public static enet_uint16 ENET_NET_TO_HOST_16(enet_uint16 host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
+        public static ushort ENET_NET_TO_HOST_16(ushort host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
 
-        public static enet_uint32 ENET_NET_TO_HOST_32(enet_uint32 host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
+        public static uint ENET_NET_TO_HOST_32(uint host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
     }
 
     public unsafe struct ENetBuffer
     {
-        public size_t dataLength;
+        public nuint dataLength;
         public void* data;
     }
 }
