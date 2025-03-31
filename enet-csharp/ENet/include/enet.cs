@@ -361,9 +361,9 @@ namespace enet
     [AttributeUsage(AttributeTargets.Struct)]
     public sealed class ENetArrayAttribute : Attribute
     {
-        public ENetArrayAttribute(uint length)
-        {
-        }
+        public readonly uint Length;
+
+        public ENetArrayAttribute(uint length) => Length = length;
     }
 
     [ENetArray(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS)]
