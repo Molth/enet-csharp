@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet_best</PackageId>
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -25,7 +25,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-        <LangVersion>10.0</LangVersion>
+        <LangVersion>9.0</LangVersion>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
