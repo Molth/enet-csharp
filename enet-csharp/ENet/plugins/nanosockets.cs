@@ -46,11 +46,7 @@ namespace NanoSockets
     [SuppressUnmanagedCodeSecurity]
     public static unsafe class UDP
     {
-#if __IOS__ || (UNITY_IOS && !UNITY_EDITOR)
-        private const string NATIVE_LIBRARY = "__Internal";
-#else
         private const string NATIVE_LIBRARY = "nanosockets";
-#endif
 
         [DllImport(NATIVE_LIBRARY, EntryPoint = "nanosockets_initialize", CallingConvention = CallingConvention.Cdecl)]
         public static extern int nanosockets_initialize();

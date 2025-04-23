@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet_best</PackageId>
-        <Version>1.0.5</Version>
+        <Version>1.0.6</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -33,24 +33,52 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Plugins\NanoSockets\Windows\nanosockets.dll">
+        <Content Include="runtimes\android-arm\native\libnanosockets.so">
             <Pack>true</Pack>
-            <PackagePath>runtimes/any/native/nanosockets.dll</PackagePath>
-            <Link>nanosockets.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
-
-        <Content Include="Plugins\NanoSockets\Linux\libnanosockets.so">
-            <Pack>true</Pack>
-            <PackagePath>runtimes/any/native/libnanosockets.so</PackagePath>
+            <PackagePath>runtimes\android-arm\native\libnanosockets.so</PackagePath>
             <Link>libnanosockets.so</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
 
-        <Content Include="Plugins\NanoSockets\macOS\libnanosockets.dylib">
+        <Content Include="runtimes\android-arm64\native\libnanosockets.so">
             <Pack>true</Pack>
-            <PackagePath>runtimes/any/native/libnanosockets.dylib</PackagePath>
+            <PackagePath>runtimes\android-arm64\native\libnanosockets.so</PackagePath>
+            <Link>libnanosockets.so</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\android-x64\native\libnanosockets.so">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\android-x64\native\libnanosockets.so</PackagePath>
+            <Link>libnanosockets.so</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\android-x86\native\libnanosockets.so">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\android-x86\native\libnanosockets.so</PackagePath>
+            <Link>libnanosockets.so</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\linux-x64\native\libnanosockets.so">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\linux-x64\native\libnanosockets.so</PackagePath>
+            <Link>libnanosockets.so</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\osx-x64\native\libnanosockets.dylib">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\osx-x64\native\libnanosockets.dylib</PackagePath>
             <Link>libnanosockets.dylib</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\win-x64\native\nanosockets.dll">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\win-x64\native\nanosockets.dll</PackagePath>
+            <Link>nanosockets.dll</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
