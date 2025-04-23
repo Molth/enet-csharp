@@ -61,6 +61,13 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
 
+        <Content Include="runtimes\linux-arm64\native\libnanosockets.so">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\linux-arm64\native\libnanosockets.so</PackagePath>
+            <Link>libnanosockets.so</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
         <Content Include="runtimes\linux-x64\native\libnanosockets.so">
             <Pack>true</Pack>
             <PackagePath>runtimes\linux-x64\native\libnanosockets.so</PackagePath>
