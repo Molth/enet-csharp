@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet_best</PackageId>
-        <Version>1.0.6</Version>
+        <Version>1.0.7</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -78,6 +78,13 @@
         <Content Include="runtimes\osx-x64\native\libnanosockets.dylib">
             <Pack>true</Pack>
             <PackagePath>runtimes\osx-x64\native\libnanosockets.dylib</PackagePath>
+            <Link>libnanosockets.dylib</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+
+        <Content Include="runtimes\osx-arm64\native\libnanosockets.dylib">
+            <Pack>true</Pack>
+            <PackagePath>runtimes\osx-arm64\native\libnanosockets.dylib</PackagePath>
             <Link>libnanosockets.dylib</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
