@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Text;
+using winsock;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
-using static NanoSockets.UDP;
+using static winsock.WinSock;
 
 #pragma warning disable CA1401
 #pragma warning disable CA2101
@@ -23,9 +23,9 @@ namespace enet
 
         public static uint timeBase = 0;
 
-        public static int enet_initialize() => nanosockets_initialize();
+        public static int enet_initialize() => (int)Initialize();
 
-        public static void enet_deinitialize() => nanosockets_deinitialize();
+        public static void enet_deinitialize() => Cleanup();
 
         public static uint enet_host_random_seed() => (uint)timeGetTime();
 
@@ -33,14 +33,34 @@ namespace enet
 
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
-        public static int enet_socket_bind(long socket, ENetAddress* address) => nanosockets_bind(socket, address);
+        public static int enet_socket_bind(long socket, ENetAddress* address)
+        {
+            sockaddr_in6 socketAddress;
+            socketAddress.sin6_family = (ushort)AddressFamily.InterNetworkV6;
+            socketAddress.sin6_port = address->port;
+            socketAddress.sin6_flowinfo = 0;
+            memcpy(socketAddress.sin6_addr, &address->host, 16);
+            socketAddress.sin6_scope_id = 0;
+            return (int)Bind((nint)socket, &socketAddress);
+        }
 
-        public static int enet_socket_get_address(long socket, ENetAddress* address) => nanosockets_address_get(socket, address);
+        public static int enet_socket_get_address(long socket, ENetAddress* address)
+        {
+            sockaddr_in6 socketAddress;
+            var result = (int)GetName((nint)socket, &socketAddress);
+            if (result == 0)
+            {
+                memcpy(&address->host, socketAddress.sin6_addr, 16);
+                address->port = socketAddress.sin6_port;
+            }
+
+            return result;
+        }
 
         public static long enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
-                return nanosockets_create(0, 0);
+                return Create();
 
             return INVALID_SOCKET;
         }
@@ -51,31 +71,31 @@ namespace enet
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
-                    result = enet_socket_set_nonblocking(socket, (byte)value);
+                    result = enet_socket_set_nonblocking(socket, value);
                     break;
                 case ENET_SOCKOPT_BROADCAST:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value);
                     break;
                 case ENET_SOCKOPT_RCVBUF:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, &value);
                     break;
                 case ENET_SOCKOPT_SNDBUF:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.SendBuffer, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.SendBuffer, &value);
                     break;
                 case ENET_SOCKOPT_REUSEADDR:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, &value);
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, &value);
                     break;
                 case ENET_SOCKOPT_SNDTIMEO:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.SendTimeout, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.SendTimeout, &value);
                     break;
                 case ENET_SOCKOPT_NODELAY:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.Socket, SocketOptionName.NoDelay, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.NoDelay, &value);
                     break;
                 case ENET_SOCKOPT_TTL:
-                    result = nanosockets_set_option(socket, SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, &value, 4);
+                    result = (int)SetOption((nint)socket, SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, &value);
                     break;
                 default:
                     break;
@@ -84,16 +104,27 @@ namespace enet
             return result == SOCKET_ERROR ? -1 : 0;
         }
 
-        public static int enet_socket_set_nonblocking(long socket, byte nonBlocking) => nanosockets_set_nonblocking(socket, nonBlocking);
+        public static int enet_socket_set_nonblocking(long socket, int nonBlocking) => (int)SetBlocking((nint)socket, nonBlocking == 0);
 
-        public static void enet_socket_destroy(long* socket) => nanosockets_destroy(socket);
+        public static void enet_socket_destroy(long* socket)
+        {
+            Close((nint)socket);
+            *socket = -1;
+        }
 
         public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
+            sockaddr_in6 socketAddress;
+            socketAddress.sin6_family = (ushort)AddressFamily.InterNetworkV6;
+            socketAddress.sin6_port = address->port;
+            socketAddress.sin6_flowinfo = 0;
+            memcpy(socketAddress.sin6_addr, &address->host, 16);
+            socketAddress.sin6_scope_id = 0;
+
             if (bufferCount == 0)
                 return 0;
             else if (bufferCount == 1)
-                return nanosockets_send(socket, address, buffers[0].data, (int)buffers[0].dataLength);
+                return SendTo((nint)socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
             else
             {
                 nuint totalLength = 0;
@@ -107,23 +138,30 @@ namespace enet
                     offset += buffers[i].dataLength;
                 }
 
-                return nanosockets_send(socket, address, buffer, (int)totalLength);
+                return SendTo((nint)socket, buffer, (int)totalLength, &socketAddress);
             }
         }
 
         public static int enet_socket_receive(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
+            sockaddr_in6 socketAddress;
+            int result;
             if (bufferCount == 0)
                 return 0;
             else if (bufferCount == 1)
-                return nanosockets_receive(socket, address, buffers->data, (int)buffers->dataLength);
+            {
+                result = ReceiveFrom((nint)socket, buffers->data, (int)buffers->dataLength, &socketAddress);
+                if (result <= 0)
+                    return result;
+                goto label;
+            }
             else
             {
                 nuint totalLength = 0;
                 for (nuint i = 0; i < bufferCount; ++i)
                     totalLength += buffers[i].dataLength;
                 byte* buffer = stackalloc byte[(int)totalLength];
-                int result = nanosockets_receive(socket, address, buffer, (int)totalLength);
+                result = ReceiveFrom((nint)socket, buffer, (int)totalLength, &socketAddress);
                 if (result <= 0)
                     return result;
                 int offset = 0;
@@ -144,39 +182,61 @@ namespace enet
                     }
                 }
 
-                return result;
+                goto label;
             }
+
+            label:
+            memcpy(&address->host, socketAddress.sin6_addr, 16);
+            address->port = socketAddress.sin6_port;
+            return result;
         }
 
         public static int enet_socket_wait(long socket, uint* condition, uint timeout)
         {
+            int error;
+            bool status;
+
             if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
-                return 0;
+            {
+                error = (int)Poll((nint)socket, (int)(timeout / 1000), SelectMode.SelectWrite, out status);
+                return (error == 0 && status) ? 0 : -1;
+            }
+
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
-                return enet_socket_poll(socket, timeout) > 0 ? 0 : -1;
+            {
+                error = (int)Poll((nint)socket, (int)(timeout / 1000), SelectMode.SelectRead, out status);
+                return (error == 0 && status) ? 0 : -1;
+            }
+
             return 0;
         }
 
-        public static int enet_socket_poll(long socket, uint timeout) => nanosockets_poll(socket, timeout);
-
         public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
-            int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            byte* buffer = stackalloc byte[byteCount];
-            Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
-            return nanosockets_address_set_ip(address, buffer);
+            return (int)SetIP(&address->host, hostName);
         }
 
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
-            int byteCount = Encoding.ASCII.GetByteCount(hostName);
-            byte* buffer = stackalloc byte[byteCount];
-            Encoding.ASCII.GetBytes(hostName, MemoryMarshal.CreateSpan(ref *buffer, byteCount));
-            return nanosockets_address_set_hostname(address, buffer);
+            return (int)SetHostName(&address->host, hostName);
         }
 
-        public static int enet_address_get_host_ip(ENetAddress* address, byte* hostName, nuint nameLength) => nanosockets_address_get_ip(address, hostName, (int)nameLength);
+        public static int enet_address_get_host_ip(ENetAddress* address, byte* hostName, nuint nameLength)
+        {
+            return (int)GetIP(&address->host, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+        }
 
-        public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength) => nanosockets_address_get_hostname(address, hostName, (int)nameLength);
+        public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
+        {
+            sockaddr_in6 socketAddress;
+            var result = (int)GetHostName(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+            if (result == 0)
+            {
+                memcpy(&address->host, socketAddress.sin6_addr, 16);
+                address->port = socketAddress.sin6_port;
+            }
+
+            return result;
+        }
     }
 }
