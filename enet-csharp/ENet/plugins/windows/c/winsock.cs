@@ -38,7 +38,12 @@ namespace winsock
             if (socket != -1)
             {
                 var optionValue = 0;
-                SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                var errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                if (errorCode != SocketError.Success)
+                {
+                    Close(socket);
+                    socket = -1;
+                }
             }
 
             return socket;

@@ -34,7 +34,12 @@ namespace unixsock
             if (_socket != -1)
             {
                 var optionValue = 0;
-                SetOption(_socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                var errorCode = SetOption(_socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                if (errorCode != SocketError.Success)
+                {
+                    Close(_socket);
+                    _socket = -1;
+                }
             }
 
             return _socket;
