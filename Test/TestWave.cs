@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
+using System.Threading;
 using static enet.ENet;
 
 #pragma warning disable CA1806
@@ -97,7 +99,7 @@ namespace enet
                 ENetAddress local = new ENetAddress();
                 enet_address_set_host_ip(&local, "0.0.0.0");
                 local.port = 7778;
-                
+
                 host = enet_host_create(&local, 1, 0, 0, 0);
 
                 ENetPeer* peer = enet_host_connect(host, &address, 0, 0);

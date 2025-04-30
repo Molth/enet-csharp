@@ -7,7 +7,7 @@ using System.Buffers.Binary;
 
 namespace winsock
 {
-    public static partial class WinSock
+    public static partial class WinSock2
     {
         public static ushort HOST_TO_NET_16(ushort host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
 

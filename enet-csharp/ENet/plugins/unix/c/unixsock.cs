@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using winsock;
 
 #pragma warning disable CS1591
 #pragma warning disable CS8981
@@ -10,43 +11,39 @@ using System.Text;
 
 // ReSharper disable ALL
 
-namespace winsock
+namespace unixsock
 {
-    public static unsafe partial class WinSock
+    public static unsafe class UnixSock
     {
-        private const string NATIVE_LIBRARY = "ws2_32.dll";
+        private const string NATIVE_LIBRARY = "libc";
+        public const ushort ADDRESS_FAMILY_INTER_NETWORK_V6 = 10;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetLastSocketError() => (SocketError)WSAGetLastError();
+        public static SocketError GetLastSocketError() => (SocketError)Marshal.GetLastWin32Error();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Initialize()
-        {
-            WSAData wsaData;
-            var errorCode = WSAStartup(514, &wsaData);
-            return errorCode;
-        }
+        public static SocketError Initialize() => SocketError.Success;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Cleanup() => WSACleanup();
+        public static SocketError Cleanup() => SocketError.Success;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static nint Create()
         {
-            var socket = WSASocketW(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp, 0, 0, 1 | 128);
-            if (socket != -1)
+            var _socket = socket((int)ADDRESS_FAMILY_INTER_NETWORK_V6, (int)SocketType.Dgram, 0);
+            if (_socket != -1)
             {
                 var optionValue = 0;
-                SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                SetOption(_socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
             }
 
-            return socket;
+            return _socket;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError Close(nint socket)
         {
-            var errorCode = closesocket(socket);
+            var errorCode = close(socket);
             return errorCode;
         }
 
@@ -60,11 +57,11 @@ namespace winsock
                 SetIP(__socketAddress_native, "::");
             else
             {
-                if (socketAddress->sin6_family != (int)AddressFamily.InterNetworkV6)
+                if (socketAddress->sin6_family != (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                     return SocketError.InvalidArgument;
 
                 Unsafe.CopyBlockUnaligned(__socketAddress_native, socketAddress, 28);
-                __socketAddress_native->sin6_port = HOST_TO_NET_16(socketAddress->sin6_port);
+                __socketAddress_native->sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
             }
 
             var errorCode = bind(socket, (sockaddr*)__socketAddress_native, 28);
@@ -96,11 +93,17 @@ namespace winsock
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError SetBlocking(nint socket, bool shouldBlock)
         {
-            var intBlocking = shouldBlock ? 0 : -1;
-            var errorCode = ioctlsocket(socket, unchecked((int)0x8004667E), &intBlocking);
-
-            if (errorCode == SocketError.SocketError)
-                errorCode = GetLastSocketError();
+            SocketError errorCode;
+            int flags = fcntl(socket, 4, 0);
+            if (flags == -1)
+            {
+                errorCode = (SocketError)Marshal.GetLastWin32Error();
+            }
+            else
+            {
+                flags = shouldBlock ? flags & ~2048 : flags | 2048;
+                errorCode = (SocketError)fcntl(socket, 4, flags);
+            }
 
             return errorCode;
         }
@@ -135,7 +138,7 @@ namespace winsock
         public static int SendTo(nint socket, void* buffer, int length, sockaddr_in6* socketAddress)
         {
             if (socketAddress != null)
-                socketAddress->sin6_port = HOST_TO_NET_16(socketAddress->sin6_port);
+                socketAddress->sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
 
             var num = sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)socketAddress, socketAddress != null ? 28 : 0);
             return num;
@@ -147,7 +150,7 @@ namespace winsock
             var socketAddressSize = 28;
             var num = recvfrom(socket, (byte*)buffer, length, SocketFlags.None, (byte*)socketAddress, &socketAddressSize);
             if (socketAddress != null)
-                socketAddress->sin6_port = NET_TO_HOST_16(socketAddress->sin6_port);
+                socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(socketAddress->sin6_port);
 
             return num;
         }
@@ -164,12 +167,12 @@ namespace winsock
                 {
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 10, (ushort)0xFFFF);
                     Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr + 12, &sockaddr, 4);
-                    socketAddress->sin6_port = NET_TO_HOST_16(((sockaddr_in*)&sockaddr)->sin_port);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(((sockaddr_in*)&sockaddr)->sin_port);
                 }
-                else if (sockaddr.ss_family == (int)AddressFamily.InterNetworkV6)
+                else if (sockaddr.ss_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
                     Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, &sockaddr, 16);
-                    socketAddress->sin6_port = NET_TO_HOST_16(((sockaddr_in6*)&sockaddr)->sin6_port);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(((sockaddr_in6*)&sockaddr)->sin6_port);
                 }
             }
 
@@ -183,7 +186,7 @@ namespace winsock
             Span<byte> buffer = stackalloc byte[byteCount];
             Encoding.ASCII.GetBytes(ip, buffer);
 
-            var addressFamily = (int)AddressFamily.InterNetworkV6;
+            var addressFamily = (int)ADDRESS_FAMILY_INTER_NETWORK_V6;
             if (ip.IndexOf(':') < 0)
             {
                 addressFamily = (int)AddressFamily.InterNetwork;
@@ -214,7 +217,7 @@ namespace winsock
                 if (inet_ntop((int)AddressFamily.InterNetwork, (byte*)pAddrBuf + 12, (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (nuint)buffer.Length) == null)
                     return SocketError.Fault;
             }
-            else if (inet_ntop((int)AddressFamily.InterNetworkV6, pAddrBuf, (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (nuint)buffer.Length) == null)
+            else if (inet_ntop((int)ADDRESS_FAMILY_INTER_NETWORK_V6, pAddrBuf, (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (nuint)buffer.Length) == null)
             {
                 return SocketError.Fault;
             }
@@ -252,7 +255,7 @@ namespace winsock
                         return 0;
                     }
 
-                    if (result->ai_family == (int)AddressFamily.InterNetworkV6)
+                    if (result->ai_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                     {
                         var socketAddress = (sockaddr_in6*)result->ai_addr;
 
@@ -268,7 +271,7 @@ namespace winsock
             if (resultList != null)
                 freeaddrinfo(resultList);
 
-            var addressFamily = (int)AddressFamily.InterNetworkV6;
+            var addressFamily = (int)ADDRESS_FAMILY_INTER_NETWORK_V6;
             if (buffer.IndexOf((byte)':') == -1)
             {
                 addressFamily = (int)AddressFamily.InterNetwork;
@@ -294,8 +297,8 @@ namespace winsock
         {
             sockaddr_in6 socketAddress;
 
-            socketAddress.sin6_family = (ushort)AddressFamily.InterNetworkV6;
-            socketAddress.sin6_port = HOST_TO_NET_16(address->sin6_port);
+            socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
+            socketAddress.sin6_port = WinSock2.HOST_TO_NET_16(address->sin6_port);
             socketAddress.sin6_flowinfo = 0;
             Unsafe.CopyBlockUnaligned(socketAddress.sin6_addr, address->sin6_addr, 16);
             socketAddress.sin6_scope_id = 0;
@@ -325,22 +328,16 @@ namespace winsock
         }
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern SocketError WSAStartup(short wVersionRequested, WSAData* lpWSAData);
-
-        [DllImport(NATIVE_LIBRARY)]
-        private static extern SocketError WSACleanup();
-
-        [DllImport(NATIVE_LIBRARY)]
         private static extern SocketError bind(nint __socketHandle_native, sockaddr* __socketAddress_native, int __socketAddressSize_native);
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern SocketError getsockname(nint __socketHandle_native, sockaddr* __socketAddress_native, int* __socketAddressSize_native);
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern nint WSASocketW(AddressFamily __addressFamily_native, SocketType __socketType_native, ProtocolType __protocolType_native, nint __protocolInfo_native, uint __group_native, int __flags_native);
+        private static extern nint socket(int af, int type, int protocol);
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern SocketError ioctlsocket(nint __socketHandle_native, int __cmd_native, int* __argp_native);
+        private static extern int fcntl(nint fd, int cmd, int arg);
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern SocketError setsockopt(nint __socketHandle_native, SocketOptionLevel __optionLevel_native, SocketOptionName __optionName_native, int* __optionValue_native, int __optionLength_native);
@@ -352,7 +349,7 @@ namespace winsock
         private static extern SocketError connect(nint s, sockaddr* name, int namelen);
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern SocketError closesocket(nint __socketHandle_native);
+        private static extern SocketError close(nint __socketHandle_native);
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern int sendto(nint __socketHandle_native, byte* __pinnedBuffer_native, int __len_native, SocketFlags __socketFlags_native, byte* __socketAddress_native, int __socketAddressSize_native);
@@ -362,9 +359,6 @@ namespace winsock
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern int select(int __ignoredParameter_native, nint* __readfds_native, nint* __writefds_native, nint* __exceptfds_native, TimeValue* __timeout_native);
-
-        [DllImport(NATIVE_LIBRARY)]
-        private static extern int WSAGetLastError();
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern int inet_pton(int Family, void* pszAddrString, void* pAddrBuf);
@@ -380,11 +374,6 @@ namespace winsock
 
         [DllImport(NATIVE_LIBRARY)]
         private static extern int getnameinfo(sockaddr* pSockaddr, int SockaddrLength, byte* pNodeBuffer, ulong NodeBufferSize, byte* pServiceBuffer, ulong ServiceBufferSize, int Flags);
-
-        [StructLayout(LayoutKind.Sequential, Size = 408)]
-        private struct WSAData
-        {
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct TimeValue

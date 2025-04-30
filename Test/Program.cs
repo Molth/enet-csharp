@@ -1,11 +1,10 @@
-﻿using enet;
-
-namespace App;
-
-class Program
+﻿namespace enet
 {
-    static void Main()
+    internal sealed class Program
     {
-        TestWave.Start();
+        private static void Main()
+        {
+            TestWave.Start();
+        }
     }
 }

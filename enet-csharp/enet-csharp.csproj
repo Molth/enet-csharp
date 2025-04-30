@@ -15,7 +15,7 @@
         <Description>ENet reliable UDP networking library</Description>
         <PackageProjectUrl>https://github.com/Molth/enet-csharp</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageTags>enet;udp;native;performance;networking</PackageTags>
+        <PackageTags>enet;udp;performance;networking</PackageTags>
 
         <PackageOutputPath>./nupkgs</PackageOutputPath>
         <PackageReadmeFile>README.md</PackageReadmeFile>

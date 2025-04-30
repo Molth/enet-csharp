@@ -5,7 +5,7 @@ using winsock;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
-using static winsock.WinSock;
+using static enet.ENetSock;
 
 #pragma warning disable CA1401
 #pragma warning disable CA2101
@@ -36,7 +36,7 @@ namespace enet
         public static int enet_socket_bind(long socket, ENetAddress* address)
         {
             sockaddr_in6 socketAddress;
-            socketAddress.sin6_family = (ushort)AddressFamily.InterNetworkV6;
+            socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
             socketAddress.sin6_port = address->port;
             socketAddress.sin6_flowinfo = 0;
             memcpy(socketAddress.sin6_addr, &address->host, 16);
@@ -115,7 +115,7 @@ namespace enet
         public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             sockaddr_in6 socketAddress;
-            socketAddress.sin6_family = (ushort)AddressFamily.InterNetworkV6;
+            socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
             socketAddress.sin6_port = address->port;
             socketAddress.sin6_flowinfo = 0;
             memcpy(socketAddress.sin6_addr, &address->host, 16);
