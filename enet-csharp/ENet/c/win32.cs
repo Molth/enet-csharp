@@ -47,7 +47,7 @@ namespace enet
         public static int enet_socket_get_address(long socket, ENetAddress* address)
         {
             sockaddr_in6 socketAddress;
-            var result = (int)GetName((nint)socket, &socketAddress);
+            int result = (int)GetName((nint)socket, &socketAddress);
             if (result == 0)
             {
                 memcpy(&address->host, socketAddress.sin6_addr, 16);
@@ -229,7 +229,7 @@ namespace enet
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
         {
             sockaddr_in6 socketAddress;
-            var result = (int)GetHostName(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+            int result = (int)GetHostName(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
             if (result == 0)
             {
                 memcpy(&address->host, socketAddress.sin6_addr, 16);

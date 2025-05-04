@@ -108,9 +108,9 @@ namespace enet
 
                 bool connected = false;
                 byte* buffer = stackalloc byte[2048];
-                var sent = false;
-                var reached = false;
-                var count = 0;
+                bool sent = false;
+                bool reached = false;
+                int count = 0;
 
                 while (_running)
                 {
@@ -150,8 +150,6 @@ namespace enet
                                             goto label;
                                         }
                                     }
-
-                                    Console.WriteLine("same");
                                 }
                                 else
                                 {

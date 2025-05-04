@@ -37,7 +37,7 @@ namespace enet
 
         static ENetSock()
         {
-            var isWindows =
+            bool isWindows =
 #if NET5_0_OR_GREATER
                 OperatingSystem.IsWindows();
 #else
