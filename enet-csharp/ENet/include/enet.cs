@@ -318,7 +318,7 @@ namespace enet
 
     public unsafe struct ENetHost
     {
-        public long socket;
+        public nint socket;
         public ENetAddress address;
         public uint incomingBandwidth;
         public uint outgoingBandwidth;

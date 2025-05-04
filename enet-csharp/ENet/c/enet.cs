@@ -31,38 +31,38 @@ namespace enet
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long enet_socket_create(ENetSocketType type) => ENet.enet_socket_create(type);
+        public static nint enet_socket_create(ENetSocketType type) => ENet.enet_socket_create(type);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_bind(long socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
+        public static int enet_socket_bind(nint socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_get_address(long socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
+        public static int enet_socket_get_address(nint socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
+        public static int enet_socket_send(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_receive(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
+        public static int enet_socket_receive(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_wait(long socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
+        public static int enet_socket_wait(nint socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_set_option(long socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
+        public static int enet_socket_set_option(nint socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void enet_socket_destroy(long* socket) => ENet.enet_socket_destroy(socket);
+        public static void enet_socket_destroy(nint* socket) => ENet.enet_socket_destroy(socket);
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ip(address, hostName);
+        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_host_ip(address, ip);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host(address, hostName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host_ip(ENetAddress* address, byte* hostName, nuint nameLength) => ENet.enet_address_get_host_ip(address, hostName, nameLength);
+        public static int enet_address_get_host_ip(ENetAddress* address, byte* ip, nuint nameLength) => ENet.enet_address_get_host_ip(address, ip, nameLength);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength) => ENet.enet_address_get_host(address, hostName, nameLength);

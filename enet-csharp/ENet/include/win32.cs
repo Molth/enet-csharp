@@ -9,9 +9,9 @@ namespace enet
 {
     public static partial class ENet
     {
-        public const long INVALID_SOCKET = ~0;
+        public const nint INVALID_SOCKET = ~0;
 
-        public const long ENET_SOCKET_NULL = INVALID_SOCKET;
+        public const nint ENET_SOCKET_NULL = INVALID_SOCKET;
 
         public static ushort ENET_HOST_TO_NET_16(ushort host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;
 

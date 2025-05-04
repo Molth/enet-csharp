@@ -171,7 +171,7 @@ namespace enet
                         if (!reached)
                         {
                             count++;
-                            if (count == 1200)
+                            if (count == 100)
                             {
                                 Console.ForegroundColor = ConsoleColor.Cyan;
                                 Console.WriteLine("reached max");

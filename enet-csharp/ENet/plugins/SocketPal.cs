@@ -11,9 +11,9 @@ using winsock;
 
 // ReSharper disable ALL
 
-namespace enet
+namespace NativeSockets
 {
-    public static unsafe class ENetSock
+    public static unsafe class SocketPal
     {
         public static readonly ushort ADDRESS_FAMILY_INTER_NETWORK_V6;
         private static readonly delegate* managed<SocketError> _GetLastSocketError;
@@ -23,8 +23,8 @@ namespace enet
         private static readonly delegate* managed<nint, SocketError> _Close;
         private static readonly delegate* managed<nint, sockaddr_in6*, SocketError> _Bind;
         private static readonly delegate* managed<nint, sockaddr_in6*, SocketError> _Connect;
-        private static readonly delegate* managed<nint, SocketOptionLevel, SocketOptionName, int*, SocketError> _SetOption;
-        private static readonly delegate* managed<nint, SocketOptionLevel, SocketOptionName, int*, SocketError> _GetOption;
+        private static readonly delegate* managed<nint, SocketOptionLevel, SocketOptionName, int*, int, SocketError> _SetOption;
+        private static readonly delegate* managed<nint, SocketOptionLevel, SocketOptionName, int*, int*, SocketError> _GetOption;
         private static readonly delegate* managed<nint, bool, SocketError> _SetBlocking;
         private static readonly delegate* managed<nint, int, SelectMode, out bool, SocketError> _Poll;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in6*, int> _SendTo;
@@ -35,7 +35,7 @@ namespace enet
         private static readonly delegate* managed<void*, ReadOnlySpan<char>, SocketError> _SetHostName;
         private static readonly delegate* managed<sockaddr_in6*, Span<byte>, SocketError> _GetHostName;
 
-        static ENetSock()
+        static SocketPal()
         {
             bool isWindows =
 #if NET5_0_OR_GREATER
@@ -102,45 +102,45 @@ namespace enet
         public static nint Create() => _Create();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Close(nint handle) => _Close(handle);
+        public static SocketError Close(nint socket) => _Close(socket);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Bind(nint handle, sockaddr_in6* address) => _Bind(handle, address);
+        public static SocketError Bind(nint socket, sockaddr_in6* socketAddress) => _Bind(socket, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Connect(nint handle, sockaddr_in6* address) => _Connect(handle, address);
+        public static SocketError Connect(nint socket, sockaddr_in6* socketAddress) => _Connect(socket, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetOption(nint handle, SocketOptionLevel level, SocketOptionName name, int* value) => _SetOption(handle, level, name, value);
+        public static SocketError SetOption(nint socket, SocketOptionLevel level, SocketOptionName name, int* value, int length = sizeof(int)) => _SetOption(socket, level, name, value, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetOption(nint handle, SocketOptionLevel level, SocketOptionName name, int* value) => _GetOption(handle, level, name, value);
+        public static SocketError GetOption(nint socket, SocketOptionLevel level, SocketOptionName name, int* value, int* length = null) => _GetOption(socket, level, name, value, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetBlocking(nint handle, bool blocking) => _SetBlocking(handle, blocking);
+        public static SocketError SetBlocking(nint socket, bool blocking) => _SetBlocking(socket, blocking);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Poll(nint handle, int microseconds, SelectMode mode, out bool status) => _Poll(handle, microseconds, mode, out status);
+        public static SocketError Poll(nint socket, int microseconds, SelectMode mode, out bool status) => _Poll(socket, microseconds, mode, out status);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int SendTo(nint handle, void* buffer, int length, sockaddr_in6* address) => _SendTo(handle, buffer, length, address);
+        public static int SendTo(nint socket, void* buffer, int length, sockaddr_in6* socketAddress) => _SendTo(socket, buffer, length, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ReceiveFrom(nint handle, void* buffer, int length, sockaddr_in6* address) => _ReceiveFrom(handle, buffer, length, address);
+        public static int ReceiveFrom(nint socket, void* buffer, int length, sockaddr_in6* socketAddress) => _ReceiveFrom(socket, buffer, length, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetName(nint handle, sockaddr_in6* address) => _GetName(handle, address);
+        public static SocketError GetName(nint socket, sockaddr_in6* socketAddress) => _GetName(socket, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetIP(void* context, ReadOnlySpan<char> ip) => _SetIP(context, ip);
+        public static SocketError SetIP(void* pAddrBuf, ReadOnlySpan<char> ip) => _SetIP(pAddrBuf, ip);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetIP(void* context, Span<byte> ip) => _GetIP(context, ip);
+        public static SocketError GetIP(void* pAddrBuf, Span<byte> ip) => _GetIP(pAddrBuf, ip);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetHostName(void* context, ReadOnlySpan<char> hostName) => _SetHostName(context, hostName);
+        public static SocketError SetHostName(void* pAddrBuf, ReadOnlySpan<char> hostName) => _SetHostName(pAddrBuf, hostName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetHostName(sockaddr_in6* address, Span<byte> hostName) => _GetHostName(address, hostName);
+        public static SocketError GetHostName(sockaddr_in6* socketAddress, Span<byte> hostName) => _GetHostName(socketAddress, hostName);
     }
 }

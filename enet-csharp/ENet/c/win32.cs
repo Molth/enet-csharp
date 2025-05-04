@@ -5,7 +5,7 @@ using winsock;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
-using static enet.ENetSock;
+using static NativeSockets.SocketPal;
 
 #pragma warning disable CA1401
 #pragma warning disable CA2101
@@ -33,21 +33,25 @@ namespace enet
 
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
-        public static int enet_socket_bind(long socket, ENetAddress* address)
+        public static int enet_socket_bind(nint socket, ENetAddress* address)
         {
+            if (address == null)
+                return (int)Bind(socket, null);
+
             sockaddr_in6 socketAddress;
             socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
             socketAddress.sin6_port = address->port;
             socketAddress.sin6_flowinfo = 0;
             memcpy(socketAddress.sin6_addr, &address->host, 16);
             socketAddress.sin6_scope_id = 0;
-            return (int)Bind((nint)socket, &socketAddress);
+
+            return (int)Bind(socket, &socketAddress);
         }
 
-        public static int enet_socket_get_address(long socket, ENetAddress* address)
+        public static int enet_socket_get_address(nint socket, ENetAddress* address)
         {
             sockaddr_in6 socketAddress;
-            int result = (int)GetName((nint)socket, &socketAddress);
+            int result = (int)GetName(socket, &socketAddress);
             if (result == 0)
             {
                 memcpy(&address->host, socketAddress.sin6_addr, 16);
@@ -57,7 +61,7 @@ namespace enet
             return result;
         }
 
-        public static long enet_socket_create(ENetSocketType type)
+        public static nint enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
                 return Create();
@@ -65,7 +69,7 @@ namespace enet
             return INVALID_SOCKET;
         }
 
-        public static int enet_socket_set_option(long socket, ENetSocketOption option, int value)
+        public static int enet_socket_set_option(nint socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
             switch (option)
@@ -74,28 +78,28 @@ namespace enet
                     result = enet_socket_set_nonblocking(socket, value);
                     break;
                 case ENET_SOCKOPT_BROADCAST:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.Broadcast, &value);
                     break;
                 case ENET_SOCKOPT_RCVBUF:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, &value);
                     break;
                 case ENET_SOCKOPT_SNDBUF:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.SendBuffer, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.SendBuffer, &value);
                     break;
                 case ENET_SOCKOPT_REUSEADDR:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, &value);
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, &value);
                     break;
                 case ENET_SOCKOPT_SNDTIMEO:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.SendTimeout, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.SendTimeout, &value);
                     break;
                 case ENET_SOCKOPT_NODELAY:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.Socket, SocketOptionName.NoDelay, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.Socket, SocketOptionName.NoDelay, &value);
                     break;
                 case ENET_SOCKOPT_TTL:
-                    result = (int)SetOption((nint)socket, SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, &value);
+                    result = (int)SetOption(socket, SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, &value);
                     break;
                 default:
                     break;
@@ -104,15 +108,15 @@ namespace enet
             return result == SOCKET_ERROR ? -1 : 0;
         }
 
-        public static int enet_socket_set_nonblocking(long socket, int nonBlocking) => (int)SetBlocking((nint)socket, nonBlocking == 0);
+        public static int enet_socket_set_nonblocking(nint socket, int nonBlocking) => (int)SetBlocking(socket, nonBlocking == 0);
 
-        public static void enet_socket_destroy(long* socket)
+        public static void enet_socket_destroy(nint* socket)
         {
-            Close((nint)socket);
+            Close(*socket);
             *socket = -1;
         }
 
-        public static int enet_socket_send(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
+        public static int enet_socket_send(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             sockaddr_in6 socketAddress;
             socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
@@ -124,7 +128,7 @@ namespace enet
             if (bufferCount == 0)
                 return 0;
             else if (bufferCount == 1)
-                return SendTo((nint)socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
+                return SendTo(socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
             else
             {
                 nuint totalLength = 0;
@@ -138,11 +142,11 @@ namespace enet
                     offset += buffers[i].dataLength;
                 }
 
-                return SendTo((nint)socket, buffer, (int)totalLength, &socketAddress);
+                return SendTo(socket, buffer, (int)totalLength, &socketAddress);
             }
         }
 
-        public static int enet_socket_receive(long socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
+        public static int enet_socket_receive(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             sockaddr_in6 socketAddress;
             int result;
@@ -150,7 +154,7 @@ namespace enet
                 return 0;
             else if (bufferCount == 1)
             {
-                result = ReceiveFrom((nint)socket, buffers->data, (int)buffers->dataLength, &socketAddress);
+                result = ReceiveFrom(socket, buffers->data, (int)buffers->dataLength, &socketAddress);
                 if (result <= 0)
                     return result;
                 goto label;
@@ -161,7 +165,7 @@ namespace enet
                 for (nuint i = 0; i < bufferCount; ++i)
                     totalLength += buffers[i].dataLength;
                 byte* buffer = stackalloc byte[(int)totalLength];
-                result = ReceiveFrom((nint)socket, buffer, (int)totalLength, &socketAddress);
+                result = ReceiveFrom(socket, buffer, (int)totalLength, &socketAddress);
                 if (result <= 0)
                     return result;
                 int offset = 0;
@@ -191,29 +195,29 @@ namespace enet
             return result;
         }
 
-        public static int enet_socket_wait(long socket, uint* condition, uint timeout)
+        public static int enet_socket_wait(nint socket, uint* condition, uint timeout)
         {
             int error;
             bool status;
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
             {
-                error = (int)Poll((nint)socket, (int)(timeout / 1000), SelectMode.SelectWrite, out status);
+                error = (int)Poll(socket, (int)(timeout / 1000), SelectMode.SelectWrite, out status);
                 return (error == 0 && status) ? 0 : -1;
             }
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
             {
-                error = (int)Poll((nint)socket, (int)(timeout / 1000), SelectMode.SelectRead, out status);
+                error = (int)Poll(socket, (int)(timeout / 1000), SelectMode.SelectRead, out status);
                 return (error == 0 && status) ? 0 : -1;
             }
 
             return 0;
         }
 
-        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> hostName)
+        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> ip)
         {
-            return (int)SetIP(&address->host, hostName);
+            return (int)SetIP(&address->host, ip);
         }
 
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName)
@@ -221,9 +225,9 @@ namespace enet
             return (int)SetHostName(&address->host, hostName);
         }
 
-        public static int enet_address_get_host_ip(ENetAddress* address, byte* hostName, nuint nameLength)
+        public static int enet_address_get_host_ip(ENetAddress* address, byte* ip, nuint nameLength)
         {
-            return (int)GetIP(&address->host, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+            return (int)GetIP(&address->host, MemoryMarshal.CreateSpan(ref *ip, (int)nameLength));
         }
 
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
