@@ -249,10 +249,10 @@ namespace winsock
             ref int reference = ref Unsafe.AsRef<int>(pAddrBuf);
             if (Unsafe.Add<int>(ref reference, 2) == -0x10000 && reference == 0 && Unsafe.Add(ref reference, 1) == 0)
             {
-                if (inet_ntop((int)AddressFamily.InterNetwork, (byte*)pAddrBuf + 12, (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (nuint)buffer.Length) == null)
+                if (inet_ntop((int)AddressFamily.InterNetwork, (byte*)pAddrBuf + 12, ref MemoryMarshal.GetReference(buffer), (nuint)buffer.Length) == null)
                     return SocketError.Fault;
             }
-            else if (inet_ntop((int)ADDRESS_FAMILY_INTER_NETWORK_V6, pAddrBuf, (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (nuint)buffer.Length) == null)
+            else if (inet_ntop((int)ADDRESS_FAMILY_INTER_NETWORK_V6, pAddrBuf, ref MemoryMarshal.GetReference(buffer), (nuint)buffer.Length) == null)
             {
                 return SocketError.Fault;
             }
@@ -330,15 +330,11 @@ namespace winsock
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError GetHostName(sockaddr_in6* socketAddress, Span<byte> buffer)
         {
-            sockaddr_in6 __socketAddress_native;
+            sockaddr_in6 __socketAddress_native = *socketAddress;
 
-            __socketAddress_native.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
             __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
-            __socketAddress_native.sin6_flowinfo = 0;
-            Unsafe.CopyBlockUnaligned(__socketAddress_native.sin6_addr, socketAddress->sin6_addr, 16);
-            __socketAddress_native.sin6_scope_id = 0;
 
-            int error = getnameinfo((sockaddr*)&__socketAddress_native, sizeof(sockaddr_in6), (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (ulong)buffer.Length, null, 0, 0x4);
+            int error = getnameinfo((sockaddr*)&__socketAddress_native, sizeof(sockaddr_in6), ref MemoryMarshal.GetReference(buffer), (ulong)buffer.Length, null, 0, 0x4);
 
             if (error == 0)
             {
@@ -414,10 +410,10 @@ namespace winsock
         private static extern void freeaddrinfo(addrinfo* pAddrInfo);
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern byte* inet_ntop(int Family, void* pAddr, byte* pStringBuf, nuint StringBufSize);
+        private static extern byte* inet_ntop(int Family, void* pAddr, ref byte pStringBuf, nuint StringBufSize);
 
         [DllImport(NATIVE_LIBRARY)]
-        private static extern int getnameinfo(sockaddr* pSockaddr, int SockaddrLength, byte* pNodeBuffer, ulong NodeBufferSize, byte* pServiceBuffer, ulong ServiceBufferSize, int Flags);
+        private static extern int getnameinfo(sockaddr* pSockaddr, int SockaddrLength, ref byte pNodeBuffer, ulong NodeBufferSize, byte* pServiceBuffer, ulong ServiceBufferSize, int Flags);
 
         [StructLayout(LayoutKind.Sequential, Size = 408)]
         private struct WSAData
