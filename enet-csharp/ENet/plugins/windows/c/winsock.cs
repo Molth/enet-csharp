@@ -44,6 +44,15 @@ namespace winsock
                     Close(socket);
                     socket = -1;
                 }
+
+                byte* __inBuffer_native = stackalloc byte[1] { 0x00 };
+                int __bytesTransferred_native;
+                errorCode = WSAIoctl(socket, -1744830452, __inBuffer_native, 1, null, 0, &__bytesTransferred_native, 0, 0);
+                if (errorCode != SocketError.Success)
+                {
+                    Close(socket);
+                    socket = -1;
+                }
             }
 
             return socket;
@@ -358,62 +367,65 @@ namespace winsock
             socketTime.Microseconds = (int)(microseconds % microcnv);
         }
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError WSAStartup(short wVersionRequested, WSAData* lpWSAData);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError WSACleanup();
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError bind(nint __socketHandle_native, sockaddr* __socketAddress_native, int __socketAddressSize_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError getsockname(nint __socketHandle_native, sockaddr* __socketAddress_native, int* __socketAddressSize_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern nint WSASocketW(AddressFamily __addressFamily_native, SocketType __socketType_native, ProtocolType __protocolType_native, nint __protocolInfo_native, uint __group_native, int __flags_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError ioctlsocket(nint __socketHandle_native, int __cmd_native, int* __argp_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError setsockopt(nint __socketHandle_native, SocketOptionLevel __optionLevel_native, SocketOptionName __optionName_native, int* __optionValue_native, int __optionLength_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError getsockopt(nint s, int level, int optname, byte* optval, int* optlen);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError connect(nint s, sockaddr* name, int namelen);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError closesocket(nint __socketHandle_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int sendto(nint __socketHandle_native, byte* __pinnedBuffer_native, int __len_native, SocketFlags __socketFlags_native, byte* __socketAddress_native, int __socketAddressSize_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int recvfrom(nint __socketHandle_native, byte* __pinnedBuffer_native, int __len_native, SocketFlags __socketFlags_native, byte* __socketAddress_native, int* __socketAddressSize_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int select(int __ignoredParameter_native, nint* __readfds_native, nint* __writefds_native, nint* __exceptfds_native, TimeValue* __timeout_native);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int WSAGetLastError();
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int inet_pton(int Family, void* pszAddrString, void* pAddrBuf);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int getaddrinfo(byte* pNodeName, byte* pServiceName, addrinfo* pHints, addrinfo** ppResult);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern void freeaddrinfo(addrinfo* pAddrInfo);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern byte* inet_ntop(int Family, void* pAddr, ref byte pStringBuf, nuint StringBufSize);
 
-        [DllImport(NATIVE_LIBRARY)]
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern int getnameinfo(sockaddr* pSockaddr, int SockaddrLength, ref byte pNodeBuffer, ulong NodeBufferSize, byte* pServiceBuffer, ulong ServiceBufferSize, int Flags);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
+        private static extern SocketError WSAIoctl(nint __socketHandle_native, int __ioControlCode_native, byte* __inBuffer_native, int __inBufferSize_native, byte* __outBuffer_native, int __outBufferSize_native, int* __bytesTransferred_native, nint __overlapped_native, nint __completionRoutine_native);
 
         [StructLayout(LayoutKind.Sequential, Size = 408)]
         private struct WSAData
