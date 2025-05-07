@@ -73,27 +73,38 @@ namespace enet
         [FieldOffset(0)] public fixed Byte ipv6[16];
         [FieldOffset(12)] public fixed Byte ipv4[4];
 
-        public ENetIP(ReadOnlySpan<byte> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, byte>(ref this), ref MemoryMarshal.GetReference(buffer), (uint)buffer.Length);
+        public ENetIP(ReadOnlySpan<byte> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), ref MemoryMarshal.GetReference(buffer), (uint)buffer.Length);
 
         public bool Equals(ENetIP other)
         {
 #if NET7_0_OR_GREATER
             if (Vector128.IsHardwareAccelerated)
-                return Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref this)) == Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref other));
+                return Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this))) == Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref other));
 #endif
-            ref int left = ref Unsafe.As<ENetIP, int>(ref this);
+            ref int left = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
             ref int right = ref Unsafe.As<ENetIP, int>(ref other);
             return left == right && Unsafe.Add<int>(ref left, 1) == Unsafe.Add<int>(ref right, 1) && Unsafe.Add<int>(ref left, 2) == Unsafe.Add<int>(ref right, 2) && Unsafe.Add<int>(ref left, 3) == Unsafe.Add<int>(ref right, 3);
         }
 
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
 
-        public override int GetHashCode() => enet_xxhash_32(Unsafe.AsPointer(ref this), 16);
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+#if NET6_0_OR_GREATER
+            hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 16));
+#else
+            ref int reference = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
+            for (int i = 0; i < 4; i++)
+                hashCode.Add(Unsafe.Add(ref reference, i));
+#endif
+            return hashCode.ToHashCode();
+        }
 
         public override string ToString()
         {
             byte* buffer = stackalloc byte[64];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref this), buffer, 64);
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this)), buffer, 64);
             return new string((sbyte*)buffer);
         }
 
@@ -113,12 +124,23 @@ namespace enet
         public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
 
-        public override int GetHashCode() => host.GetHashCode() ^ (int)port;
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+#if NET6_0_OR_GREATER
+            hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 20));
+#else
+            ref int reference = ref Unsafe.As<ENetAddress, int>(ref Unsafe.AsRef(in this));
+            for (int i = 0; i < 5; i++)
+                hashCode.Add(Unsafe.Add(ref reference, i));
+#endif
+            return hashCode.ToHashCode();
+        }
 
         public override string ToString()
         {
             byte* buffer = stackalloc byte[64];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref this.host), buffer, 64);
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), buffer, 64);
             return new string((sbyte*)buffer) + ":" + port;
         }
 
@@ -479,7 +501,7 @@ namespace enet
         public ENetPacketDataBuffer buffer0;
         public ENetPacketDataBuffer buffer1;
 
-        public byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref this)) + i)->data;
+        public byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref Unsafe.AsRef(in this))) + i)->data;
     }
 
     public unsafe struct ENetPacketDataBuffer
