@@ -7,12 +7,12 @@
 
 namespace winsock
 {
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit, Size = 16)]
     public unsafe struct sockaddr_in
     {
-        public ushort sin_family;
-        public ushort sin_port;
-        public in_addr sin_addr;
-        public fixed byte sin_zero[8];
+        [FieldOffset(0)] public ushort sin_family;
+        [FieldOffset(2)] public ushort sin_port;
+        [FieldOffset(4)] public in_addr sin_addr;
+        [FieldOffset(8)] public fixed byte sin_zero[8];
     }
 }

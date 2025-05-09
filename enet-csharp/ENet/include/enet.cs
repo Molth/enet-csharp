@@ -90,7 +90,7 @@ namespace enet
 
         public override int GetHashCode()
         {
-            var hashCode = new HashCode();
+            HashCode hashCode = new HashCode();
 #if NET6_0_OR_GREATER
             hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 16));
 #else
@@ -126,7 +126,7 @@ namespace enet
 
         public override int GetHashCode()
         {
-            var hashCode = new HashCode();
+            HashCode hashCode = new HashCode();
 #if NET6_0_OR_GREATER
             hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 20));
 #else

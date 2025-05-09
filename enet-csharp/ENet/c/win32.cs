@@ -36,7 +36,7 @@ namespace enet
         public static int enet_socket_bind(nint socket, ENetAddress* address)
         {
             if (address == null)
-                return (int)Bind(socket, null);
+                return (int)Bind6(socket, null);
 
             sockaddr_in6 socketAddress;
             socketAddress.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
@@ -45,13 +45,13 @@ namespace enet
             memcpy(socketAddress.sin6_addr, &address->host, 16);
             socketAddress.sin6_scope_id = 0;
 
-            return (int)Bind(socket, &socketAddress);
+            return (int)Bind6(socket, &socketAddress);
         }
 
         public static int enet_socket_get_address(nint socket, ENetAddress* address)
         {
             sockaddr_in6 socketAddress;
-            int result = (int)GetName(socket, &socketAddress);
+            int result = (int)GetName6(socket, &socketAddress);
             if (result == 0)
             {
                 memcpy(&address->host, socketAddress.sin6_addr, 16);
@@ -64,7 +64,7 @@ namespace enet
         public static nint enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
-                return Create();
+                return Create(true);
 
             return INVALID_SOCKET;
         }
@@ -128,7 +128,7 @@ namespace enet
             if (bufferCount == 0)
                 return 0;
             else if (bufferCount == 1)
-                return SendTo(socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
+                return SendTo6(socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
             else
             {
                 nuint totalLength = 0;
@@ -142,7 +142,7 @@ namespace enet
                     offset += buffers[i].dataLength;
                 }
 
-                return SendTo(socket, buffer, (int)totalLength, &socketAddress);
+                return SendTo6(socket, buffer, (int)totalLength, &socketAddress);
             }
         }
 
@@ -154,7 +154,7 @@ namespace enet
                 return 0;
             else if (bufferCount == 1)
             {
-                result = ReceiveFrom(socket, buffers->data, (int)buffers->dataLength, &socketAddress);
+                result = ReceiveFrom6(socket, buffers->data, (int)buffers->dataLength, &socketAddress);
                 if (result <= 0)
                     return result;
                 goto label;
@@ -165,7 +165,7 @@ namespace enet
                 for (nuint i = 0; i < bufferCount; ++i)
                     totalLength += buffers[i].dataLength;
                 byte* buffer = stackalloc byte[(int)totalLength];
-                result = ReceiveFrom(socket, buffer, (int)totalLength, &socketAddress);
+                result = ReceiveFrom6(socket, buffer, (int)totalLength, &socketAddress);
                 if (result <= 0)
                     return result;
                 int offset = 0;
@@ -217,23 +217,38 @@ namespace enet
 
         public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> ip)
         {
-            return (int)SetIP(&address->host, ip);
+            sockaddr_in6 __socketAddress_native;
+            SocketError error = SetIP6(&__socketAddress_native, ip);
+            if (error == 0)
+                memcpy(address, __socketAddress_native.sin6_addr, 16);
+
+            return (int)error;
         }
 
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
-            return (int)SetHostName(&address->host, hostName);
+            sockaddr_in6 __socketAddress_native;
+            SocketError error = SetHostName6(&__socketAddress_native, hostName);
+            if (error == 0)
+                memcpy(address, __socketAddress_native.sin6_addr, 16);
+
+            return (int)error;
         }
 
         public static int enet_address_get_host_ip(ENetAddress* address, byte* ip, nuint nameLength)
         {
-            return (int)GetIP(&address->host, MemoryMarshal.CreateSpan(ref *ip, (int)nameLength));
+            sockaddr_in6 __socketAddress_native;
+            memcpy(__socketAddress_native.sin6_addr, address, 16);
+
+            SocketError error = GetIP6(&__socketAddress_native, MemoryMarshal.CreateSpan(ref *ip, (int)nameLength));
+
+            return (int)error;
         }
 
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
         {
             sockaddr_in6 socketAddress;
-            int result = (int)GetHostName(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+            int result = (int)GetHostName6(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
             if (result == 0)
             {
                 memcpy(&address->host, socketAddress.sin6_addr, 16);

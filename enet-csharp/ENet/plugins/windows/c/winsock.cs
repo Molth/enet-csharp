@@ -32,17 +32,24 @@ namespace winsock
         public static SocketError Cleanup() => WSACleanup();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static nint Create()
+        public static nint Create(bool ipv6)
         {
-            nint socket = WSASocketW((AddressFamily)ADDRESS_FAMILY_INTER_NETWORK_V6, SocketType.Dgram, ProtocolType.Udp, 0, 0, 1 | 128);
+            AddressFamily family;
+            family = ipv6 ? (AddressFamily)ADDRESS_FAMILY_INTER_NETWORK_V6 : AddressFamily.InterNetwork;
+            nint socket = WSASocketW(family, SocketType.Dgram, ProtocolType.Udp, 0, 0, 1 | 128);
             if (socket != -1)
             {
-                int optionValue = 0;
-                SocketError errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
-                if (errorCode != SocketError.Success)
+                SocketError errorCode;
+                if (ipv6)
                 {
-                    Close(socket);
-                    socket = -1;
+                    int optionValue = 0;
+                    errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
+                    if (errorCode != SocketError.Success)
+                    {
+                        Close(socket);
+                        socket = -1;
+                        goto label;
+                    }
                 }
 
                 byte* __inBuffer_native = stackalloc byte[1] { 0x00 };
@@ -55,6 +62,7 @@ namespace winsock
                 }
             }
 
+            label:
             return socket;
         }
 
@@ -66,34 +74,60 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Bind(nint socket, sockaddr_in6* socketAddress)
+        public static SocketError Bind4(nint socket, sockaddr_in* socketAddress)
+        {
+            sockaddr_in __socketAddress_native;
+            if (socketAddress == null)
+            {
+                __socketAddress_native = new sockaddr_in();
+                SetIP4(&__socketAddress_native, "0.0.0.0");
+            }
+            else
+            {
+                __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+            }
+
+            SocketError errorCode = bind(socket, (sockaddr*)&__socketAddress_native, sizeof(sockaddr_in));
+            return errorCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError Bind6(nint socket, sockaddr_in6* socketAddress)
         {
             sockaddr_in6 __socketAddress_native;
             if (socketAddress == null)
             {
                 __socketAddress_native = new sockaddr_in6();
-                SetIP(&__socketAddress_native, "::");
+                SetIP6(&__socketAddress_native, "::");
             }
             else
             {
-                if (socketAddress->sin6_family != (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
-                    return SocketError.InvalidArgument;
-
                 __socketAddress_native = *socketAddress;
                 __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
             }
 
-            SocketError errorCode = bind(socket, (sockaddr*)&__socketAddress_native, 28);
+            SocketError errorCode = bind(socket, (sockaddr*)&__socketAddress_native, sizeof(sockaddr_in6));
             return errorCode;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError Connect(nint socket, sockaddr_in6* socketAddress)
+        public static SocketError Connect4(nint socket, sockaddr_in* socketAddress)
+        {
+            sockaddr_in __socketAddress_native = *socketAddress;
+            __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+
+            SocketError errorCode = connect(socket, (sockaddr*)&__socketAddress_native, sizeof(sockaddr_in));
+            return errorCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError Connect6(nint socket, sockaddr_in6* socketAddress)
         {
             sockaddr_in6 __socketAddress_native = *socketAddress;
             __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
 
-            SocketError errorCode = connect(socket, (sockaddr*)&__socketAddress_native, 28);
+            SocketError errorCode = connect(socket, (sockaddr*)&__socketAddress_native, sizeof(sockaddr_in6));
             return errorCode;
         }
 
@@ -154,21 +188,53 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int SendTo(nint socket, void* buffer, int length, sockaddr_in6* socketAddress)
+        public static int SendTo4(nint socket, void* buffer, int length, sockaddr_in* socketAddress)
+        {
+            if (socketAddress != null)
+            {
+                sockaddr_in __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+                return sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in));
+            }
+
+            int num = sendto(socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in));
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SendTo6(nint socket, void* buffer, int length, sockaddr_in6* socketAddress)
         {
             if (socketAddress != null)
             {
                 sockaddr_in6 __socketAddress_native = *socketAddress;
                 __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
-                return sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, 28);
+                return sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in6));
             }
 
-            int num = sendto(socket, (byte*)buffer, length, SocketFlags.None, null, 28);
+            int num = sendto(socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in6));
             return num;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ReceiveFrom(nint socket, void* buffer, int length, sockaddr_in6* socketAddress)
+        public static int ReceiveFrom4(nint socket, void* buffer, int length, sockaddr_in* socketAddress)
+        {
+            sockaddr_storage addressStorage = new sockaddr_storage();
+            int socketAddressSize = sizeof(sockaddr_storage);
+
+            int num = recvfrom(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&addressStorage, &socketAddressSize);
+
+            if (num > 0 && socketAddress != null)
+            {
+                sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                *socketAddress = *__socketAddress_native;
+                socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+            }
+
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ReceiveFrom6(nint socket, void* buffer, int length, sockaddr_in6* socketAddress)
         {
             sockaddr_storage addressStorage = new sockaddr_storage();
             int socketAddressSize = sizeof(sockaddr_storage);
@@ -197,7 +263,23 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetName(nint socket, sockaddr_in6* socketAddress)
+        public static SocketError GetName4(nint socket, sockaddr_in* socketAddress)
+        {
+            sockaddr_storage addressStorage = new sockaddr_storage();
+            int socketAddressSize = sizeof(sockaddr_storage);
+            SocketError errorCode = getsockname(socket, (sockaddr*)&addressStorage, &socketAddressSize);
+            if (errorCode == SocketError.Success)
+            {
+                sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                *socketAddress = *__socketAddress_native;
+                socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+            }
+
+            return errorCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError GetName6(nint socket, sockaddr_in6* socketAddress)
         {
             sockaddr_storage addressStorage = new sockaddr_storage();
             int socketAddressSize = sizeof(sockaddr_storage);
@@ -224,22 +306,17 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetIP(void* pAddrBuf, ReadOnlySpan<char> ip)
+        public static SocketError SetIP4(sockaddr_in* socketAddress, ReadOnlySpan<char> ip)
         {
+            void* pAddrBuf = &socketAddress->sin_addr;
+
             int byteCount = Encoding.ASCII.GetByteCount(ip);
             Span<byte> buffer = stackalloc byte[byteCount];
             Encoding.ASCII.GetBytes(ip, buffer);
 
-            int addressFamily = (int)ADDRESS_FAMILY_INTER_NETWORK_V6;
-            if (ip.IndexOf(':') < 0)
-            {
-                addressFamily = (int)AddressFamily.InterNetwork;
-                Unsafe.InitBlockUnaligned(pAddrBuf, 0, 8);
-                Unsafe.WriteUnaligned((byte*)pAddrBuf + 8, -0x10000);
-                pAddrBuf = (byte*)pAddrBuf + 12;
-            }
+            int addressFamily = (int)AddressFamily.InterNetwork;
 
-            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (byte*)pAddrBuf);
+            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), pAddrBuf);
 
             switch (error)
             {
@@ -253,8 +330,52 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetIP(void* pAddrBuf, Span<byte> buffer)
+        public static SocketError SetIP6(sockaddr_in6* socketAddress, ReadOnlySpan<char> ip)
         {
+            void* pAddrBuf = socketAddress->sin6_addr;
+
+            int byteCount = Encoding.ASCII.GetByteCount(ip);
+            Span<byte> buffer = stackalloc byte[byteCount];
+            Encoding.ASCII.GetBytes(ip, buffer);
+
+            int addressFamily = (int)ADDRESS_FAMILY_INTER_NETWORK_V6;
+            if (ip.IndexOf(':') < 0)
+            {
+                addressFamily = (int)AddressFamily.InterNetwork;
+                Unsafe.InitBlockUnaligned(pAddrBuf, 0, 8);
+                Unsafe.WriteUnaligned((byte*)pAddrBuf + 8, -0x10000);
+                pAddrBuf = (byte*)pAddrBuf + 12;
+            }
+
+            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), pAddrBuf);
+
+            switch (error)
+            {
+                case 1:
+                    return SocketError.Success;
+                case 0:
+                    return SocketError.InvalidArgument;
+                default:
+                    return SocketError.Fault;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError GetIP4(sockaddr_in* socketAddress, Span<byte> buffer)
+        {
+            void* pAddrBuf = &socketAddress->sin_addr;
+
+            if (inet_ntop((int)AddressFamily.InterNetwork, pAddrBuf, ref MemoryMarshal.GetReference(buffer), (nuint)buffer.Length) == null)
+                return SocketError.Fault;
+
+            return SocketError.Success;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError GetIP6(sockaddr_in6* socketAddress, Span<byte> buffer)
+        {
+            void* pAddrBuf = socketAddress->sin6_addr;
+
             ref int reference = ref Unsafe.AsRef<int>(pAddrBuf);
             if (Unsafe.Add<int>(ref reference, 2) == -0x10000 && reference == 0 && Unsafe.Add(ref reference, 1) == 0)
             {
@@ -270,8 +391,10 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError SetHostName(void* pAddrBuf, ReadOnlySpan<char> hostName)
+        public static SocketError SetHostName4(sockaddr_in* socketAddress, ReadOnlySpan<char> hostName)
         {
+            void* pAddrBuf = &socketAddress->sin_addr;
+
             int byteCount = Encoding.ASCII.GetByteCount(hostName);
             Span<byte> buffer = stackalloc byte[byteCount];
             Encoding.ASCII.GetBytes(hostName, buffer);
@@ -288,11 +411,62 @@ namespace winsock
                 {
                     if (hint->ai_family == (int)AddressFamily.InterNetwork)
                     {
-                        sockaddr_in* socketAddress = (sockaddr_in*)hint->ai_addr;
+                        sockaddr_in* __socketAddress_native = (sockaddr_in*)hint->ai_addr;
+
+                        *socketAddress = *__socketAddress_native;
+                        socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+
+                        freeaddrinfo(results);
+
+                        return 0;
+                    }
+                }
+            }
+
+            if (results != null)
+                freeaddrinfo(results);
+
+            const int addressFamily = (int)AddressFamily.InterNetwork;
+
+            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), pAddrBuf);
+
+            switch (error)
+            {
+                case 1:
+                    return SocketError.Success;
+                case 0:
+                    return SocketError.InvalidArgument;
+                default:
+                    return SocketError.Fault;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError SetHostName6(sockaddr_in6* socketAddress, ReadOnlySpan<char> hostName)
+        {
+            void* pAddrBuf = socketAddress->sin6_addr;
+
+            int byteCount = Encoding.ASCII.GetByteCount(hostName);
+            Span<byte> buffer = stackalloc byte[byteCount];
+            Encoding.ASCII.GetBytes(hostName, buffer);
+
+            addrinfo addressInfo = new addrinfo();
+            addrinfo* hint, results = null;
+
+            if (getaddrinfo((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), null, &addressInfo, &results) != 0)
+                return SocketError.Fault;
+
+            for (hint = results; hint != null; hint = hint->ai_next)
+            {
+                if (hint->ai_addr != null && hint->ai_addrlen >= (nuint)sizeof(sockaddr_in))
+                {
+                    if (hint->ai_family == (int)AddressFamily.InterNetwork)
+                    {
+                        sockaddr_in* __socketAddress_native = (sockaddr_in*)hint->ai_addr;
 
                         Unsafe.InitBlockUnaligned(pAddrBuf, 0, 8);
                         Unsafe.WriteUnaligned((byte*)pAddrBuf + 8, -0x10000);
-                        Unsafe.WriteUnaligned((byte*)pAddrBuf + 12, socketAddress->sin_addr.S_addr);
+                        Unsafe.WriteUnaligned((byte*)pAddrBuf + 12, __socketAddress_native->sin_addr.S_addr);
 
                         freeaddrinfo(results);
 
@@ -301,9 +475,9 @@ namespace winsock
 
                     if (hint->ai_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                     {
-                        sockaddr_in6* socketAddress = (sockaddr_in6*)hint->ai_addr;
+                        sockaddr_in6* __socketAddress_native = (sockaddr_in6*)hint->ai_addr;
 
-                        Unsafe.CopyBlockUnaligned(pAddrBuf, socketAddress->sin6_addr, 16);
+                        Unsafe.CopyBlockUnaligned(pAddrBuf, __socketAddress_native->sin6_addr, 16);
 
                         freeaddrinfo(results);
 
@@ -321,9 +495,10 @@ namespace winsock
                 addressFamily = (int)AddressFamily.InterNetwork;
                 Unsafe.InitBlockUnaligned(pAddrBuf, 0, 8);
                 Unsafe.WriteUnaligned((byte*)pAddrBuf + 8, -0x10000);
+                pAddrBuf = (byte*)pAddrBuf + 12;
             }
 
-            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), (byte*)pAddrBuf + 12);
+            int error = inet_pton(addressFamily, Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), pAddrBuf);
 
             switch (error)
             {
@@ -337,7 +512,30 @@ namespace winsock
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SocketError GetHostName(sockaddr_in6* socketAddress, Span<byte> buffer)
+        public static SocketError GetHostName4(sockaddr_in* socketAddress, Span<byte> buffer)
+        {
+            sockaddr_in __socketAddress_native = *socketAddress;
+
+            __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+
+            int error = getnameinfo((sockaddr*)&__socketAddress_native, sizeof(sockaddr_in), ref MemoryMarshal.GetReference(buffer), (ulong)buffer.Length, null, 0, 0x4);
+
+            if (error == 0)
+            {
+                if (Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)) != null && buffer.Length > 0 && buffer.IndexOf((byte)'\0') < 0)
+                    return SocketError.Fault;
+
+                return SocketError.Success;
+            }
+
+            if (error != 0x2AF9L)
+                return SocketError.Fault;
+
+            return GetIP4(socketAddress, buffer);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError GetHostName6(sockaddr_in6* socketAddress, Span<byte> buffer)
         {
             sockaddr_in6 __socketAddress_native = *socketAddress;
 
@@ -356,7 +554,7 @@ namespace winsock
             if (error != 0x2AF9L)
                 return SocketError.Fault;
 
-            return GetIP(socketAddress->sin6_addr, buffer);
+            return GetIP6(socketAddress, buffer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
