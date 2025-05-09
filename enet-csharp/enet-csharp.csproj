@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet-no_binaries</PackageId>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
