@@ -247,15 +247,17 @@ namespace enet
 
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
         {
-            sockaddr_in6 socketAddress;
-            int result = (int)GetHostName6(&socketAddress, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
-            if (result == 0)
-            {
-                memcpy(&address->host, socketAddress.sin6_addr, 16);
-                address->port = socketAddress.sin6_port;
-            }
+            sockaddr_in6 __socketAddress_native;
 
-            return result;
+            __socketAddress_native.sin6_family = (ushort)ADDRESS_FAMILY_INTER_NETWORK_V6;
+            __socketAddress_native.sin6_port = address->port;
+            __socketAddress_native.sin6_flowinfo = 0;
+            memcpy(__socketAddress_native.sin6_addr, address, 16);
+            __socketAddress_native.sin6_scope_id = 0;
+
+            SocketError error = GetHostName6(&__socketAddress_native, MemoryMarshal.CreateSpan(ref *hostName, (int)nameLength));
+
+            return (int)error;
         }
     }
 }

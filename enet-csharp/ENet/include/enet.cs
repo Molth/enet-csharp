@@ -119,7 +119,7 @@ namespace enet
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
         [FieldOffset(0)] public ENetIP host;
-        [FieldOffset(16)] public UInt16 port;
+        [FieldOffset(16)] public ushort port;
 
         public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);

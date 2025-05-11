@@ -36,6 +36,12 @@ namespace enet
                 enet_address_set_host_ip(&address, "0.0.0.0");
                 address.port = 7777;
 
+                byte* hostName = stackalloc byte[1024];
+                int error = enet_address_get_host(&address, hostName, 1024);
+
+                if (error == 0)
+                    Console.WriteLine(new string((sbyte*)hostName));
+
                 host = enet_host_create(&address, 4095, 0, 0, 0);
 
                 ENetPeer* peer = null;
