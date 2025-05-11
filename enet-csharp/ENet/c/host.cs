@@ -12,6 +12,11 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+        /// <summary>
+        ///     Sends a ping request to an address.
+        /// </summary>
+        /// <param name="host">host ping the address</param>
+        /// <param name="address">destination for the ping request</param>
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
             ENetBuffer buffer;
@@ -21,6 +26,33 @@ namespace enet
             return enet_socket_send(host->socket, address, &buffer, 1) > 0 ? 0 : -1;
         }
 
+        /// <summary>
+        ///     Creates a host for communicating to peers.
+        /// </summary>
+        /// <param name="address">
+        ///     The address at which other peers may connect to this host. If NULL, then no peers may connect to
+        ///     the host.
+        /// </param>
+        /// <param name="peerCount">The maximum number of peers that should be allocated for the host.</param>
+        /// <param name="channelLimit">
+        ///     The maximum number of channels allowed; if 0, then this is equivalent to
+        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        /// </param>
+        /// <param name="incomingBandwidth">
+        ///     Downstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
+        ///     bandwidth.
+        /// </param>
+        /// <param name="outgoingBandwidth">
+        ///     Upstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
+        ///     bandwidth.
+        /// </param>
+        /// <returns>The host on success and NULL on failure</returns>
+        /// <remarks>
+        ///     ENet will strategically drop packets on specific sides of a connection between hosts
+        ///     to ensure the host's bandwidth is not overwhelmed. The bandwidth parameters also determine
+        ///     the window size of a connection which limits the amount of reliable packets that may be in transit
+        ///     at any given time.
+        /// </remarks>
         public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth)
         {
             ENetHost* host;
@@ -120,6 +152,10 @@ namespace enet
             return host;
         }
 
+        /// <summary>
+        ///     Destroys the host and all resources associated with it.
+        /// </summary>
+        /// <param name="host">pointer to the host to destroy</param>
         public static void enet_host_destroy(ENetHost* host)
         {
             ENetPeer* currentPeer;
@@ -151,6 +187,18 @@ namespace enet
             return n ^ (n >> 14);
         }
 
+        /// <summary>
+        ///     Initiates a connection to a foreign host.
+        /// </summary>
+        /// <param name="host">host seeking the connection</param>
+        /// <param name="address">destination for the connection</param>
+        /// <param name="channelCount">number of channels to allocate</param>
+        /// <param name="data">user data supplied to the receiving host</param>
+        /// <returns>a peer representing the foreign host on success, NULL on failure</returns>
+        /// <remarks>
+        ///     The peer returned will have not completed the connection until enet_host_service()
+        ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
+        /// </remarks>
         public static ENetPeer* enet_host_connect(ENetHost* host, ENetAddress* address, nuint channelCount, uint data)
         {
             ENetPeer* currentPeer;
@@ -230,6 +278,12 @@ namespace enet
             return currentPeer;
         }
 
+        /// <summary>
+        ///     Queues a packet to be sent to all peers associated with the host.
+        /// </summary>
+        /// <param name="host">host on which to broadcast the packet</param>
+        /// <param name="channelID">channel on which to broadcast</param>
+        /// <param name="packet">packet to broadcast</param>
         public static void enet_host_broadcast(ENetHost* host, byte channelID, ENetPacket* packet)
         {
             ENetPeer* currentPeer;
@@ -248,6 +302,11 @@ namespace enet
                 enet_packet_destroy(packet);
         }
 
+        /// <summary>
+        ///     Sets the packet compressor the host should use to compress and decompress packets.
+        /// </summary>
+        /// <param name="host">host to enable or disable compression for</param>
+        /// <param name="compressor">callbacks for for the packet compressor; if NULL, then compression is disabled</param>
         public static void enet_host_compress(ENetHost* host, ENetCompressor* compressor)
         {
             if (host->compressor.context != null && host->compressor.destroy != null)
@@ -259,6 +318,14 @@ namespace enet
                 host->compressor.context = null;
         }
 
+        /// <summary>
+        ///     Limits the maximum allowed channels of future incoming connections.
+        /// </summary>
+        /// <param name="host">host to limit</param>
+        /// <param name="channelLimit">
+        ///     the maximum number of channels allowed; if 0, then this is equivalent to
+        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        /// </param>
         public static void enet_host_channel_limit(ENetHost* host, nuint channelLimit)
         {
             if (!(channelLimit != 0) || channelLimit > ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT)
@@ -269,6 +336,16 @@ namespace enet
             host->channelLimit = channelLimit;
         }
 
+        /// <summary>
+        ///     Adjusts the bandwidth limits of a host.
+        /// </summary>
+        /// <param name="host">host to adjust</param>
+        /// <param name="incomingBandwidth">new incoming bandwidth</param>
+        /// <param name="outgoingBandwidth">new outgoing bandwidth</param>
+        /// <remarks>
+        ///     the incoming and outgoing bandwidth parameters are identical in function to those
+        ///     specified in <see cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint)" />.
+        /// </remarks>
         public static void enet_host_bandwidth_limit(ENetHost* host, uint incomingBandwidth, uint outgoingBandwidth)
         {
             host->incomingBandwidth = incomingBandwidth;

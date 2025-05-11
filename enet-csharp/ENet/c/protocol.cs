@@ -1726,6 +1726,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Sends any queued packets on the host specified to its designated peers.
+        /// </summary>
+        /// <param name="host">host to flush</param>
+        /// <remarks>
+        ///     This function need only be used in circumstances where one wishes to send queued packets earlier than in a call to
+        ///     enet_host_service().
+        /// </remarks>
         public static void enet_host_flush(ENetHost* host)
         {
             host->serviceTime = enet_time_get();
@@ -1733,6 +1741,24 @@ namespace enet
             enet_protocol_send_outgoing_commands(host, null, 0);
         }
 
+        /// <summary>
+        ///     Checks for any queued events on the host and dispatches one if available.
+        /// </summary>
+        /// <param name="host">host to check for events</param>
+        /// <param name="event">an event structure where event details will be placed if available</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>&gt; 0 if an event was dispatched</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>0 if no events are available</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        /// </returns>
         public static int enet_host_check_events(ENetHost* host, ENetEvent* @event)
         {
             if (@event == null) return -1;
@@ -1744,6 +1770,32 @@ namespace enet
             return enet_protocol_dispatch_incoming_commands(host, @event);
         }
 
+        /// <summary>
+        ///     Waits for events on the host specified and shuttles packets between
+        ///     the host and its peers.
+        /// </summary>
+        /// <param name="host">host to service</param>
+        /// <param name="event">
+        ///     an event structure where event details will be placed if one occurs
+        ///     if event == NULL then no events will be delivered
+        /// </param>
+        /// <param name="timeout">number of milliseconds that ENet should wait for events</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>&gt; 0 if an event occurred within the specified time limit</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>0 if no event occurred</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        /// </returns>
+        /// <remarks>
+        ///     enet_host_service should be called fairly regularly for adequate performance
+        /// </remarks>
         public static int enet_host_service(ENetHost* host, ENetEvent* @event, uint timeout)
         {
             uint waitCondition;

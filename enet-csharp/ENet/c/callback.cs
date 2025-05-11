@@ -9,6 +9,19 @@ namespace enet
     {
         public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free);
 
+        /// <summary>
+        ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in
+        ///     ENet.
+        ///     Do not use <see cref="enet_initialize()" /> if you use this variant. Make sure the <see cref="ENetCallbacks" />
+        ///     structure
+        ///     is zeroed out so that any additional callbacks added in future versions will be properly ignored.
+        /// </summary>
+        /// <param name="version">
+        ///     the constant <see cref="ENet.ENET_VERSION" /> should be supplied so ENet knows which version of
+        ///     <see cref="ENetCallbacks" /> struct to use
+        /// </param>
+        /// <param name="inits">user-overridden callbacks where any NULL callbacks will use ENet's defaults</param>
+        /// <returns>0 on success, &lt; 0 on failure</returns>
         public static int enet_initialize_with_callbacks(uint version, ENetCallbacks* inits)
         {
             if (version < ENET_VERSION_CREATE(1, 3, 0))
@@ -26,6 +39,10 @@ namespace enet
             return enet_initialize();
         }
 
+        /// <summary>
+        ///     Gives the linked version of the ENet library.
+        /// </summary>
+        /// <returns>the version number</returns>
         public static uint enet_linked_version() => ENET_VERSION;
 
         public static void* enet_malloc(nuint size) => callbacks.malloc(size);

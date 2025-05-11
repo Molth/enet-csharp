@@ -8,6 +8,8 @@ namespace enet
 {
     public partial class ENet
     {
+        /* adaptation constants tuned aggressively for small packet sizes rather than large file compression */
+
         public const uint ENET_RANGE_CODER_TOP = 1 << 24;
         public const uint ENET_RANGE_CODER_BOTTOM = 1 << 16;
 
@@ -22,6 +24,7 @@ namespace enet
 
     public unsafe struct ENetRangeCoder
     {
+        /* only allocate enough symbols for reasonable MTUs, would need to be larger for large file compression */
         public ENetSymbols symbols_t;
         public ENetSymbol* symbols => (ENetSymbol*)Unsafe.AsPointer(ref symbols_t);
     }
@@ -939,6 +942,11 @@ namespace enet
             return (nuint)(outData - outStart);
         }
 
+        /// <summary>
+        ///     Sets the packet compressor the host should use to the default range coder.
+        /// </summary>
+        /// <param name="host">host to enable the range coder for</param>
+        /// <returns>0 on success, &lt; 0 on failure</returns>
         public static int enet_host_compress_with_range_coder(ENetHost* host)
         {
             ENetCompressor compressor;

@@ -115,6 +115,17 @@ namespace enet
         public static implicit operator ReadOnlySpan<byte>(ENetIP ip) => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, byte>(ref ip), 16);
     }
 
+    /// <summary>
+    ///     Portable internet address structure.
+    /// </summary>
+    /// <remarks>
+    ///     The host must be specified in <b>network byte-order</b>, and the port must be in host
+    ///     byte-order. The constant ENET_HOST_ANY may be used to specify the default
+    ///     server host. The constant ENET_HOST_BROADCAST may be used to specify the
+    ///     broadcast address (255.255.255.255).  This makes sense for enet_host_connect,
+    ///     but not for enet_host_create.  Once a server responds to a broadcast, the
+    ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = 20)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
@@ -148,23 +159,121 @@ namespace enet
         public static bool operator !=(ENetAddress left, ENetAddress right) => !left.Equals(right);
     }
 
+    /// <summary>
+    ///     Packet flag bit constants.
+    /// </summary>
+    /// <remarks>
+    ///     The host must be specified in <b>network byte-order</b>, and the port must be in
+    ///     host byte-order. The constant ENET_HOST_ANY may be used to specify the
+    ///     default server host.
+    /// </remarks>
+    /// <seealso cref="ENetPacket" />
     [Flags]
     public enum ENetPacketFlag
     {
+        /// <summary>
+        ///     packet must be received by the target peer and resend attempts should be
+        ///     made until the packet is delivered
+        /// </summary>
         ENET_PACKET_FLAG_RELIABLE = (1 << 0),
+
+        /// <summary>
+        ///     packet will not be sequenced with other packets
+        /// </summary>
         ENET_PACKET_FLAG_UNSEQUENCED = (1 << 1),
+
+        /// <summary>
+        ///     packet will not allocate data, and user must supply it instead
+        /// </summary>
         ENET_PACKET_FLAG_NO_ALLOCATE = (1 << 2),
+
+        /// <summary>
+        ///     packet will be fragmented using unreliable (instead of reliable) sends
+        ///     if it exceeds the MTU
+        /// </summary>
         ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT = (1 << 3),
+
+        /// <summary>
+        ///     whether the packet has been sent from all queues it has been entered into
+        /// </summary>
         ENET_PACKET_FLAG_SENT = (1 << 8)
     }
 
+    /// <summary>
+    ///     ENet packet structure.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         An ENet data packet that may be sent to or received from a peer. The shown
+    ///         fields should only be read and never modified. The data field contains the
+    ///         allocated data for the packet. The dataLength fields specifies the length
+    ///         of the allocated data. The flags field is either 0 (specifying no flags),
+    ///         or a bitwise-or of any combination of the following flags:
+    ///     </para>
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>
+    ///                 <c>ENET_PACKET_FLAG_RELIABLE</c> - packet must be received by the target peer
+    ///                 and resend attempts should be made until the packet is delivered
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 <c>ENET_PACKET_FLAG_UNSEQUENCED</c> - packet will not be sequenced with other packets
+    ///                 (not supported for reliable packets)
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 <c>ENET_PACKET_FLAG_NO_ALLOCATE</c> - packet will not allocate data, and user must supply it
+    ///                 instead
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 <c>ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT</c> - packet will be fragmented using unreliable
+    ///                 (instead of reliable) sends if it exceeds the MTU
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 <c>ENET_PACKET_FLAG_SENT</c> - whether the packet has been sent from all queues it has been
+    ///                 entered into
+    ///             </description>
+    ///         </item>
+    ///     </list>
+    /// </remarks>
+    /// <seealso cref="ENetPacketFlag" />
     public unsafe struct ENetPacket
     {
+        /// <summary>
+        ///     internal use only
+        /// </summary>
         public nuint referenceCount;
+
+        /// <summary>
+        ///     bitwise-or of ENetPacketFlag constants
+        /// </summary>
         public uint flags;
+
+        /// <summary>
+        ///     allocated data for packet
+        /// </summary>
         public byte* data;
+
+        /// <summary>
+        ///     length of data
+        /// </summary>
         public nuint dataLength;
+
+        /// <summary>
+        ///     function to be called when the packet is no longer in use
+        /// </summary>
         public delegate* managed<ENetPacket*, void> freeCallback;
+
+        /// <summary>
+        ///     application private data, may be freely modified
+        /// </summary>
         public void* userData;
     }
 
@@ -266,6 +375,12 @@ namespace enet
         ENET_PEER_FLAG_CONTINUE_SENDING = (1 << 1)
     }
 
+    /// <summary>
+    ///     An ENet peer which data packets may be sent or received from.
+    /// </summary>
+    /// <remarks>
+    ///     No fields should be modified unless otherwise specified.
+    /// </remarks>
     public unsafe struct ENetPeer
     {
         public ENetListNode dispatchList;
@@ -275,13 +390,35 @@ namespace enet
         public uint connectID;
         public byte outgoingSessionID;
         public byte incomingSessionID;
+
+        /// <summary>
+        ///     Internet address of the peer
+        /// </summary>
         public ENetAddress address;
+
+        /// <summary>
+        ///     Application private data, may be freely modified
+        /// </summary>
         public void* data;
+
         public ENetPeerState state;
         public ENetChannel* channels;
+
+        /// <summary>
+        ///     Number of channels allocated for communication with peer
+        /// </summary>
         public nuint channelCount;
+
+        /// <summary>
+        ///     Downstream bandwidth of the client in bytes/second
+        /// </summary>
         public uint incomingBandwidth;
+
+        /// <summary>
+        ///     Upstream bandwidth of the client in bytes/second
+        /// </summary>
         public uint outgoingBandwidth;
+
         public uint incomingBandwidthThrottleEpoch;
         public uint outgoingBandwidthThrottleEpoch;
         public uint incomingDataTotal;
@@ -293,7 +430,12 @@ namespace enet
         public uint packetLossEpoch;
         public uint packetsSent;
         public uint packetsLost;
+
+        /// <summary>
+        ///     mean packet loss of reliable packets as a ratio with respect to the constant ENET_PEER_PACKET_LOSS_SCALE
+        /// </summary>
         public uint packetLoss;
+
         public uint packetLossVariance;
         public uint packetThrottle;
         public uint packetThrottleLimit;
@@ -310,7 +452,12 @@ namespace enet
         public uint lowestRoundTripTime;
         public uint lastRoundTripTimeVariance;
         public uint highestRoundTripTimeVariance;
+
+        /// <summary>
+        ///     mean round trip time (RTT), in milliseconds, between sending a reliable packet and receiving its acknowledgement
+        /// </summary>
         public uint roundTripTime;
+
         public uint roundTripTimeVariance;
         public uint mtu;
         public uint windowSize;
@@ -330,27 +477,90 @@ namespace enet
         public nuint totalWaitingData;
     }
 
+    /// <summary>
+    ///     An ENet packet compressor for compressing UDP packets before socket sends or receives.
+    /// </summary>
     public unsafe struct ENetCompressor
     {
+        /// <summary>
+        ///     Context data for the compressor. Must be non-NULL.
+        /// </summary>
         public void* context;
+
+        /// <summary>
+        ///     Compresses from inBuffers[0:inBufferCount-1], containing inLimit bytes, to outData, outputting at most outLimit
+        ///     bytes. Should return 0 on failure.
+        /// </summary>
         public delegate* managed<void*, ENetBuffer*, nuint, nuint, byte*, nuint, nuint> compress;
+
+        /// <summary>
+        ///     Decompresses from inData, containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0
+        ///     on failure.
+        /// </summary>
         public delegate* managed<void*, byte*, nuint, byte*, nuint, nuint> decompress;
+
+        /// <summary>
+        ///     Destroys the context when compression is disabled or the host is destroyed. May be NULL.
+        /// </summary>
         public delegate* managed<void*, void> destroy;
     }
 
+    /// <summary>
+    ///     An ENet host for communicating with peers.
+    /// </summary>
+    /// <remarks>
+    ///     No fields should be modified unless otherwise stated.
+    /// </remarks>
+    /// <seealso cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint)" />
+    /// <seealso cref="enet_host_destroy(ENetHost*)" />
+    /// <seealso cref="enet_host_connect(ENetHost*, ENetAddress*, nuint, uint)" />
+    /// <seealso cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
+    /// <seealso cref="enet_host_flush(ENetHost*)" />
+    /// <seealso cref="enet_host_broadcast(ENetHost*, byte, ENetPacket*)" />
+    /// <seealso cref="enet_host_compress(ENetHost*, ENetCompressor*)" />
+    /// <seealso cref="enet_host_compress_with_range_coder(ENetHost*)" />
+    /// <seealso cref="enet_host_channel_limit(ENetHost*, nuint)" />
+    /// <seealso cref="enet_host_bandwidth_limit(ENetHost*, uint, uint)" />
+    /// <seealso cref="enet_host_bandwidth_throttle(ENetHost*)" />
     public unsafe struct ENetHost
     {
         public nint socket;
+
+        /// <summary>
+        ///     Internet address of the host
+        /// </summary>
         public ENetAddress address;
+
+        /// <summary>
+        ///     downstream bandwidth of the host
+        /// </summary>
         public uint incomingBandwidth;
+
+        /// <summary>
+        ///     upstream bandwidth of the host
+        /// </summary>
         public uint outgoingBandwidth;
+
         public uint bandwidthThrottleEpoch;
         public uint mtu;
         public uint randomSeed;
         public int recalculateBandwidthLimits;
+
+        /// <summary>
+        ///     array of peers allocated for this host
+        /// </summary>
         public ENetPeer* peers;
+
+        /// <summary>
+        ///     number of peers allocated for this host
+        /// </summary>
         public nuint peerCount;
+
+        /// <summary>
+        ///     maximum number of channels allowed for connected peers
+        /// </summary>
         public nuint channelLimit;
+
         public uint serviceTime;
         public ENetList dispatchQueue;
         public uint totalQueued;
@@ -362,21 +572,59 @@ namespace enet
         public ENetBuffers buffers_t;
         public ENetBuffer* buffers => (ENetBuffer*)Unsafe.AsPointer(ref buffers_t);
         public nuint bufferCount;
+
+        /// <summary>
+        ///     callback the user can set to enable packet checksums for this host
+        /// </summary>
         public delegate* managed<ENetBuffer*, nuint, uint> checksum;
+
         public ENetCompressor compressor;
         public ENetPacketData packetData;
         public ENetAddress receivedAddress;
         public byte* receivedData;
         public nuint receivedDataLength;
+
+        /// <summary>
+        ///     total data sent, user should reset to 0 as needed to prevent overflow
+        /// </summary>
         public uint totalSentData;
+
+        /// <summary>
+        ///     total UDP packets sent, user should reset to 0 as needed to prevent overflow
+        /// </summary>
         public uint totalSentPackets;
+
+        /// <summary>
+        ///     total data received, user should reset to 0 as needed to prevent overflow
+        /// </summary>
         public uint totalReceivedData;
+
+        /// <summary>
+        ///     total UDP packets received, user should reset to 0 as needed to prevent overflow
+        /// </summary>
         public uint totalReceivedPackets;
+
+        /// <summary>
+        ///     callback the user can set to intercept received raw UDP packets
+        /// </summary>
         public delegate* managed<ENetHost*, ENetEvent*, int> intercept;
+
         public nuint connectedPeers;
         public nuint bandwidthLimitedPeers;
+
+        /// <summary>
+        ///     optional number of allowed peers from duplicate IPs, defaults to ENET_PROTOCOL_MAXIMUM_PEER_ID
+        /// </summary>
         public nuint duplicatePeers;
+
+        /// <summary>
+        ///     the maximum allowable packet size that may be sent or received on a peer
+        /// </summary>
         public nuint maximumPacketSize;
+
+        /// <summary>
+        ///     the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered
+        /// </summary>
         public nuint maximumWaitingData;
     }
 
@@ -509,20 +757,71 @@ namespace enet
         public fixed byte data[(int)ENET_PROTOCOL_MAXIMUM_MTU];
     }
 
+    /// <summary>
+    ///     An ENet event type, as specified in <see cref="ENetEvent" />.
+    /// </summary>
     public enum ENetEventType
     {
+        /// <summary>
+        ///     no event occurred within the specified time limit
+        /// </summary>
         ENET_EVENT_TYPE_NONE = 0,
+
+        /// <summary>
+        ///     a connection request initiated by enet_host_connect has completed.
+        ///     The peer field contains the peer which successfully connected.
+        /// </summary>
         ENET_EVENT_TYPE_CONNECT = 1,
+
+        /// <summary>
+        ///     a peer has disconnected. This event is generated on a successful
+        ///     completion of a disconnect initiated by enet_peer_disconnect, if
+        ///     a peer has timed out, or if a connection request intialized by
+        ///     enet_host_connect has timed out. The peer field contains the peer
+        ///     which disconnected. The data field contains user supplied data
+        ///     describing the disconnection, or 0, if none is available.
+        /// </summary>
         ENET_EVENT_TYPE_DISCONNECT = 2,
+
+        /// <summary>
+        ///     a packet has been received from a peer. The peer field specifies the
+        ///     peer which sent the packet. The channelID field specifies the channel
+        ///     number upon which the packet was received. The packet field contains
+        ///     the packet that was received; this packet must be destroyed with
+        ///     enet_packet_destroy after use.
+        /// </summary>
         ENET_EVENT_TYPE_RECEIVE = 3
     }
 
+    /// <summary>
+    ///     An ENet event as returned by enet_host_service().
+    /// </summary>
+    /// <seealso cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
     public unsafe struct ENetEvent
     {
+        /// <summary>
+        ///     type of the event
+        /// </summary>
         public ENetEventType type;
+
+        /// <summary>
+        ///     peer that generated a connect, disconnect or receive event
+        /// </summary>
         public ENetPeer* peer;
+
+        /// <summary>
+        ///     channel on the peer that generated the event, if appropriate
+        /// </summary>
         public byte channelID;
+
+        /// <summary>
+        ///     data associated with the event, if appropriate
+        /// </summary>
         public uint data;
+
+        /// <summary>
+        ///     packet associated with the event, if appropriate
+        /// </summary>
         public ENetPacket* packet;
     }
 }

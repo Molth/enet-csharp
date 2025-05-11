@@ -11,6 +11,13 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+        /// <summary>
+        ///     Creates a packet that may be sent to a peer.
+        /// </summary>
+        /// <param name="data">initial contents of the packet's data; the packet's data will remain uninitialized if data is NULL.</param>
+        /// <param name="dataLength">size of the data allocated for this packet</param>
+        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <returns>the packet on success, NULL on failure</returns>
         public static ENetPacket* enet_packet_create(void* data, nuint dataLength, uint flags)
         {
             ENetPacket* packet = (ENetPacket*)enet_malloc((nuint)sizeof(ENetPacket));
@@ -36,6 +43,10 @@ namespace enet
             return packet;
         }
 
+        /// <summary>
+        ///     Destroys the packet and deallocates its data.
+        /// </summary>
+        /// <param name="packet">packet to be destroyed</param>
         public static void enet_packet_destroy(ENetPacket* packet)
         {
             if (packet == null)
@@ -49,6 +60,13 @@ namespace enet
             enet_free(packet);
         }
 
+        /// <summary>
+        ///     Attempts to resize the data in the packet to length specified in the
+        ///     dataLength parameter.
+        /// </summary>
+        /// <param name="packet">packet to resize</param>
+        /// <param name="dataLength">new size for the packet data</param>
+        /// <returns>0 on success, &lt; 0 on failure</returns>
         public static int enet_packet_resize(ENetPacket* packet, nuint dataLength)
         {
             byte* newData;

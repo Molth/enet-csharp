@@ -23,14 +23,30 @@ namespace enet
 
         public static uint timeBase = 0;
 
+        /// <summary>
+        ///     Initializes ENet globally. Must be called prior to using any functions in
+        ///     ENet.
+        /// </summary>
+        /// <returns>0 on success, &lt; 0 on failure</returns>
         public static int enet_initialize() => (int)Initialize();
 
+        /// <summary>
+        ///     Shuts down ENet globally.  Should be called when a program that has
+        ///     initialized ENet exits.
+        /// </summary>
         public static void enet_deinitialize() => Cleanup();
 
         public static uint enet_host_random_seed() => (uint)timeGetTime();
 
+        /// <returns>
+        ///     the wall-time in milliseconds.  Its initial value is unspecified
+        ///     unless otherwise set.
+        /// </returns>
         public static uint enet_time_get() => (uint)timeGetTime() - timeBase;
 
+        /// <summary>
+        ///     Sets the current wall-time in milliseconds.
+        /// </summary>
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
         public static int enet_socket_bind(nint socket, ENetAddress* address)
@@ -215,6 +231,23 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Attempts to parse the printable form of the IP address in the parameter hostName
+        ///     and sets the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store the parsed IP address</param>
+        /// <param name="ip">IP address to parse</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
         public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> ip)
         {
             sockaddr_in6 __socketAddress_native;
@@ -225,6 +258,23 @@ namespace enet
             return (int)error;
         }
 
+        /// <summary>
+        ///     Attempts to resolve the host named by the parameter hostName and sets
+        ///     the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store resolved address</param>
+        /// <param name="hostName">host name to lookup</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
         public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName)
         {
             sockaddr_in6 __socketAddress_native;
@@ -235,6 +285,23 @@ namespace enet
             return (int)error;
         }
 
+        /// <summary>
+        ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
+        /// </summary>
+        /// <param name="address">address printed</param>
+        /// <param name="ip">destination for name, must not be NULL</param>
+        /// <param name="nameLength">maximum length of hostName.</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the null-terminated name of the host in hostName on success
+        /// </returns>
         public static int enet_address_get_host_ip(ENetAddress* address, byte* ip, nuint nameLength)
         {
             sockaddr_in6 __socketAddress_native;
@@ -245,6 +312,23 @@ namespace enet
             return (int)error;
         }
 
+        /// <summary>
+        ///     Attempts to do a reverse lookup of the host field in the address parameter.
+        /// </summary>
+        /// <param name="address">address used for reverse lookup</param>
+        /// <param name="hostName">destination for name, must not be NULL</param>
+        /// <param name="nameLength">maximum length of hostName.</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the null-terminated name of the host in hostName on success
+        /// </returns>
         public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength)
         {
             sockaddr_in6 __socketAddress_native;
