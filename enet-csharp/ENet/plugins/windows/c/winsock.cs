@@ -36,35 +36,16 @@ namespace winsock
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static nint Create(bool ipv6)
         {
-            AddressFamily family;
-            family = ipv6 ? (AddressFamily)ADDRESS_FAMILY_INTER_NETWORK_V6 : AddressFamily.InterNetwork;
+            AddressFamily family = ipv6 ? (AddressFamily)ADDRESS_FAMILY_INTER_NETWORK_V6 : AddressFamily.InterNetwork;
             nint socket = WSASocketW(family, SocketType.Dgram, ProtocolType.Udp, 0, 0, 1 | 128);
+
             if (socket != -1)
             {
-                SocketError errorCode;
-                if (ipv6)
-                {
-                    int optionValue = 0;
-                    errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
-                    if (errorCode != SocketError.Success)
-                    {
-                        Close(socket);
-                        socket = -1;
-                        goto label;
-                    }
-                }
-
-                byte* __inBuffer_native = stackalloc byte[1] { 0x00 };
+                byte* __inBuffer_native = stackalloc byte[1] { 0x0 };
                 int __bytesTransferred_native;
-                errorCode = WSAIoctl(socket, -1744830452, __inBuffer_native, 1, null, 0, &__bytesTransferred_native, 0, 0);
-                if (errorCode != SocketError.Success)
-                {
-                    Close(socket);
-                    socket = -1;
-                }
+                SocketError errorCode = WSAIoctl(socket, -1744830452, __inBuffer_native, 1, null, 0, &__bytesTransferred_native, 0, 0);
             }
 
-            label:
             return socket;
         }
 
@@ -72,6 +53,14 @@ namespace winsock
         public static SocketError Close(nint socket)
         {
             SocketError errorCode = closesocket(socket);
+            return errorCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError SetDualMode6(nint socket, bool dualMode)
+        {
+            int optionValue = dualMode ? 0 : 1;
+            SocketError errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
             return errorCode;
         }
 

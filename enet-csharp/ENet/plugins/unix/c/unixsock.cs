@@ -191,20 +191,8 @@ namespace unixsock
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static nint Create(bool ipv6)
         {
-            int family;
-            family = ipv6 ? ADDRESS_FAMILY_INTER_NETWORK_V6 : (int)AddressFamily.InterNetwork;
+            int family = ipv6 ? ADDRESS_FAMILY_INTER_NETWORK_V6 : (int)AddressFamily.InterNetwork;
             nint _socket = socket(family, (int)SocketType.Dgram, 0);
-            if (_socket != -1 && ipv6)
-            {
-                int optionValue = 0;
-                SocketError errorCode = SetOption(_socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
-                if (errorCode != SocketError.Success)
-                {
-                    Close(_socket);
-                    _socket = -1;
-                }
-            }
-
             return _socket;
         }
 
@@ -212,6 +200,14 @@ namespace unixsock
         public static SocketError Close(nint socket)
         {
             SocketError errorCode = close(socket);
+            return errorCode;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError SetDualMode6(nint socket, bool dualMode)
+        {
+            int optionValue = dualMode ? 0 : 1;
+            SocketError errorCode = SetOption(socket, SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, &optionValue);
             return errorCode;
         }
 

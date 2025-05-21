@@ -21,6 +21,7 @@ namespace NativeSockets
         private static readonly delegate* managed<SocketError> _Cleanup;
         private static readonly delegate* managed<bool, nint> _Create;
         private static readonly delegate* managed<nint, SocketError> _Close;
+        private static readonly delegate* managed<nint, bool, SocketError> _SetDualMode6;
         private static readonly delegate* managed<nint, sockaddr_in*, SocketError> _Bind4;
         private static readonly delegate* managed<nint, sockaddr_in6*, SocketError> _Bind6;
         private static readonly delegate* managed<nint, sockaddr_in*, SocketError> _Connect4;
@@ -60,6 +61,7 @@ namespace NativeSockets
                 _Cleanup = &WinSock.Cleanup;
                 _Create = &WinSock.Create;
                 _Close = &WinSock.Close;
+                _SetDualMode6 = &WinSock.SetDualMode6;
                 _Bind4 = &WinSock.Bind4;
                 _Bind6 = &WinSock.Bind6;
                 _Connect4 = &WinSock.Connect4;
@@ -91,6 +93,7 @@ namespace NativeSockets
                 _Cleanup = &UnixSock.Cleanup;
                 _Create = &UnixSock.Create;
                 _Close = &UnixSock.Close;
+                _SetDualMode6 = &UnixSock.SetDualMode6;
                 _Bind4 = &UnixSock.Bind4;
                 _Bind6 = &UnixSock.Bind6;
                 _Connect4 = &UnixSock.Connect4;
@@ -130,6 +133,9 @@ namespace NativeSockets
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError Close(nint socket) => _Close(socket);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError SetDualMode6(nint socket, bool dualMode) => _SetDualMode6(socket, dualMode);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError Bind4(nint socket, sockaddr_in* socketAddress) => _Bind4(socket, socketAddress);

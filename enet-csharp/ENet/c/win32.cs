@@ -80,7 +80,14 @@ namespace enet
         public static nint enet_socket_create(ENetSocketType type)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
-                return Create(true);
+            {
+                var socket = Create(true);
+
+                if (socket != -1)
+                    SetDualMode6(socket, true);
+
+                return socket;
+            }
 
             return INVALID_SOCKET;
         }
