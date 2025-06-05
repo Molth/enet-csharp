@@ -33,7 +33,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_host_ip(&address, "0.0.0.0");
+                enet_address_set_host_ip(&address, "::0");
                 address.port = 7777;
 
                 byte* hostName = stackalloc byte[1024];
@@ -42,7 +42,7 @@ namespace enet
                 if (error == 0)
                     Console.WriteLine(new string((sbyte*)hostName));
 
-                host = enet_host_create(&address, 4095, 0, 0, 0);
+                host = enet_host_create(&address, 4095, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE);
 
                 ENetPeer* peer = null;
 
@@ -106,7 +106,7 @@ namespace enet
                 enet_address_set_host_ip(&local, "0.0.0.0");
                 local.port = 7778;
 
-                host = enet_host_create(&local, 1, 0, 0, 0);
+                host = enet_host_create(&local, 1, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV4);
 
                 ENetPeer* peer = enet_host_connect(host, &address, 0, 0);
 

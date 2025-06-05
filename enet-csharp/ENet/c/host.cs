@@ -3,6 +3,7 @@ using static enet.ENetSocketType;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
+using static enet.ENetHostOption;
 
 #pragma warning disable CS1591
 
@@ -46,6 +47,19 @@ namespace enet
         ///     Upstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
         ///     bandwidth.
         /// </param>
+        /// <param name="option">
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV4 (default): IPv4</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV6_ONLY: IPv6-only</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both IPv4 and IPv6</description>
+        ///         </item>
+        ///     </list>
+        /// </param>
         /// <returns>The host on success and NULL on failure</returns>
         /// <remarks>
         ///     ENet will strategically drop packets on specific sides of a connection between hosts
@@ -53,8 +67,11 @@ namespace enet
         ///     the window size of a connection which limits the amount of reliable packets that may be in transit
         ///     at any given time.
         /// </remarks>
-        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth)
+        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option = 0)
         {
+            if (option < ENET_HOSTOPT_IPV4 || option > ENET_HOSTOPT_IPV6_DUALMODE)
+                return null;
+
             ENetHost* host;
             ENetPeer* currentPeer;
 
@@ -67,7 +84,11 @@ namespace enet
             host->peers = (ENetPeer*)enet_malloc(peerCount * (nuint)sizeof(ENetPeer));
             memset(host->peers, 0, peerCount * (nuint)sizeof(ENetPeer));
 
-            host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+            host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, option);
+
+            if (host->socket != ENET_SOCKET_NULL && option == ENET_HOSTOPT_IPV6_DUALMODE)
+                enet_socket_set_option(host->socket, ENET_SOCKOPT_IPV6_ONLY, 0);
+
             if (host->socket == ENET_SOCKET_NULL || (address != null && enet_socket_bind(host->socket, address) < 0))
             {
                 if (host->socket != ENET_SOCKET_NULL)
@@ -344,7 +365,7 @@ namespace enet
         /// <param name="outgoingBandwidth">new outgoing bandwidth</param>
         /// <remarks>
         ///     the incoming and outgoing bandwidth parameters are identical in function to those
-        ///     specified in <see cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint)" />.
+        ///     specified in <see cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint, ENetHostOption)" />.
         /// </remarks>
         public static void enet_host_bandwidth_limit(ENetHost* host, uint incomingBandwidth, uint outgoingBandwidth)
         {

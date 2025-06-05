@@ -39,6 +39,13 @@ namespace enet
         ENET_SOCKET_WAIT_INTERRUPT = (1 << 2)
     }
 
+    public enum ENetHostOption
+    {
+        ENET_HOSTOPT_IPV4 = 0,
+        ENET_HOSTOPT_IPV6_ONLY = 1,
+        ENET_HOSTOPT_IPV6_DUALMODE = 2
+    }
+
     public enum ENetSocketOption
     {
         ENET_SOCKOPT_NONBLOCK = 1,
@@ -50,7 +57,8 @@ namespace enet
         ENET_SOCKOPT_SNDTIMEO = 7,
         ENET_SOCKOPT_ERROR = 8,
         ENET_SOCKOPT_NODELAY = 9,
-        ENET_SOCKOPT_TTL = 10
+        ENET_SOCKOPT_TTL = 10,
+        ENET_SOCKOPT_IPV6_ONLY = 11
     }
 
     public enum ENetSocketShutdown
@@ -70,8 +78,8 @@ namespace enet
     [StructLayout(LayoutKind.Explicit, Size = 16)]
     public unsafe struct ENetIP : IEquatable<ENetIP>
     {
-        [FieldOffset(0)] public fixed Byte ipv6[16];
-        [FieldOffset(12)] public fixed Byte ipv4[4];
+        [FieldOffset(0)] public fixed byte ipv6[16];
+        [FieldOffset(12)] public fixed byte ipv4[4];
 
         public ENetIP(ReadOnlySpan<byte> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), ref MemoryMarshal.GetReference(buffer), (uint)buffer.Length);
 
@@ -126,13 +134,43 @@ namespace enet
     ///     but not for enet_host_create.  Once a server responds to a broadcast, the
     ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = 20)]
+    [StructLayout(LayoutKind.Explicit, Size = 24)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
         [FieldOffset(0)] public ENetIP host;
+        [FieldOffset(12)] public uint address;
         [FieldOffset(16)] public ushort port;
+        [FieldOffset(20)] public uint scopeID;
 
-        public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port;
+        public Span<byte> IPv6
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 16);
+        }
+
+        public Span<byte> IPv4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 12), 4);
+        }
+
+        public bool IsIPv4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                ref int reference = ref Unsafe.As<ENetAddress, int>(ref Unsafe.AsRef(in this));
+                return Unsafe.Add(ref reference, 2) == -0x10000 && reference == 0 && Unsafe.Add(ref reference, 1) == 0;
+            }
+        }
+
+        public bool IsIPv6
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => !IsIPv4;
+        }
+
+        public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port && this.scopeID == other.scopeID;
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
 
         public override int GetHashCode()
@@ -511,7 +549,7 @@ namespace enet
     /// <remarks>
     ///     No fields should be modified unless otherwise stated.
     /// </remarks>
-    /// <seealso cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint)" />
+    /// <seealso cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint, ENetHostOption)" />
     /// <seealso cref="enet_host_destroy(ENetHost*)" />
     /// <seealso cref="enet_host_connect(ENetHost*, ENetAddress*, nuint, uint)" />
     /// <seealso cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
@@ -524,7 +562,7 @@ namespace enet
     /// <seealso cref="enet_host_bandwidth_throttle(ENetHost*)" />
     public unsafe struct ENetHost
     {
-        public nint socket;
+        public ENetSocket socket;
 
         /// <summary>
         ///     Internet address of the host

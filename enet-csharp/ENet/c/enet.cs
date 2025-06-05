@@ -62,19 +62,19 @@ namespace enet
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static nint enet_socket_create(ENetSocketType type) => ENet.enet_socket_create(type);
+        public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option = 0) => ENet.enet_socket_create(type, option);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_bind(nint socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
+        public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_get_address(nint socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_send(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
+        public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_receive(nint socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
+        public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_wait(nint socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
@@ -83,7 +83,7 @@ namespace enet
         public static int enet_socket_set_option(nint socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void enet_socket_destroy(nint* socket) => ENet.enet_socket_destroy(socket);
+        public static void enet_socket_destroy(ENetSocket* socket) => ENet.enet_socket_destroy(socket);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
@@ -223,6 +223,19 @@ namespace enet
         ///     Upstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
         ///     bandwidth.
         /// </param>
+        /// <param name="option">
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV4 (default): IPv4</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV6_ONLY: IPv6-only</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both IPv4 and IPv6</description>
+        ///         </item>
+        ///     </list>
+        /// </param>
         /// <returns>The host on success and NULL on failure</returns>
         /// <remarks>
         ///     ENet will strategically drop packets on specific sides of a connection between hosts
@@ -231,7 +244,7 @@ namespace enet
         ///     at any given time.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth) => ENet.enet_host_create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth);
+        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option = 0) => ENet.enet_host_create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);
 
         /// <summary>
         ///     Destroys the host and all resources associated with it.
@@ -352,7 +365,7 @@ namespace enet
         /// <param name="outgoingBandwidth">new outgoing bandwidth</param>
         /// <remarks>
         ///     the incoming and outgoing bandwidth parameters are identical in function to those
-        ///     specified in <see cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint)" />.
+        ///     specified in <see cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint, ENetHostOption)" />.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_bandwidth_limit(ENetHost* host, uint incomingBandwidth, uint outgoingBandwidth) => ENet.enet_host_bandwidth_limit(host, incomingBandwidth, outgoingBandwidth);
