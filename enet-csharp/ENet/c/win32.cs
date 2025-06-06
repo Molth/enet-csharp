@@ -102,9 +102,16 @@ namespace enet
             {
                 bool ipv6 = option == ENET_HOSTOPT_IPV6_ONLY || option == ENET_HOSTOPT_IPV6_DUALMODE;
                 nint socket = Create(ipv6);
+                if (socket != ENET_SOCKET_NULL && option == ENET_HOSTOPT_IPV6_DUALMODE && enet_socket_set_option(socket, ENET_SOCKOPT_IPV6_ONLY, 0) < 0)
+                {
+                    Close(socket);
+                    goto error;
+                }
+
                 return new ENetSocket { handle = (int)socket, IsIPv6 = ipv6 };
             }
 
+            error:
             return new ENetSocket { handle = (int)INVALID_SOCKET };
         }
 

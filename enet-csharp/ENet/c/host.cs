@@ -86,9 +86,6 @@ namespace enet
 
             host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, option);
 
-            if (host->socket != ENET_SOCKET_NULL && option == ENET_HOSTOPT_IPV6_DUALMODE)
-                enet_socket_set_option(host->socket, ENET_SOCKOPT_IPV6_ONLY, 0);
-
             if (host->socket == ENET_SOCKET_NULL || (address != null && enet_socket_bind(host->socket, address) < 0))
             {
                 if (host->socket != ENET_SOCKET_NULL)
