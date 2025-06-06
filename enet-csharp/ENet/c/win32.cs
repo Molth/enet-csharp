@@ -70,7 +70,7 @@ namespace enet
             else
             {
                 if (address->IsIPv6)
-                    return (int)SocketError.AddressFamilyNotSupported;
+                    return -1;
 
                 sockaddr_in socketAddress;
                 socketAddress.sin_family = (ushort)AddressFamily.InterNetwork;
