@@ -329,13 +329,13 @@ namespace enet
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
             {
-                error = (int)Poll(socket, (int)(timeout / 1000), SelectMode.SelectWrite, out status);
+                error = (int)Poll(socket, (int)(timeout * 1000), SelectMode.SelectWrite, out status);
                 return (error == 0 && status) ? 0 : -1;
             }
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
             {
-                error = (int)Poll(socket, (int)(timeout / 1000), SelectMode.SelectRead, out status);
+                error = (int)Poll(socket, (int)(timeout * 1000), SelectMode.SelectRead, out status);
                 return (error == 0 && status) ? 0 : -1;
             }
 
