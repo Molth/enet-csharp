@@ -7,7 +7,7 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free);
+        public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free, &abort);
 
         /// <summary>
         ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in
@@ -36,6 +36,9 @@ namespace enet
                 callbacks.free = inits->free;
             }
 
+            if (inits->no_memory != null)
+                callbacks.no_memory = inits->no_memory;
+
             return enet_initialize();
         }
 
@@ -45,7 +48,15 @@ namespace enet
         /// <returns>the version number</returns>
         public static uint enet_linked_version() => ENET_VERSION;
 
-        public static void* enet_malloc(nuint size) => callbacks.malloc(size);
+        public static void* enet_malloc(nuint size)
+        {
+            void* memory = callbacks.malloc(size);
+
+            if (memory == null)
+                callbacks.no_memory();
+
+            return memory;
+        }
 
         public static void enet_free(void* memory) => callbacks.free(memory);
     }

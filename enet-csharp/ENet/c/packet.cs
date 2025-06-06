@@ -21,6 +21,8 @@ namespace enet
         public static ENetPacket* enet_packet_create(void* data, nuint dataLength, uint flags)
         {
             ENetPacket* packet = (ENetPacket*)enet_malloc((nuint)sizeof(ENetPacket));
+            if (packet == null)
+                return null;
 
             if ((flags & (uint)ENET_PACKET_FLAG_NO_ALLOCATE) != 0)
                 packet->data = (byte*)data;
@@ -29,6 +31,11 @@ namespace enet
             else
             {
                 packet->data = (byte*)enet_malloc(dataLength);
+                if (packet->data == null)
+                {
+                    enet_free(packet);
+                    return null;
+                }
 
                 if (data != null)
                     memcpy(packet->data, data, dataLength);
@@ -79,6 +86,8 @@ namespace enet
             }
 
             newData = (byte*)enet_malloc(dataLength);
+            if (newData == null)
+                return -1;
 
             if (packet->data != null)
             {

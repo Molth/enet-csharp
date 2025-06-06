@@ -337,7 +337,8 @@ namespace enet
             if (channelCount > host->channelLimit)
                 channelCount = host->channelLimit;
             peer->channels = (ENetChannel*)enet_malloc(channelCount * (nuint)sizeof(ENetChannel));
-
+            if (peer->channels == null)
+                return null;
             peer->channelCount = channelCount;
             peer->state = ENET_PEER_STATE_ACKNOWLEDGING_CONNECT;
             peer->connectID = command->connect.connectID;

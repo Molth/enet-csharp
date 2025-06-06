@@ -79,9 +79,19 @@ namespace enet
                 return null;
 
             host = (ENetHost*)enet_malloc((nuint)sizeof(ENetHost));
+            if (host == null)
+                return null;
+
             memset(host, 0, (nuint)sizeof(ENetHost));
 
             host->peers = (ENetPeer*)enet_malloc(peerCount * (nuint)sizeof(ENetPeer));
+            if (host->peers == null)
+            {
+                enet_free(host);
+
+                return null;
+            }
+
             memset(host->peers, 0, peerCount * (nuint)sizeof(ENetPeer));
 
             host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, option);
@@ -240,6 +250,8 @@ namespace enet
                 return null;
 
             currentPeer->channels = (ENetChannel*)enet_malloc(channelCount * (nuint)sizeof(ENetChannel));
+            if (currentPeer->channels == null)
+                return null;
 
             currentPeer->channelCount = channelCount;
             currentPeer->state = ENET_PEER_STATE_CONNECTING;

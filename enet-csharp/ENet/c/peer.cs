@@ -167,6 +167,17 @@ namespace enet
                         fragmentLength = (nuint)(packet->dataLength - fragmentOffset);
 
                     fragment = (ENetOutgoingCommand*)enet_malloc((nuint)sizeof(ENetOutgoingCommand));
+                    if (fragment == null)
+                    {
+                        while (!enet_list_empty(&fragments))
+                        {
+                            fragment = (ENetOutgoingCommand*)enet_list_remove(enet_list_begin(&fragments));
+
+                            enet_free(fragment);
+                        }
+
+                        return -1;
+                    }
 
                     fragment->fragmentOffset = fragmentOffset;
                     fragment->fragmentLength = (ushort)fragmentLength;
@@ -627,6 +638,8 @@ namespace enet
             }
 
             acknowledgement = (ENetAcknowledgement*)enet_malloc((nuint)sizeof(ENetAcknowledgement));
+            if (acknowledgement == null)
+                return null;
 
             peer->outgoingDataTotal += (uint)sizeof(ENetProtocolAcknowledge);
 
@@ -708,6 +721,8 @@ namespace enet
         public static ENetOutgoingCommand* enet_peer_queue_outgoing_command(ENetPeer* peer, ENetProtocol* command, ENetPacket* packet, uint offset, ushort length)
         {
             ENetOutgoingCommand* outgoingCommand = (ENetOutgoingCommand*)enet_malloc((nuint)sizeof(ENetOutgoingCommand));
+            if (outgoingCommand == null)
+                return null;
 
             outgoingCommand->command = *command;
             outgoingCommand->fragmentOffset = offset;
@@ -965,6 +980,8 @@ namespace enet
                 goto notifyError;
 
             incomingCommand = (ENetIncomingCommand*)enet_malloc((nuint)sizeof(ENetIncomingCommand));
+            if (incomingCommand == null)
+                goto notifyError;
 
             incomingCommand->reliableSequenceNumber = command->header.reliableSequenceNumber;
             incomingCommand->unreliableSequenceNumber = (ushort)(unreliableSequenceNumber & 0xFFFF);
@@ -978,6 +995,13 @@ namespace enet
             {
                 if (fragmentCount <= ENET_PROTOCOL_MAXIMUM_FRAGMENT_COUNT)
                     incomingCommand->fragments = (uint*)enet_malloc((nuint)((fragmentCount + 31) / 32 * sizeof(uint)));
+
+                if (incomingCommand->fragments == null)
+                {
+                    enet_free(incomingCommand);
+
+                    goto notifyError;
+                }
 
                 memset(incomingCommand->fragments, 0, (nuint)((fragmentCount + 31) / 32 * sizeof(uint)));
             }
