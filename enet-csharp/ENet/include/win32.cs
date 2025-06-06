@@ -29,7 +29,7 @@ namespace enet
         public void* data;
     }
 
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
     public struct ENetSocket
     {
         [FieldOffset(0)] public int handle;
