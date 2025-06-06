@@ -364,7 +364,10 @@ namespace enet
             sockaddr_in6 __socketAddress_native;
             SocketError error = SetIP6(&__socketAddress_native, ip);
             if (error == 0)
+            {
                 memcpy(address, __socketAddress_native.sin6_addr, 16);
+                address->scopeID = __socketAddress_native.sin6_scope_id;
+            }
 
             return (int)error;
         }
@@ -391,7 +394,10 @@ namespace enet
             sockaddr_in6 __socketAddress_native;
             SocketError error = SetHostName6(&__socketAddress_native, hostName);
             if (error == 0)
+            {
                 memcpy(address, __socketAddress_native.sin6_addr, 16);
+                address->scopeID = __socketAddress_native.sin6_scope_id;
+            }
 
             return (int)error;
         }
@@ -417,6 +423,7 @@ namespace enet
         {
             sockaddr_in6 __socketAddress_native;
             memcpy(__socketAddress_native.sin6_addr, address, 16);
+            __socketAddress_native.sin6_scope_id = address->scopeID;
 
             SocketError error = GetIP6(&__socketAddress_native, MemoryMarshal.CreateSpan(ref *ip, (int)nameLength));
 
