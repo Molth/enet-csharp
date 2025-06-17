@@ -216,6 +216,7 @@ namespace winsock
 
             if (num > 0 && socketAddress != null)
             {
+                socketAddress->sin_family = (ushort)AddressFamily.InterNetwork;
                 sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                 *socketAddress = *__socketAddress_native;
                 socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
@@ -234,6 +235,7 @@ namespace winsock
 
             if (num > 0 && socketAddress != null)
             {
+                socketAddress->sin6_family = ADDRESS_FAMILY_INTER_NETWORK_V6;
                 if (addressStorage.ss_family == (int)AddressFamily.InterNetwork)
                 {
                     sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;

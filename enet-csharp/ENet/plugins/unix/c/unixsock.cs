@@ -365,6 +365,7 @@ namespace unixsock
 
             if (num > 0 && socketAddress != null)
             {
+                socketAddress->sin_family = (ushort)AddressFamily.InterNetwork;
                 sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                 *socketAddress = *__socketAddress_native;
                 socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
@@ -385,6 +386,7 @@ namespace unixsock
             {
                 if (addressStorage.ss_family == (int)AddressFamily.InterNetwork)
                 {
+                    socketAddress->sin6_family = ADDRESS_FAMILY_INTER_NETWORK_V6;
                     sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                     Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, -0x10000);
