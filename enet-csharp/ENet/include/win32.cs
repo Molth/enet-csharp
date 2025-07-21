@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Runtime.InteropServices;
 
 #pragma warning disable CS1591
 
@@ -29,12 +28,11 @@ namespace enet
         public void* data;
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 8)]
     public struct ENetSocket
     {
-        [FieldOffset(0)] public int handle;
+        public nint handle;
         public bool IsIPv4 => !IsIPv6;
-        [FieldOffset(4)] public bool IsIPv6;
+        public bool IsIPv6;
 
         public static implicit operator bool(ENetSocket socket) => socket.handle > 0;
         public static implicit operator nint(ENetSocket socket) => socket.handle;

@@ -108,11 +108,11 @@ namespace enet
                     goto error;
                 }
 
-                return new ENetSocket { handle = (int)socket, IsIPv6 = ipv6 };
+                return new ENetSocket { handle = socket, IsIPv6 = ipv6 };
             }
 
             error:
-            return new ENetSocket { handle = (int)INVALID_SOCKET };
+            return new ENetSocket { handle = INVALID_SOCKET };
         }
 
         public static int enet_socket_set_option(nint socket, ENetSocketOption option, int value)
