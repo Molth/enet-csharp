@@ -384,9 +384,9 @@ namespace unixsock
 
             if (num > 0 && socketAddress != null)
             {
+                socketAddress->sin6_family = ADDRESS_FAMILY_INTER_NETWORK_V6;
                 if (addressStorage.ss_family == (int)AddressFamily.InterNetwork)
                 {
-                    socketAddress->sin6_family = ADDRESS_FAMILY_INTER_NETWORK_V6;
                     sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                     Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, -0x10000);
