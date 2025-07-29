@@ -10,7 +10,7 @@ namespace NativeSockets
 {
     public static class WinSock2
     {
-        internal static readonly int ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 = (BitConverter.IsLittleEndian ? -65536 : 65535);
+        public static int ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 { get; } = (BitConverter.IsLittleEndian ? -65536 : 65535);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort HOST_TO_NET_16(ushort host) => BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(host) : host;

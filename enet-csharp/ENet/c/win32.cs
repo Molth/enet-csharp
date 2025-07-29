@@ -75,7 +75,7 @@ namespace enet
                 sockaddr_in socketAddress;
                 socketAddress.sin_family = (ushort)AddressFamily.InterNetwork;
                 socketAddress.sin_port = address->port;
-                memcpy(&socketAddress.sin_addr, &address->address, 4);
+                Unsafe.WriteUnaligned(&socketAddress.sin_addr, address->address);
                 memset(socketAddress.sin_zero, 0, 8);
 
                 return (int)Bind4(socket, &socketAddress);
@@ -205,7 +205,7 @@ namespace enet
                 sockaddr_in socketAddress;
                 socketAddress.sin_family = (ushort)AddressFamily.InterNetwork;
                 socketAddress.sin_port = address->port;
-                memcpy(&socketAddress.sin_addr, &address->address, 4);
+                Unsafe.WriteUnaligned(&socketAddress.sin_addr, address->address);
                 memset(socketAddress.sin_zero, 0, 8);
 
                 if (bufferCount == 1)
@@ -322,8 +322,8 @@ namespace enet
 
                 label:
                 memset(address, 0, 8);
-                Unsafe.WriteUnaligned((byte*)address + 8, -0x10000);
-                memcpy(&address->address, &socketAddress.sin_addr, 4);
+                Unsafe.WriteUnaligned((byte*)address + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
+                Unsafe.WriteUnaligned(&address->address, socketAddress.sin_addr);
                 address->port = socketAddress.sin_port;
                 return result;
             }
