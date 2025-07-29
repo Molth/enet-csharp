@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-#if NET7_0_OR_GREATER
-using System.Runtime.Intrinsics;
-#endif
+using NativeSockets;
 using static enet.ENet;
 
 #pragma warning disable CS1591
@@ -85,34 +83,19 @@ namespace enet
 
         public bool Equals(ENetIP other)
         {
-#if NET7_0_OR_GREATER
-            if (Vector128.IsHardwareAccelerated)
-                return Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this))) == Vector128.LoadUnsafe<byte>(ref Unsafe.As<ENetIP, byte>(ref other));
-#endif
-            ref int left = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
-            ref int right = ref Unsafe.As<ENetIP, int>(ref other);
-            return left == right && Unsafe.Add<int>(ref left, 1) == Unsafe.Add<int>(ref right, 1) && Unsafe.Add<int>(ref left, 2) == Unsafe.Add<int>(ref right, 2) && Unsafe.Add<int>(ref left, 3) == Unsafe.Add<int>(ref right, 3);
+            ref byte local1 = ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this));
+            ref byte local2 = ref Unsafe.As<ENetIP, byte>(ref other);
+            return SpanHelpers.Compare(ref local1, ref local2, 16);
         }
 
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            HashCode hashCode = new HashCode();
-#if NET6_0_OR_GREATER
-            hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 16));
-#else
-            ref int reference = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
-            for (int i = 0; i < 4; i++)
-                hashCode.Add(Unsafe.Add(ref reference, i));
-#endif
-            return hashCode.ToHashCode();
-        }
+        public override int GetHashCode() => XxHash.Hash32(this);
 
         public override string ToString()
         {
-            byte* buffer = stackalloc byte[64];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this)), buffer, 64);
+            byte* buffer = stackalloc byte[128];
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this)), buffer, 128);
             return new string((sbyte*)buffer);
         }
 
@@ -170,26 +153,21 @@ namespace enet
             get => !IsIPv4;
         }
 
-        public bool Equals(ENetAddress other) => this.host == other.host && this.port == other.port && this.scopeID == other.scopeID;
+        public bool Equals(ENetAddress other)
+        {
+            ref byte local1 = ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this));
+            ref byte local2 = ref Unsafe.As<ENetAddress, byte>(ref other);
+            return SpanHelpers.Compare(ref local1, ref local2, 24);
+        }
+
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            HashCode hashCode = new HashCode();
-#if NET6_0_OR_GREATER
-            hashCode.AddBytes(MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 20));
-#else
-            ref int reference = ref Unsafe.As<ENetAddress, int>(ref Unsafe.AsRef(in this));
-            for (int i = 0; i < 5; i++)
-                hashCode.Add(Unsafe.Add(ref reference, i));
-#endif
-            return hashCode.ToHashCode();
-        }
+        public override int GetHashCode() => XxHash.Hash32(this);
 
         public override string ToString()
         {
-            byte* buffer = stackalloc byte[64];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), buffer, 64);
+            byte* buffer = stackalloc byte[128];
+            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), buffer, 128);
             return new string((sbyte*)buffer) + ":" + port;
         }
 

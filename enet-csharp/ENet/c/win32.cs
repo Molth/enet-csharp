@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using winsock;
+using NativeSockets;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
@@ -337,13 +337,33 @@ namespace enet
             if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
             {
                 error = (int)Poll(socket, (int)(timeout * 1000), SelectMode.SelectWrite, out status);
-                return (error == 0 && status) ? 0 : -1;
+                if (error == 0)
+                {
+                    *condition = (uint)ENET_SOCKET_WAIT_NONE;
+                    if (status)
+                    {
+                        *condition |= (uint)ENET_SOCKET_WAIT_SEND;
+                        return 0;
+                    }
+                }
+
+                return -1;
             }
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
             {
                 error = (int)Poll(socket, (int)(timeout * 1000), SelectMode.SelectRead, out status);
-                return (error == 0 && status) ? 0 : -1;
+                if (error == 0)
+                {
+                    *condition = (uint)ENET_SOCKET_WAIT_NONE;
+                    if (status)
+                    {
+                        *condition |= (uint)ENET_SOCKET_WAIT_RECEIVE;
+                        return 0;
+                    }
+                }
+
+                return -1;
             }
 
             return 0;

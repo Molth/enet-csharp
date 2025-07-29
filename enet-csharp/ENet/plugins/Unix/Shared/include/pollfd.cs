@@ -5,12 +5,13 @@
 
 // ReSharper disable ALL
 
-namespace winsock
+namespace NativeSockets
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct sockaddr
+    internal struct pollfd
     {
-        public ushort sa_family;
-        public fixed byte sa_data[14];
+        public int fd;
+        public short events;
+        public short revents;
     }
 }

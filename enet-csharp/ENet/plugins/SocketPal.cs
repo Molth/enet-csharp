@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-#if !NET5_0_OR_GREATER
-using System.Runtime.InteropServices;
-#endif
-using unixsock;
-using winsock;
 
 #pragma warning disable CS1591
 
@@ -15,7 +10,12 @@ namespace NativeSockets
 {
     public static unsafe class SocketPal
     {
-        public static readonly ushort ADDRESS_FAMILY_INTER_NETWORK_V6;
+        public static ushort ADDRESS_FAMILY_INTER_NETWORK_V6 { get; }
+
+        public static bool IsWindows => WindowsSocketPal.IsSupported;
+        public static bool IsLinux => LinuxSocketPal.IsSupported;
+        public static bool IsBSD => BSDSocketPal.IsSupported;
+
         private static readonly delegate* managed<SocketError> _GetLastSocketError;
         private static readonly delegate* managed<SocketError> _Initialize;
         private static readonly delegate* managed<SocketError> _Cleanup;
@@ -30,8 +30,10 @@ namespace NativeSockets
         private static readonly delegate* managed<nint, SocketOptionLevel, SocketOptionName, int*, int*, SocketError> _GetOption;
         private static readonly delegate* managed<nint, bool, SocketError> _SetBlocking;
         private static readonly delegate* managed<nint, int, SelectMode, out bool, SocketError> _Poll;
+        private static readonly delegate* managed<nint, void*, int, int> _Send;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in*, int> _SendTo4;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in6*, int> _SendTo6;
+        private static readonly delegate* managed<nint, void*, int, int> _Receive;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in*, int> _ReceiveFrom4;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in6*, int> _ReceiveFrom6;
         private static readonly delegate* managed<nint, sockaddr_in*, SocketError> _GetName4;
@@ -47,76 +49,114 @@ namespace NativeSockets
 
         static SocketPal()
         {
-            bool isWindows =
-#if NET5_0_OR_GREATER
-                OperatingSystem.IsWindows();
-#else
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#endif
-            if (isWindows)
+            if (IsWindows)
             {
-                ADDRESS_FAMILY_INTER_NETWORK_V6 = WinSock.ADDRESS_FAMILY_INTER_NETWORK_V6;
-                _GetLastSocketError = &WinSock.GetLastSocketError;
-                _Initialize = &WinSock.Initialize;
-                _Cleanup = &WinSock.Cleanup;
-                _Create = &WinSock.Create;
-                _Close = &WinSock.Close;
-                _SetDualMode6 = &WinSock.SetDualMode6;
-                _Bind4 = &WinSock.Bind4;
-                _Bind6 = &WinSock.Bind6;
-                _Connect4 = &WinSock.Connect4;
-                _Connect6 = &WinSock.Connect6;
-                _SetOption = &WinSock.SetOption;
-                _GetOption = &WinSock.GetOption;
-                _SetBlocking = &WinSock.SetBlocking;
-                _Poll = &WinSock.Poll;
-                _SendTo4 = &WinSock.SendTo4;
-                _SendTo6 = &WinSock.SendTo6;
-                _ReceiveFrom4 = &WinSock.ReceiveFrom4;
-                _ReceiveFrom6 = &WinSock.ReceiveFrom6;
-                _GetName4 = &WinSock.GetName4;
-                _GetName6 = &WinSock.GetName6;
-                _SetIP4 = &WinSock.SetIP4;
-                _SetIP6 = &WinSock.SetIP6;
-                _GetIP4 = &WinSock.GetIP4;
-                _GetIP6 = &WinSock.GetIP6;
-                _SetHostName4 = &WinSock.SetHostName4;
-                _SetHostName6 = &WinSock.SetHostName6;
-                _GetHostName4 = &WinSock.GetHostName4;
-                _GetHostName6 = &WinSock.GetHostName6;
+                ADDRESS_FAMILY_INTER_NETWORK_V6 = WindowsSocketPal.ADDRESS_FAMILY_INTER_NETWORK_V6;
+
+                _GetLastSocketError = &WindowsSocketPal.GetLastSocketError;
+                _Initialize = &WindowsSocketPal.Initialize;
+                _Cleanup = &WindowsSocketPal.Cleanup;
+                _Create = &WindowsSocketPal.Create;
+                _Close = &WindowsSocketPal.Close;
+                _SetDualMode6 = &WindowsSocketPal.SetDualMode6;
+                _Bind4 = &WindowsSocketPal.Bind4;
+                _Bind6 = &WindowsSocketPal.Bind6;
+                _Connect4 = &WindowsSocketPal.Connect4;
+                _Connect6 = &WindowsSocketPal.Connect6;
+                _SetOption = &WindowsSocketPal.SetOption;
+                _GetOption = &WindowsSocketPal.GetOption;
+                _SetBlocking = &WindowsSocketPal.SetBlocking;
+                _Poll = &WindowsSocketPal.Poll;
+                _Send = &WindowsSocketPal.Send;
+                _SendTo4 = &WindowsSocketPal.SendTo4;
+                _SendTo6 = &WindowsSocketPal.SendTo6;
+                _Receive = &WindowsSocketPal.Receive;
+                _ReceiveFrom4 = &WindowsSocketPal.ReceiveFrom4;
+                _ReceiveFrom6 = &WindowsSocketPal.ReceiveFrom6;
+                _GetName4 = &WindowsSocketPal.GetName4;
+                _GetName6 = &WindowsSocketPal.GetName6;
+                _SetIP4 = &WindowsSocketPal.SetIP4;
+                _SetIP6 = &WindowsSocketPal.SetIP6;
+                _GetIP4 = &WindowsSocketPal.GetIP4;
+                _GetIP6 = &WindowsSocketPal.GetIP6;
+                _SetHostName4 = &WindowsSocketPal.SetHostName4;
+                _SetHostName6 = &WindowsSocketPal.SetHostName6;
+                _GetHostName4 = &WindowsSocketPal.GetHostName4;
+                _GetHostName6 = &WindowsSocketPal.GetHostName6;
+
+                return;
             }
-            else
+
+            if (IsLinux)
             {
-                ADDRESS_FAMILY_INTER_NETWORK_V6 = UnixSock.ADDRESS_FAMILY_INTER_NETWORK_V6;
-                _GetLastSocketError = &UnixSock.GetLastSocketError;
-                _Initialize = &UnixSock.Initialize;
-                _Cleanup = &UnixSock.Cleanup;
-                _Create = &UnixSock.Create;
-                _Close = &UnixSock.Close;
-                _SetDualMode6 = &UnixSock.SetDualMode6;
-                _Bind4 = &UnixSock.Bind4;
-                _Bind6 = &UnixSock.Bind6;
-                _Connect4 = &UnixSock.Connect4;
-                _Connect6 = &UnixSock.Connect6;
-                _SetOption = &UnixSock.SetOption;
-                _GetOption = &UnixSock.GetOption;
-                _SetBlocking = &UnixSock.SetBlocking;
-                _Poll = &UnixSock.Poll;
-                _SendTo4 = &UnixSock.SendTo4;
-                _SendTo6 = &UnixSock.SendTo6;
-                _ReceiveFrom4 = &UnixSock.ReceiveFrom4;
-                _ReceiveFrom6 = &UnixSock.ReceiveFrom6;
-                _GetName4 = &UnixSock.GetName4;
-                _GetName6 = &UnixSock.GetName6;
-                _SetIP4 = &UnixSock.SetIP4;
-                _SetIP6 = &UnixSock.SetIP6;
-                _GetIP4 = &UnixSock.GetIP4;
-                _GetIP6 = &UnixSock.GetIP6;
-                _SetHostName4 = &UnixSock.SetHostName4;
-                _SetHostName6 = &UnixSock.SetHostName6;
-                _GetHostName4 = &UnixSock.GetHostName4;
-                _GetHostName6 = &UnixSock.GetHostName6;
+                ADDRESS_FAMILY_INTER_NETWORK_V6 = LinuxSocketPal.ADDRESS_FAMILY_INTER_NETWORK_V6;
+
+                _GetLastSocketError = &LinuxSocketPal.GetLastSocketError;
+                _Initialize = &LinuxSocketPal.Initialize;
+                _Cleanup = &LinuxSocketPal.Cleanup;
+                _Create = &LinuxSocketPal.Create;
+                _Close = &LinuxSocketPal.Close;
+                _SetDualMode6 = &LinuxSocketPal.SetDualMode6;
+                _Bind4 = &LinuxSocketPal.Bind4;
+                _Bind6 = &LinuxSocketPal.Bind6;
+                _Connect4 = &LinuxSocketPal.Connect4;
+                _Connect6 = &LinuxSocketPal.Connect6;
+                _SetOption = &LinuxSocketPal.SetOption;
+                _GetOption = &LinuxSocketPal.GetOption;
+                _SetBlocking = &LinuxSocketPal.SetBlocking;
+                _Poll = &LinuxSocketPal.Poll;
+                _Send = &LinuxSocketPal.Send;
+                _SendTo4 = &LinuxSocketPal.SendTo4;
+                _SendTo6 = &LinuxSocketPal.SendTo6;
+                _Receive = &LinuxSocketPal.Receive;
+                _ReceiveFrom4 = &LinuxSocketPal.ReceiveFrom4;
+                _ReceiveFrom6 = &LinuxSocketPal.ReceiveFrom6;
+                _GetName4 = &LinuxSocketPal.GetName4;
+                _GetName6 = &LinuxSocketPal.GetName6;
+                _SetIP4 = &LinuxSocketPal.SetIP4;
+                _SetIP6 = &LinuxSocketPal.SetIP6;
+                _GetIP4 = &LinuxSocketPal.GetIP4;
+                _GetIP6 = &LinuxSocketPal.GetIP6;
+                _SetHostName4 = &LinuxSocketPal.SetHostName4;
+                _SetHostName6 = &LinuxSocketPal.SetHostName6;
+                _GetHostName4 = &LinuxSocketPal.GetHostName4;
+                _GetHostName6 = &LinuxSocketPal.GetHostName6;
+
+                return;
             }
+
+            ADDRESS_FAMILY_INTER_NETWORK_V6 = BSDSocketPal.ADDRESS_FAMILY_INTER_NETWORK_V6;
+
+            _GetLastSocketError = &BSDSocketPal.GetLastSocketError;
+            _Initialize = &BSDSocketPal.Initialize;
+            _Cleanup = &BSDSocketPal.Cleanup;
+            _Create = &BSDSocketPal.Create;
+            _Close = &BSDSocketPal.Close;
+            _SetDualMode6 = &BSDSocketPal.SetDualMode6;
+            _Bind4 = &BSDSocketPal.Bind4;
+            _Bind6 = &BSDSocketPal.Bind6;
+            _Connect4 = &BSDSocketPal.Connect4;
+            _Connect6 = &BSDSocketPal.Connect6;
+            _SetOption = &BSDSocketPal.SetOption;
+            _GetOption = &BSDSocketPal.GetOption;
+            _SetBlocking = &BSDSocketPal.SetBlocking;
+            _Poll = &BSDSocketPal.Poll;
+            _Send = &BSDSocketPal.Send;
+            _SendTo4 = &BSDSocketPal.SendTo4;
+            _SendTo6 = &BSDSocketPal.SendTo6;
+            _Receive = &BSDSocketPal.Receive;
+            _ReceiveFrom4 = &BSDSocketPal.ReceiveFrom4;
+            _ReceiveFrom6 = &BSDSocketPal.ReceiveFrom6;
+            _GetName4 = &BSDSocketPal.GetName4;
+            _GetName6 = &BSDSocketPal.GetName6;
+            _SetIP4 = &BSDSocketPal.SetIP4;
+            _SetIP6 = &BSDSocketPal.SetIP6;
+            _GetIP4 = &BSDSocketPal.GetIP4;
+            _GetIP6 = &BSDSocketPal.GetIP6;
+            _SetHostName4 = &BSDSocketPal.SetHostName4;
+            _SetHostName6 = &BSDSocketPal.SetHostName6;
+            _GetHostName4 = &BSDSocketPal.GetHostName4;
+            _GetHostName6 = &BSDSocketPal.GetHostName6;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -162,10 +202,16 @@ namespace NativeSockets
         public static SocketError Poll(nint socket, int microseconds, SelectMode mode, out bool status) => _Poll(socket, microseconds, mode, out status);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Send(nint socket, void* buffer, int length) => _Send(socket, buffer, length);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int SendTo4(nint socket, void* buffer, int length, sockaddr_in* socketAddress) => _SendTo4(socket, buffer, length, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int SendTo6(nint socket, void* buffer, int length, sockaddr_in6* socketAddress) => _SendTo6(socket, buffer, length, socketAddress);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Receive(nint socket, void* buffer, int length) => _Receive(socket, buffer, length);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ReceiveFrom4(nint socket, void* buffer, int length, sockaddr_in* socketAddress) => _ReceiveFrom4(socket, buffer, length, socketAddress);

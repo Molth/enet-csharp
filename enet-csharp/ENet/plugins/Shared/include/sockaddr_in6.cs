@@ -5,12 +5,12 @@
 
 // ReSharper disable ALL
 
-namespace winsock
+namespace NativeSockets
 {
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public unsafe struct sockaddr_in6
     {
-        [FieldOffset(0)] public ushort sin6_family;
+        [FieldOffset(0)] public sa_family_t sin6_family;
         [FieldOffset(2)] public ushort sin6_port;
         [FieldOffset(4)] public uint sin6_flowinfo;
         [FieldOffset(8)] public fixed byte sin6_addr[16];

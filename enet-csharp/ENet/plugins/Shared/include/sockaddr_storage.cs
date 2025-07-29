@@ -5,12 +5,12 @@
 
 // ReSharper disable ALL
 
-namespace winsock
+namespace NativeSockets
 {
     [StructLayout(LayoutKind.Explicit, Size = 128)]
     public struct sockaddr_storage
     {
-        [FieldOffset(0)] public ushort ss_family;
+        [FieldOffset(0)] public sa_family_t ss_family;
         [FieldOffset(8)] public long __ss_align;
     }
 }
