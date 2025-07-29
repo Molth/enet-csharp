@@ -85,7 +85,7 @@ namespace enet
         {
             ref byte local1 = ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this));
             ref byte local2 = ref Unsafe.As<ENetIP, byte>(ref other);
-            return SpanHelpers.Compare(ref local1, ref local2, 16);
+            return SpanHelpers.Compare(ref local1, ref local2, (nuint)sizeof(ENetIP));
         }
 
         public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
@@ -157,7 +157,7 @@ namespace enet
         {
             ref byte local1 = ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this));
             ref byte local2 = ref Unsafe.As<ENetAddress, byte>(ref other);
-            return SpanHelpers.Compare(ref local1, ref local2, 24);
+            return SpanHelpers.Compare(ref local1, ref local2, (nuint)sizeof(ENetAddress));
         }
 
         public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
