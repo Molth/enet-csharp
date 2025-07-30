@@ -143,7 +143,7 @@ namespace enet
             get
             {
                 ref int reference = ref Unsafe.As<ENetAddress, int>(ref Unsafe.AsRef(in this));
-                return Unsafe.Add(ref reference, 2) == WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 && Unsafe.As<int, long>(ref reference) == 0;
+                return Unsafe.Add(ref reference, 2) == WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 && reference == 0 && Unsafe.Add(ref reference, 1) == 0;
             }
         }
 
