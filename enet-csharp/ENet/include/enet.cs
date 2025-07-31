@@ -178,18 +178,13 @@ namespace enet
             int chars = 0;
             int charsWritten;
 
-            bool isIPv6 = IsIPv6;
-
-            if (isIPv6)
+            if (IsIPv6)
             {
                 destination[0] = '[';
                 ++chars;
-            }
 
-            chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
+                chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
 
-            if (isIPv6)
-            {
                 if (scopeID != 0)
                 {
                     destination[chars] = '%';
@@ -201,6 +196,10 @@ namespace enet
 
                 destination[chars] = ']';
                 ++chars;
+            }
+            else
+            {
+                chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
             }
 
             destination[chars] = ':';
