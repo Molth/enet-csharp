@@ -36,6 +36,12 @@ namespace NativeSockets
         private static readonly delegate* managed<nint, void*, int, int> _Receive;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in*, int> _ReceiveFrom4;
         private static readonly delegate* managed<nint, void*, int, sockaddr_in6*, int> _ReceiveFrom6;
+        private static readonly delegate* managed<nint, WSABuffer*, int, int> _WSASend;
+        private static readonly delegate* managed<nint, WSABuffer*, int, sockaddr_in*, int> _WSASendTo4;
+        private static readonly delegate* managed<nint, WSABuffer*, int, sockaddr_in6*, int> _WSASendTo6;
+        private static readonly delegate* managed<nint, WSABuffer*, int, int> _WSAReceive;
+        private static readonly delegate* managed<nint, WSABuffer*, int, sockaddr_in*, int> _WSAReceiveFrom4;
+        private static readonly delegate* managed<nint, WSABuffer*, int, sockaddr_in6*, int> _WSAReceiveFrom6;
         private static readonly delegate* managed<nint, sockaddr_in*, SocketError> _GetName4;
         private static readonly delegate* managed<nint, sockaddr_in6*, SocketError> _GetName6;
         private static readonly delegate* managed<sockaddr_in*, ReadOnlySpan<char>, SocketError> _SetIP4;
@@ -73,6 +79,12 @@ namespace NativeSockets
                 _Receive = &WindowsSocketPal.Receive;
                 _ReceiveFrom4 = &WindowsSocketPal.ReceiveFrom4;
                 _ReceiveFrom6 = &WindowsSocketPal.ReceiveFrom6;
+                _WSASend = &WindowsSocketPal.WSASend;
+                _WSASendTo4 = &WindowsSocketPal.WSASendTo4;
+                _WSASendTo6 = &WindowsSocketPal.WSASendTo6;
+                _WSAReceive = &WindowsSocketPal.WSAReceive;
+                _WSAReceiveFrom4 = &WindowsSocketPal.WSAReceiveFrom4;
+                _WSAReceiveFrom6 = &WindowsSocketPal.WSAReceiveFrom6;
                 _GetName4 = &WindowsSocketPal.GetName4;
                 _GetName6 = &WindowsSocketPal.GetName6;
                 _SetIP4 = &WindowsSocketPal.SetIP4;
@@ -111,6 +123,12 @@ namespace NativeSockets
                 _Receive = &LinuxSocketPal.Receive;
                 _ReceiveFrom4 = &LinuxSocketPal.ReceiveFrom4;
                 _ReceiveFrom6 = &LinuxSocketPal.ReceiveFrom6;
+                _WSASend = &LinuxSocketPal.WSASend;
+                _WSASendTo4 = &LinuxSocketPal.WSASendTo4;
+                _WSASendTo6 = &LinuxSocketPal.WSASendTo6;
+                _WSAReceive = &LinuxSocketPal.WSAReceive;
+                _WSAReceiveFrom4 = &LinuxSocketPal.WSAReceiveFrom4;
+                _WSAReceiveFrom6 = &LinuxSocketPal.WSAReceiveFrom6;
                 _GetName4 = &LinuxSocketPal.GetName4;
                 _GetName6 = &LinuxSocketPal.GetName6;
                 _SetIP4 = &LinuxSocketPal.SetIP4;
@@ -147,6 +165,12 @@ namespace NativeSockets
             _Receive = &BSDSocketPal.Receive;
             _ReceiveFrom4 = &BSDSocketPal.ReceiveFrom4;
             _ReceiveFrom6 = &BSDSocketPal.ReceiveFrom6;
+            _WSASend = &BSDSocketPal.WSASend;
+            _WSASendTo4 = &BSDSocketPal.WSASendTo4;
+            _WSASendTo6 = &BSDSocketPal.WSASendTo6;
+            _WSAReceive = &BSDSocketPal.WSAReceive;
+            _WSAReceiveFrom4 = &BSDSocketPal.WSAReceiveFrom4;
+            _WSAReceiveFrom6 = &BSDSocketPal.WSAReceiveFrom6;
             _GetName4 = &BSDSocketPal.GetName4;
             _GetName6 = &BSDSocketPal.GetName6;
             _SetIP4 = &BSDSocketPal.SetIP4;
@@ -218,6 +242,24 @@ namespace NativeSockets
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ReceiveFrom6(nint socket, void* buffer, int length, sockaddr_in6* socketAddress) => _ReceiveFrom6(socket, buffer, length, socketAddress);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASend(nint socket, WSABuffer* buffers, int bufferCount) => _WSASend(socket, buffers, bufferCount);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress) => _WSASendTo4(socket, buffers, bufferCount, socketAddress);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress) => _WSASendTo6(socket, buffers, bufferCount, socketAddress);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceive(nint socket, WSABuffer* buffers, int bufferCount) => _WSAReceive(socket, buffers, bufferCount);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress) => _WSAReceiveFrom4(socket, buffers, bufferCount, socketAddress);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress) => _WSAReceiveFrom6(socket, buffers, bufferCount, socketAddress);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError GetName4(nint socket, sockaddr_in* socketAddress) => _GetName4(socket, socketAddress);

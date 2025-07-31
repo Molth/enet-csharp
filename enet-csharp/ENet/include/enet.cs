@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using NativeSockets;
 using static enet.ENet;
 
@@ -166,9 +167,52 @@ namespace enet
 
         public override string ToString()
         {
-            byte* buffer = stackalloc byte[128];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), buffer, 128);
-            return new string((sbyte*)buffer) + ":" + port;
+            Span<byte> buffer = stackalloc byte[128];
+
+            int error = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), 128);
+            if (error != 0)
+                return "ERROR";
+
+            Span<char> destination = stackalloc char[256];
+
+            int chars = 0;
+            int charsWritten;
+
+            bool isIPv6 = IsIPv6;
+
+            if (isIPv6)
+            {
+                destination[0] = '[';
+                ++chars;
+            }
+
+            chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
+
+            if (isIPv6)
+            {
+                if (scopeID != 0)
+                {
+                    destination[chars] = '%';
+                    ++chars;
+
+                    scopeID.TryFormat(destination.Slice(chars), out charsWritten);
+                    chars += charsWritten;
+                }
+
+                destination[chars] = ']';
+                ++chars;
+            }
+
+            destination[chars] = ':';
+            ++chars;
+
+            port.TryFormat(destination.Slice(chars), out charsWritten);
+            chars += charsWritten;
+
+            destination[chars] = '\0';
+            ++chars;
+
+            return destination.Slice(0, chars).ToString();
         }
 
         public static bool operator ==(ENetAddress left, ENetAddress right) => left.Equals(right);

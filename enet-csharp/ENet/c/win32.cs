@@ -167,9 +167,6 @@ namespace enet
 
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            if (bufferCount == 0)
-                return 0;
-
             if (socket.IsIPv6)
             {
                 sockaddr_in6 socketAddress;
@@ -179,23 +176,7 @@ namespace enet
                 memcpy(socketAddress.sin6_addr, &address->host, 16);
                 socketAddress.sin6_scope_id = address->scopeID;
 
-                if (bufferCount == 1)
-                    return SendTo6(socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
-                else
-                {
-                    nuint totalLength = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                        totalLength += buffers[i].dataLength;
-                    byte* buffer = stackalloc byte[(int)totalLength];
-                    nuint offset = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                    {
-                        memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
-                        offset += buffers[i].dataLength;
-                    }
-
-                    return SendTo6(socket, buffer, (int)totalLength, &socketAddress);
-                }
+                return WSASendTo6(socket, (WSABuffer*)buffers, (int)bufferCount, &socketAddress);
             }
             else
             {
@@ -208,73 +189,21 @@ namespace enet
                 Unsafe.WriteUnaligned(&socketAddress.sin_addr, address->address);
                 memset(socketAddress.sin_zero, 0, 8);
 
-                if (bufferCount == 1)
-                    return SendTo4(socket, buffers[0].data, (int)buffers[0].dataLength, &socketAddress);
-                else
-                {
-                    nuint totalLength = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                        totalLength += buffers[i].dataLength;
-                    byte* buffer = stackalloc byte[(int)totalLength];
-                    nuint offset = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                    {
-                        memcpy(buffer + offset, buffers[i].data, buffers[i].dataLength);
-                        offset += buffers[i].dataLength;
-                    }
-
-                    return SendTo4(socket, buffer, (int)totalLength, &socketAddress);
-                }
+                return WSASendTo4(socket, (WSABuffer*)buffers, (int)bufferCount, &socketAddress);
             }
         }
 
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            if (bufferCount == 0)
-                return 0;
-
             int result;
             if (socket.IsIPv6)
             {
                 sockaddr_in6 socketAddress;
-                if (bufferCount == 1)
-                {
-                    result = ReceiveFrom6(socket, buffers->data, (int)buffers->dataLength, &socketAddress);
-                    if (result <= 0)
-                        return result;
-                    goto label;
-                }
-                else
-                {
-                    nuint totalLength = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                        totalLength += buffers[i].dataLength;
-                    byte* buffer = stackalloc byte[(int)totalLength];
-                    result = ReceiveFrom6(socket, buffer, (int)totalLength, &socketAddress);
-                    if (result <= 0)
-                        return result;
-                    int offset = 0;
-                    int length;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                    {
-                        length = result - offset;
-                        if (length < (int)buffers[i].dataLength)
-                        {
-                            if (length > 0)
-                                memcpy(buffers[i].data, buffer + offset, (nuint)length);
-                            break;
-                        }
-                        else
-                        {
-                            memcpy(buffers[i].data, buffer + offset, buffers[i].dataLength);
-                            offset += (int)buffers[i].dataLength;
-                        }
-                    }
+                result = WSAReceiveFrom6(socket, (WSABuffer*)buffers, (int)bufferCount, &socketAddress);
 
-                    goto label;
-                }
+                if (result <= 0)
+                    return result;
 
-                label:
                 memcpy(&address->host, socketAddress.sin6_addr, 16);
                 address->port = socketAddress.sin6_port;
                 address->scopeID = socketAddress.sin6_scope_id;
@@ -283,48 +212,16 @@ namespace enet
             else
             {
                 sockaddr_in socketAddress;
-                if (bufferCount == 1)
-                {
-                    result = ReceiveFrom4(socket, buffers->data, (int)buffers->dataLength, &socketAddress);
-                    if (result <= 0)
-                        return result;
-                    goto label;
-                }
-                else
-                {
-                    nuint totalLength = 0;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                        totalLength += buffers[i].dataLength;
-                    byte* buffer = stackalloc byte[(int)totalLength];
-                    result = ReceiveFrom4(socket, buffer, (int)totalLength, &socketAddress);
-                    if (result <= 0)
-                        return result;
-                    int offset = 0;
-                    int length;
-                    for (nuint i = 0; i < bufferCount; ++i)
-                    {
-                        length = result - offset;
-                        if (length < (int)buffers[i].dataLength)
-                        {
-                            if (length > 0)
-                                memcpy(buffers[i].data, buffer + offset, (nuint)length);
-                            break;
-                        }
-                        else
-                        {
-                            memcpy(buffers[i].data, buffer + offset, buffers[i].dataLength);
-                            offset += (int)buffers[i].dataLength;
-                        }
-                    }
+                result = WSAReceiveFrom4(socket, (WSABuffer*)buffers, (int)bufferCount, &socketAddress);
 
-                    goto label;
-                }
+                if (result <= 0)
+                    return result;
 
-                label:
                 memset(address, 0, 8);
                 Unsafe.WriteUnaligned((byte*)address + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
                 Unsafe.WriteUnaligned(&address->address, socketAddress.sin_addr);
                 address->port = socketAddress.sin_port;
+                address->scopeID = 0;
                 return result;
             }
         }

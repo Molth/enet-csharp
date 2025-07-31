@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
-using static NativeSockets.UnixSocketPal;
 
 #pragma warning disable CA1401
 #pragma warning disable CS1591
@@ -16,11 +15,126 @@ using static NativeSockets.UnixSocketPal;
 namespace NativeSockets
 {
     [SuppressUnmanagedCodeSecurity]
-    public static unsafe class LinuxSocketPal
+    public static unsafe class BSDSocketPal
     {
-        public const ushort ADDRESS_FAMILY_INTER_NETWORK_V6 = 10;
+        public static ushort ADDRESS_FAMILY_INTER_NETWORK_V6 { get; }
 
-        public static bool IsSupported { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        public static bool IsSupported { get; } = !WindowsSocketPal.IsSupported && !LinuxSocketPal.IsSupported;
+
+        static BSDSocketPal()
+        {
+            bool isIOS;
+
+            bool isOSX = IsSupported && RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            bool isFreeBSD = !isOSX && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"));
+
+            if (isOSX || isFreeBSD || !IsSupported)
+            {
+                isIOS = false;
+                goto label1;
+            }
+
+            try
+            {
+                _ = iOSSocketPal.getpid();
+                isIOS = true;
+            }
+            catch
+            {
+                isIOS = false;
+            }
+
+            label1:
+            if (!isIOS)
+            {
+                _bind = &UnixSocketPal.bind;
+                _getsockname = &UnixSocketPal.getsockname;
+                _socket = &UnixSocketPal.socket;
+                _fcntl = &UnixSocketPal.fcntl;
+                _setsockopt = &UnixSocketPal.setsockopt;
+                _getsockopt = &UnixSocketPal.getsockopt;
+                _connect = &UnixSocketPal.connect;
+                _close = &UnixSocketPal.close;
+                _send = &UnixSocketPal.send;
+                _sendto = &UnixSocketPal.sendto;
+                _recv = &UnixSocketPal.recv;
+                _recvfrom = &UnixSocketPal.recvfrom;
+                _sendmsg = &UnixSocketPal.sendmsg;
+                _recvmsg = &UnixSocketPal.recvmsg;
+                _poll = &UnixSocketPal.poll;
+                _inet_pton = &UnixSocketPal.inet_pton;
+                _getaddrinfo = &UnixSocketPal.getaddrinfo;
+                _freeaddrinfo = &UnixSocketPal.freeaddrinfo;
+                _inet_ntop = &UnixSocketPal.inet_ntop;
+                _getnameinfo = &UnixSocketPal.getnameinfo;
+            }
+            else
+            {
+                _bind = &iOSSocketPal.bind;
+                _getsockname = &iOSSocketPal.getsockname;
+                _socket = &iOSSocketPal.socket;
+                _fcntl = &iOSSocketPal.fcntl;
+                _setsockopt = &iOSSocketPal.setsockopt;
+                _getsockopt = &iOSSocketPal.getsockopt;
+                _connect = &iOSSocketPal.connect;
+                _close = &iOSSocketPal.close;
+                _send = &iOSSocketPal.send;
+                _sendto = &iOSSocketPal.sendto;
+                _recv = &iOSSocketPal.recv;
+                _recvfrom = &iOSSocketPal.recvfrom;
+                _sendmsg = &iOSSocketPal.sendmsg;
+                _recvmsg = &iOSSocketPal.recvmsg;
+                _poll = &iOSSocketPal.poll;
+                _inet_pton = &iOSSocketPal.inet_pton;
+                _getaddrinfo = &iOSSocketPal.getaddrinfo;
+                _freeaddrinfo = &iOSSocketPal.freeaddrinfo;
+                _inet_ntop = &iOSSocketPal.inet_ntop;
+                _getnameinfo = &iOSSocketPal.getnameinfo;
+            }
+
+            if (isOSX || isIOS)
+            {
+                ADDRESS_FAMILY_INTER_NETWORK_V6 = 30;
+                return;
+            }
+
+            if (isFreeBSD || !IsSupported)
+                goto label2;
+
+            ReadOnlySpan<char> hostName = "::1";
+
+            int byteCount = Encoding.ASCII.GetByteCount(hostName);
+            Span<byte> buffer = stackalloc byte[byteCount + 1];
+            Encoding.ASCII.GetBytes(hostName, buffer);
+            buffer[byteCount] = 0;
+
+            addrinfo addressInfo = new addrinfo();
+            addrinfo* hint, results = null;
+
+            if (getaddrinfo((byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), null, &addressInfo, &results) != 0)
+                goto label2;
+
+            for (hint = results; hint != null; hint = hint->ai_next)
+            {
+                if (hint->ai_addr != null && hint->ai_addrlen >= (nuint)sizeof(sockaddr_in))
+                {
+                    if (hint->ai_family != (int)AddressFamily.InterNetwork)
+                    {
+                        ADDRESS_FAMILY_INTER_NETWORK_V6 = (ushort)hint->ai_family;
+
+                        freeaddrinfo(results);
+
+                        return;
+                    }
+                }
+            }
+
+            if (results != null)
+                freeaddrinfo(results);
+
+            label2:
+            ADDRESS_FAMILY_INTER_NETWORK_V6 = 28;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError GetLastSocketError() => UnixSocketPal.GetLastSocketError();
@@ -214,7 +328,7 @@ namespace NativeSockets
                 return sendto((int)socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in));
             }
 
-            int num = sendto((int)socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in));
+            int num = send((int)socket, (byte*)buffer, length, SocketFlags.None);
             return num;
         }
 
@@ -228,7 +342,7 @@ namespace NativeSockets
                 return sendto((int)socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in6));
             }
 
-            int num = sendto((int)socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in6));
+            int num = send((int)socket, (byte*)buffer, length, SocketFlags.None);
             return num;
         }
 
@@ -249,7 +363,6 @@ namespace NativeSockets
 
             if (num > 0 && socketAddress != null)
             {
-                socketAddress->sin_family.family = (ushort)AddressFamily.InterNetwork;
                 sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                 *socketAddress = *__socketAddress_native;
                 socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
@@ -268,8 +381,8 @@ namespace NativeSockets
 
             if (num > 0 && socketAddress != null)
             {
-                socketAddress->sin6_family.family = ADDRESS_FAMILY_INTER_NETWORK_V6;
-                if (addressStorage.ss_family.family == (int)AddressFamily.InterNetwork)
+                socketAddress->sin6_family = sa_family_t.FromBSD(ADDRESS_FAMILY_INTER_NETWORK_V6);
+                if (addressStorage.ss_family.bsd_family == (int)AddressFamily.InterNetwork)
                 {
                     sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                     Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
@@ -277,7 +390,215 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
                 }
-                else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
+                else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
+                {
+                    sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
+                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin6_port);
+                }
+            }
+
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASend(nint socket, WSABuffer* buffers, int bufferCount)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            msghdr msg;
+            msg.msg_name = null;
+            msg.msg_namelen = 0;
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            int num = sendmsg((int)socket, &msg, 0);
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            sockaddr_in __socketAddress_native;
+
+            msghdr msg;
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            if (socketAddress != null)
+            {
+                __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+
+                msg.msg_name = &__socketAddress_native;
+                msg.msg_namelen = 16;
+            }
+            else
+            {
+                msg.msg_name = null;
+                msg.msg_namelen = 0;
+            }
+
+            int num = sendmsg((int)socket, &msg, 0);
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            sockaddr_in6 __socketAddress_native;
+
+            msghdr msg;
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            if (socketAddress != null)
+            {
+                __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
+
+                msg.msg_name = &__socketAddress_native;
+                msg.msg_namelen = 28;
+            }
+            else
+            {
+                msg.msg_name = null;
+                msg.msg_namelen = 0;
+            }
+
+            int num = sendmsg((int)socket, &msg, 0);
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceive(nint socket, WSABuffer* buffers, int bufferCount)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            msghdr msg;
+            msg.msg_name = null;
+            msg.msg_namelen = 0;
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            int num = recvmsg((int)socket, &msg, 0);
+
+            if (msg.msg_flags != 0)
+                return -1;
+
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            sockaddr_storage addressStorage = new sockaddr_storage();
+
+            msghdr msg;
+            msg.msg_name = &addressStorage;
+            msg.msg_namelen = (nuint)sizeof(sockaddr_storage);
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            int num = recvmsg((int)socket, &msg, 0);
+
+            if (msg.msg_flags != 0)
+                return -1;
+
+            if (num > 0 && socketAddress != null)
+            {
+                sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                *socketAddress = *__socketAddress_native;
+                socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+            }
+
+            return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress)
+        {
+            iovec* msg_iov = stackalloc iovec[bufferCount];
+            for (int i = 0; i < bufferCount; ++i)
+            {
+                msg_iov[i].iov_base = buffers[i].Pointer;
+                msg_iov[i].iov_len = buffers[i].Length;
+            }
+
+            sockaddr_storage addressStorage = new sockaddr_storage();
+
+            msghdr msg;
+            msg.msg_name = &addressStorage;
+            msg.msg_namelen = (nuint)sizeof(sockaddr_storage);
+            msg.msg_iov = msg_iov;
+            msg.msg_iovlen = bufferCount;
+            msg.msg_control = null;
+            msg.msg_controllen = 0;
+            msg.msg_flags = 0;
+
+            int num = recvmsg((int)socket, &msg, 0);
+
+            if (msg.msg_flags != 0)
+                return -1;
+
+            if (num > 0 && socketAddress != null)
+            {
+                socketAddress->sin6_family = sa_family_t.FromBSD(ADDRESS_FAMILY_INTER_NETWORK_V6);
+                if (addressStorage.ss_family.bsd_family == (int)AddressFamily.InterNetwork)
+                {
+                    sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                    Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
+                    Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
+                    Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                }
+                else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
                     sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
                     Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
@@ -314,7 +635,7 @@ namespace NativeSockets
             if (errorCode == SocketError.Success)
             {
                 socketAddress->sin6_family = addressStorage.ss_family;
-                if (addressStorage.ss_family.family == (int)AddressFamily.InterNetwork)
+                if (addressStorage.ss_family.bsd_family == (int)AddressFamily.InterNetwork)
                 {
                     sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                     Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
@@ -322,7 +643,7 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
                 }
-                else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
+                else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
                     sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
                     Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
@@ -588,5 +909,86 @@ namespace NativeSockets
 
             return GetIP6(socketAddress, buffer);
         }
+
+        private static readonly delegate* managed<int, sockaddr*, int, SocketError> _bind;
+        private static readonly delegate* managed<int, sockaddr*, int*, SocketError> _getsockname;
+        private static readonly delegate* managed<int, int, int, int> _socket;
+        private static readonly delegate* managed<int, int, int, int> _fcntl;
+        private static readonly delegate* managed<int, SocketOptionLevel, SocketOptionName, int*, int, SocketError> _setsockopt;
+        private static readonly delegate* managed<int, int, int, byte*, int*, SocketError> _getsockopt;
+        private static readonly delegate* managed<int, sockaddr*, int, SocketError> _connect;
+        private static readonly delegate* managed<int, SocketError> _close;
+        private static readonly delegate* managed<int, byte*, int, SocketFlags, int> _send;
+        private static readonly delegate* managed<int, byte*, int, SocketFlags, byte*, int, int> _sendto;
+        private static readonly delegate* managed<int, byte*, int, SocketFlags, int> _recv;
+        private static readonly delegate* managed<int, byte*, int, SocketFlags, byte*, int*, int> _recvfrom;
+        private static readonly delegate* managed<int, msghdr*, int, int> _sendmsg;
+        private static readonly delegate* managed<int, msghdr*, int, int> _recvmsg;
+        private static readonly delegate* managed<pollfd*, nuint, int, int> _poll;
+        private static readonly delegate* managed<int, void*, void*, int> _inet_pton;
+        private static readonly delegate* managed<byte*, byte*, addrinfo*, addrinfo**, int> _getaddrinfo;
+        private static readonly delegate* managed<addrinfo*, void> _freeaddrinfo;
+        private static readonly delegate* managed<int, void*, ref byte, nuint, byte*> _inet_ntop;
+        private static readonly delegate* managed<sockaddr*, int, ref byte, ulong, byte*, ulong, int, int> _getnameinfo;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError bind(int socketHandle, sockaddr* socketAddress, int socketAddressSize) => _bind(socketHandle, socketAddress, socketAddressSize);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError getsockname(int socketHandle, sockaddr* socketAddress, int* socketAddressSize) => _getsockname(socketHandle, socketAddress, socketAddressSize);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int socket(int af, int type, int protocol) => _socket(af, type, protocol);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int fcntl(int fd, int cmd, int arg) => _fcntl(fd, cmd, arg);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError setsockopt(int socketHandle, SocketOptionLevel optionLevel, SocketOptionName optionName, int* optionValue, int optionLength) => _setsockopt(socketHandle, optionLevel, optionName, optionValue, optionLength);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError getsockopt(int s, int level, int optname, byte* optval, int* optlen) => _getsockopt(s, level, optname, optval, optlen);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError connect(int s, sockaddr* name, int namelen) => _connect(s, name, namelen);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static SocketError close(int socketHandle) => _close(socketHandle);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int send(int socketHandle, byte* buffer, int length, SocketFlags flags) => _send(socketHandle, buffer, length, flags);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int sendto(int socketHandle, byte* buffer, int length, SocketFlags flags, byte* socketAddress, int socketAddressSize) => _sendto(socketHandle, buffer, length, flags, socketAddress, socketAddressSize);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int recv(int socketHandle, byte* buffer, int length, SocketFlags flags) => _recv(socketHandle, buffer, length, flags);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int recvfrom(int socketHandle, byte* buffer, int length, SocketFlags flags, byte* socketAddress, int* socketAddressSize) => _recvfrom(socketHandle, buffer, length, flags, socketAddress, socketAddressSize);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int sendmsg(int sockfd, msghdr* msg, int flags) => _sendmsg(sockfd, msg, flags);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int recvmsg(int sockfd, msghdr* msg, int flags) => _recvmsg(sockfd, msg, flags);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int poll(pollfd* fds, nuint nfds, int timeout) => _poll(fds, nfds, timeout);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int inet_pton(int family, void* pszAddrString, void* pAddrBuf) => _inet_pton(family, pszAddrString, pAddrBuf);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int getaddrinfo(byte* pNodeName, byte* pServiceName, addrinfo* pHints, addrinfo** ppResult) => _getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void freeaddrinfo(addrinfo* pAddrInfo) => _freeaddrinfo(pAddrInfo);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte* inet_ntop(int family, void* pAddr, ref byte pStringBuf, nuint stringBufSize) => _inet_ntop(family, pAddr, ref pStringBuf, stringBufSize);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int getnameinfo(sockaddr* pSockaddr, int sockaddrLength, ref byte pNodeBuffer, ulong nodeBufferSize, byte* pServiceBuffer, ulong serviceBufferSize, int flags) => _getnameinfo(pSockaddr, sockaddrLength, ref pNodeBuffer, nodeBufferSize, pServiceBuffer, serviceBufferSize, flags);
     }
 }

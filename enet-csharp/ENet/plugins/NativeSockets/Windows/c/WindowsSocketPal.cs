@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using System.Threading;
 
 #pragma warning disable CA1401
 #pragma warning disable CS1591
@@ -199,7 +200,7 @@ namespace NativeSockets
                 return sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in));
             }
 
-            int num = sendto(socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in));
+            int num = send(socket, (byte*)buffer, length, SocketFlags.None);
             return num;
         }
 
@@ -213,7 +214,7 @@ namespace NativeSockets
                 return sendto(socket, (byte*)buffer, length, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in6));
             }
 
-            int num = sendto(socket, (byte*)buffer, length, SocketFlags.None, null, sizeof(sockaddr_in6));
+            int num = send(socket, (byte*)buffer, length, SocketFlags.None);
             return num;
         }
 
@@ -234,7 +235,6 @@ namespace NativeSockets
 
             if (num > 0 && socketAddress != null)
             {
-                socketAddress->sin_family.family = (ushort)AddressFamily.InterNetwork;
                 sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
                 *socketAddress = *__socketAddress_native;
                 socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
@@ -271,6 +271,119 @@ namespace NativeSockets
             }
 
             return num;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASend(nint socket, WSABuffer* buffers, int bufferCount)
+        {
+            uint bytesTransferred;
+            SocketError error = WSASend(socket, buffers, (uint)bufferCount, &bytesTransferred, SocketFlags.None, null, 0);
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress)
+        {
+            uint bytesTransferred;
+            SocketError error;
+            if (socketAddress != null)
+            {
+                sockaddr_in __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin_port = WinSock2.HOST_TO_NET_16(socketAddress->sin_port);
+                error = WSASendTo(socket, buffers, (uint)bufferCount, &bytesTransferred, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in), null, 0);
+                return error == SocketError.Success ? (int)bytesTransferred : -1;
+            }
+
+            error = WSASend(socket, buffers, (uint)bufferCount, &bytesTransferred, SocketFlags.None, null, 0);
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSASendTo6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress)
+        {
+            uint bytesTransferred;
+            SocketError error;
+            if (socketAddress != null)
+            {
+                sockaddr_in6 __socketAddress_native = *socketAddress;
+                __socketAddress_native.sin6_port = WinSock2.HOST_TO_NET_16(socketAddress->sin6_port);
+                error = WSASendTo(socket, buffers, (uint)bufferCount, &bytesTransferred, SocketFlags.None, (byte*)&__socketAddress_native, sizeof(sockaddr_in6), null, 0);
+                return error == SocketError.Success ? (int)bytesTransferred : -1;
+            }
+
+            error = WSASend(socket, buffers, (uint)bufferCount, &bytesTransferred, SocketFlags.None, null, 0);
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceive(nint socket, WSABuffer* buffers, int bufferCount)
+        {
+            uint bytesTransferred;
+            SocketFlags socketFlags;
+            SocketError error = WSARecv(socket, buffers, (uint)bufferCount, &bytesTransferred, &socketFlags, null, 0);
+
+            if (socketFlags != 0)
+                return -1;
+
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom4(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in* socketAddress)
+        {
+            uint bytesTransferred;
+            SocketFlags socketFlags;
+            sockaddr_storage addressStorage = new sockaddr_storage();
+            int socketAddressSize = sizeof(sockaddr_storage);
+
+            SocketError error = WSARecvFrom(socket, buffers, (uint)bufferCount, &bytesTransferred, &socketFlags, (byte*)&addressStorage, &socketAddressSize, null, 0);
+
+            if (socketFlags != 0)
+                return -1;
+
+            if (error == SocketError.Success && socketAddress != null)
+            {
+                sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                *socketAddress = *__socketAddress_native;
+                socketAddress->sin_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+            }
+
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WSAReceiveFrom6(nint socket, WSABuffer* buffers, int bufferCount, sockaddr_in6* socketAddress)
+        {
+            uint bytesTransferred;
+            SocketFlags socketFlags;
+            sockaddr_storage addressStorage = new sockaddr_storage();
+            int socketAddressSize = sizeof(sockaddr_storage);
+
+            SocketError error = WSARecvFrom(socket, buffers, (uint)bufferCount, &bytesTransferred, &socketFlags, (byte*)&addressStorage, &socketAddressSize, null, 0);
+
+            if (socketFlags != 0)
+                return -1;
+
+            if (error == SocketError.Success && socketAddress != null)
+            {
+                socketAddress->sin6_family.family = ADDRESS_FAMILY_INTER_NETWORK_V6;
+                if (addressStorage.ss_family.family == (int)AddressFamily.InterNetwork)
+                {
+                    sockaddr_in* __socketAddress_native = (sockaddr_in*)&addressStorage;
+                    Unsafe.InitBlockUnaligned(socketAddress->sin6_addr, 0, 8);
+                    Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
+                    Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                }
+                else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
+                {
+                    sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
+                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
+                    socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin6_port);
+                }
+            }
+
+            return error == SocketError.Success ? (int)bytesTransferred : -1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -641,6 +754,18 @@ namespace NativeSockets
 
         [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
         private static extern SocketError WSAIoctl(nint __socketHandle_native, int __ioControlCode_native, byte* __inBuffer_native, int __inBufferSize_native, byte* __outBuffer_native, int __outBufferSize_native, int* __bytesTransferred_native, nint __overlapped_native, nint __completionRoutine_native);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
+        private static extern SocketError WSASend(nint __socketHandle_native, WSABuffer* __buffers_native, uint __bufferCount_native, uint* __bytesTransferred_native, SocketFlags __socketFlags_native, NativeOverlapped* __overlapped_native, nint __completionRoutine_native);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
+        private static extern SocketError WSASendTo(nint __socketHandle_native, WSABuffer* __buffers_native, uint __bufferCount_native, uint* __bytesTransferred_native, SocketFlags __socketFlags_native, byte* __socketAddress_native, int __socketAddressSize_native, NativeOverlapped* __overlapped_native, nint __completionRoutine_native);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
+        private static extern SocketError WSARecv(nint __socketHandle_native, WSABuffer* __buffer_native, uint __bufferCount_native, uint* __bytesTransferred_native, SocketFlags* __socketFlags_native, NativeOverlapped* __overlapped_native, nint __completionRoutine_native);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.StdCall)]
+        private static extern SocketError WSARecvFrom(nint __socketHandle_native, WSABuffer* __buffers_native, uint __bufferCount_native, uint* __bytesTransferred_native, SocketFlags* __socketFlags_native, void* __socketAddressPointer_native, void* __socketAddressSizePointer_native, NativeOverlapped* __overlapped_native, nint __completionRoutine_native);
 
         [StructLayout(LayoutKind.Sequential, Size = 408)]
         private struct WSAData

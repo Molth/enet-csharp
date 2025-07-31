@@ -135,6 +135,7 @@ namespace enet
             host->checksum = null;
             host->receivedAddress.host = ENET_HOST_ANY;
             host->receivedAddress.port = 0;
+            host->receivedAddress.scopeID = 0;
             host->receivedData = null;
             host->receivedDataLength = 0;
 

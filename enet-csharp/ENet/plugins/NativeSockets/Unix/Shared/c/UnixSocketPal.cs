@@ -144,5 +144,11 @@ namespace NativeSockets
 
         [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.Cdecl)]
         public static extern int getnameinfo(sockaddr* pSockaddr, int SockaddrLength, ref byte pNodeBuffer, ulong NodeBufferSize, byte* pServiceBuffer, ulong ServiceBufferSize, int Flags);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int sendmsg(int sockfd, msghdr* msg, int flags);
+
+        [DllImport(NATIVE_LIBRARY, CallingConvention = CallingConvention.Cdecl)]
+        public static extern int recvmsg(int sockfd, msghdr* msg, int flags);
     }
 }

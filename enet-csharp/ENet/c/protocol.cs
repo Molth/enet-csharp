@@ -321,10 +321,9 @@ namespace enet
                         peer = currentPeer;
                 }
                 else if (currentPeer->state != ENET_PEER_STATE_CONNECTING &&
-                         currentPeer->address.host == host->receivedAddress.host)
+                         currentPeer->address == host->receivedAddress)
                 {
-                    if (currentPeer->address.port == host->receivedAddress.port &&
-                        currentPeer->connectID == command->connect.connectID)
+                    if (currentPeer->connectID == command->connect.connectID)
                         return null;
 
                     ++duplicatePeers;
@@ -1024,8 +1023,7 @@ namespace enet
 
                 if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                     peer->state == ENET_PEER_STATE_ZOMBIE ||
-                    ((host->receivedAddress.host != peer->address.host ||
-                      host->receivedAddress.port != peer->address.port) &&
+                    (host->receivedAddress != peer->address &&
                      peer->address.host != ENET_HOST_BROADCAST) ||
                     (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
                      sessionID != peer->incomingSessionID))
@@ -1071,8 +1069,7 @@ namespace enet
 
             if (peer != null)
             {
-                peer->address.host = host->receivedAddress.host;
-                peer->address.port = host->receivedAddress.port;
+                peer->address = host->receivedAddress;
                 peer->incomingDataTotal += (uint)host->receivedDataLength;
             }
 
