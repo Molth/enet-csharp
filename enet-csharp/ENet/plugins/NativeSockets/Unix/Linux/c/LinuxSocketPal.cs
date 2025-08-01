@@ -275,6 +275,7 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                    socketAddress->sin6_scope_id = 0;
                 }
                 else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
@@ -306,7 +307,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -343,7 +344,7 @@ namespace NativeSockets
                 msg.msg_namelen = 0;
             }
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -380,7 +381,7 @@ namespace NativeSockets
                 msg.msg_namelen = 0;
             }
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -403,7 +404,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -432,7 +433,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -468,7 +469,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -483,6 +484,7 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                    socketAddress->sin6_scope_id = 0;
                 }
                 else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
@@ -532,7 +534,7 @@ namespace NativeSockets
                 else if (addressStorage.ss_family.family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
                     sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
-                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
+                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 16);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin6_port);
                 }
             }
@@ -716,7 +718,7 @@ namespace NativeSockets
                     {
                         sockaddr_in6* __socketAddress_native = (sockaddr_in6*)hint->ai_addr;
 
-                        Unsafe.CopyBlockUnaligned(pAddrBuf, __socketAddress_native->sin6_addr, 20);
+                        Unsafe.CopyBlockUnaligned(pAddrBuf, __socketAddress_native->sin6_addr, 16);
 
                         freeaddrinfo(results);
 

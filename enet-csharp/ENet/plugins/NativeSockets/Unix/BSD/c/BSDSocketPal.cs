@@ -389,6 +389,7 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                    socketAddress->sin6_scope_id = 0;
                 }
                 else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
@@ -420,7 +421,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -457,7 +458,7 @@ namespace NativeSockets
                 msg.msg_namelen = 0;
             }
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -494,7 +495,7 @@ namespace NativeSockets
                 msg.msg_namelen = 0;
             }
 
-            int num = sendmsg((int)socket, &msg, 0);
+            int num = (int)sendmsg((int)socket, &msg, 0);
             return num;
         }
 
@@ -517,7 +518,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -546,7 +547,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -582,7 +583,7 @@ namespace NativeSockets
             msg.msg_controllen = 0;
             msg.msg_flags = 0;
 
-            int num = recvmsg((int)socket, &msg, 0);
+            int num = (int)recvmsg((int)socket, &msg, 0);
 
             if (msg.msg_flags != 0)
                 return -1;
@@ -597,6 +598,7 @@ namespace NativeSockets
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 8, WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6);
                     Unsafe.WriteUnaligned(socketAddress->sin6_addr + 12, __socketAddress_native->sin_addr);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin_port);
+                    socketAddress->sin6_scope_id = 0;
                 }
                 else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
@@ -646,7 +648,7 @@ namespace NativeSockets
                 else if (addressStorage.ss_family.bsd_family == (int)ADDRESS_FAMILY_INTER_NETWORK_V6)
                 {
                     sockaddr_in6* __socketAddress_native = (sockaddr_in6*)&addressStorage;
-                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 20);
+                    Unsafe.CopyBlockUnaligned(socketAddress->sin6_addr, __socketAddress_native->sin6_addr, 16);
                     socketAddress->sin6_port = WinSock2.NET_TO_HOST_16(__socketAddress_native->sin6_port);
                 }
             }
@@ -830,7 +832,7 @@ namespace NativeSockets
                     {
                         sockaddr_in6* __socketAddress_native = (sockaddr_in6*)hint->ai_addr;
 
-                        Unsafe.CopyBlockUnaligned(pAddrBuf, __socketAddress_native->sin6_addr, 20);
+                        Unsafe.CopyBlockUnaligned(pAddrBuf, __socketAddress_native->sin6_addr, 16);
 
                         freeaddrinfo(results);
 
@@ -922,8 +924,8 @@ namespace NativeSockets
         private static readonly delegate* managed<int, byte*, int, SocketFlags, byte*, int, int> _sendto;
         private static readonly delegate* managed<int, byte*, int, SocketFlags, int> _recv;
         private static readonly delegate* managed<int, byte*, int, SocketFlags, byte*, int*, int> _recvfrom;
-        private static readonly delegate* managed<int, msghdr*, int, int> _sendmsg;
-        private static readonly delegate* managed<int, msghdr*, int, int> _recvmsg;
+        private static readonly delegate* managed<int, msghdr*, int, nint> _sendmsg;
+        private static readonly delegate* managed<int, msghdr*, int, nint> _recvmsg;
         private static readonly delegate* managed<pollfd*, nuint, int, int> _poll;
         private static readonly delegate* managed<int, void*, void*, int> _inet_pton;
         private static readonly delegate* managed<byte*, byte*, addrinfo*, addrinfo**, int> _getaddrinfo;
@@ -968,10 +970,10 @@ namespace NativeSockets
         private static int recvfrom(int socketHandle, byte* buffer, int length, SocketFlags flags, byte* socketAddress, int* socketAddressSize) => _recvfrom(socketHandle, buffer, length, flags, socketAddress, socketAddressSize);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int sendmsg(int sockfd, msghdr* msg, int flags) => _sendmsg(sockfd, msg, flags);
+        public static nint sendmsg(int sockfd, msghdr* msg, int flags) => _sendmsg(sockfd, msg, flags);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int recvmsg(int sockfd, msghdr* msg, int flags) => _recvmsg(sockfd, msg, flags);
+        public static nint recvmsg(int sockfd, msghdr* msg, int flags) => _recvmsg(sockfd, msg, flags);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int poll(pollfd* fds, nuint nfds, int timeout) => _poll(fds, nfds, timeout);
