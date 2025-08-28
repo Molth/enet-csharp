@@ -1,4 +1,5 @@
-﻿using static enet.ENetPeerState;
+﻿using System.Runtime.CompilerServices;
+using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;
@@ -863,10 +864,10 @@ namespace enet
                 enet_peer_dispatch_incoming_unreliable_commands(peer, channel, queuedCommand);
         }
 
+        private static ENetIncomingCommand dummyCommand;
+
         public static ENetIncomingCommand* enet_peer_queue_incoming_command(ENetPeer* peer, ENetProtocol* command, void* data, nuint dataLength, uint flags, uint fragmentCount)
         {
-            ENetIncomingCommand dummyCommand;
-
             ENetChannel* channel = &peer->channels[command->header.channelID];
             uint unreliableSequenceNumber = 0, reliableSequenceNumber = 0;
             ushort reliableWindow, currentWindow;
@@ -1036,7 +1037,7 @@ namespace enet
             if (packet != null && packet->referenceCount == 0)
                 enet_packet_destroy(packet);
 
-            return &dummyCommand;
+            return (ENetIncomingCommand*)Unsafe.AsPointer(ref dummyCommand);
 
             notifyError:
             if (packet != null && packet->referenceCount == 0)
