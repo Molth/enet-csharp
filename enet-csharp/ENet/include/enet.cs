@@ -80,6 +80,34 @@ namespace enet
         [FieldOffset(0)] public fixed byte ipv6[16];
         [FieldOffset(12)] public fixed byte ipv4[4];
 
+        public Span<byte> IPv6
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 16);
+        }
+
+        public Span<byte> IPv4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 12), 4);
+        }
+
+        public bool IsIPv4
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                ref int reference = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
+                return Unsafe.Add(ref reference, 2) == WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 && reference == 0 && Unsafe.Add(ref reference, 1) == 0;
+            }
+        }
+
+        public bool IsIPv6
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => !IsIPv4;
+        }
+
         public ENetIP(ReadOnlySpan<byte> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), ref MemoryMarshal.GetReference(buffer), (uint)buffer.Length);
 
         public bool Equals(ENetIP other)
