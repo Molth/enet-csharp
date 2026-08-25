@@ -13,6 +13,10 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+#pragma warning disable CS0649
+        private static ENetIncomingCommand dummyCommand;
+#pragma warning restore CS0649
+
         /// <summary>
         ///     Configures throttle parameter for a peer.
         /// </summary>
@@ -190,7 +194,7 @@ namespace enet
                     fragment->command.sendFragment.fragmentCount = ENET_HOST_TO_NET_32(fragmentCount);
                     fragment->command.sendFragment.fragmentNumber = ENET_HOST_TO_NET_32(fragmentNumber);
                     fragment->command.sendFragment.totalLength = ENET_HOST_TO_NET_32((uint)packet->dataLength);
-                    fragment->command.sendFragment.fragmentOffset = ENET_NET_TO_HOST_32(fragmentOffset);
+                    fragment->command.sendFragment.fragmentOffset = ENET_HOST_TO_NET_32(fragmentOffset);
 
                     enet_list_insert(enet_list_end(&fragments), fragment);
                 }
@@ -863,8 +867,6 @@ namespace enet
             if (!enet_list_empty(&channel->incomingUnreliableCommands))
                 enet_peer_dispatch_incoming_unreliable_commands(peer, channel, queuedCommand);
         }
-
-        private static ENetIncomingCommand dummyCommand;
 
         public static ENetIncomingCommand* enet_peer_queue_incoming_command(ENetPeer* peer, ENetProtocol* command, void* data, nuint dataLength, uint flags, uint fragmentCount)
         {

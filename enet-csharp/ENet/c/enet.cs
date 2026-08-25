@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable CS1591
@@ -60,7 +61,6 @@ namespace enet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_time_set(uint newTimeBase) => ENet.enet_time_set(newTimeBase);
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option = 0) => ENet.enet_socket_create(type, option);
 
@@ -68,7 +68,7 @@ namespace enet
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_get_address(nint socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
+        public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
@@ -77,10 +77,10 @@ namespace enet
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_wait(nint socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
+        public static int enet_socket_wait(ENetSocket socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_set_option(nint socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
+        public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_socket_destroy(ENetSocket* socket) => ENet.enet_socket_destroy(socket);
@@ -102,8 +102,66 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
+        public static int enet_address_set_ip_endpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_ip_endpoint(address, ip);
+
+        /// <summary>
+        ///     Attempts to parse the printable form of the IP address in the parameter hostName
+        ///     and sets the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store the parsed IP address</param>
+        /// <param name="ip">IP address to parse</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
+        public static int enet_address_set_ip_address(ENetAddress* address, IPAddress ip) => ENet.enet_address_set_ip_address(address, ip);
+
+        /// <summary>
+        ///     Attempts to parse the printable form of the IP address in the parameter hostName
+        ///     and sets the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store the parsed IP address</param>
+        /// <param name="ip">IP address to parse</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ip(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_host_ip(address, ip);
+        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_ip_ipv4(address, ip);
+
+        /// <summary>
+        ///     Attempts to parse the printable form of the IP address in the parameter hostName
+        ///     and sets the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store the parsed IP address</param>
+        /// <param name="ip">IP address to parse</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_ip_ipv6(address, ip);
 
         /// <summary>
         ///     Attempts to resolve the host named by the parameter hostName and sets
@@ -123,14 +181,33 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host(address, hostName);
+        public static int enet_address_set_host_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ipv4(address, hostName);
+
+        /// <summary>
+        ///     Attempts to resolve the host named by the parameter hostName and sets
+        ///     the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store resolved address</param>
+        /// <param name="hostName">host name to lookup</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_address_set_host_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ipv6(address, hostName);
 
         /// <summary>
         ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
         /// </summary>
         /// <param name="address">address printed</param>
         /// <param name="ip">destination for name, must not be NULL</param>
-        /// <param name="nameLength">maximum length of hostName.</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -143,14 +220,13 @@ namespace enet
         ///     the null-terminated name of the host in hostName on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host_ip(ENetAddress* address, byte* ip, nuint nameLength) => ENet.enet_address_get_host_ip(address, ip, nameLength);
+        public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => ENet.enet_address_get_ip(address, ref ip);
 
         /// <summary>
         ///     Attempts to do a reverse lookup of the host field in the address parameter.
         /// </summary>
         /// <param name="address">address used for reverse lookup</param>
         /// <param name="hostName">destination for name, must not be NULL</param>
-        /// <param name="nameLength">maximum length of hostName.</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -163,7 +239,7 @@ namespace enet
         ///     the null-terminated name of the host in hostName on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host(ENetAddress* address, byte* hostName, nuint nameLength) => ENet.enet_address_get_host(address, hostName, nameLength);
+        public static int enet_address_get_host(ENetAddress* address, ref Span<char> hostName) => ENet.enet_address_get_host(address, ref hostName);
 
         /// <summary>
         ///     Creates a packet that may be sent to a peer.

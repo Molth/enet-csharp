@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Net;
 using System.Security.Cryptography;
 using System.Threading;
-using static enet.ENet;
+using static enet.ENET_API;
 
 #pragma warning disable CA1806
 
@@ -33,16 +34,16 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_host_ip(&address, "0.0.0.0");
-                address.port = 7777;
+                enet_address_set_ip_address(&address, IPAddress.IPv6Any);
+                address.Port = 7777;
 
-                byte* hostName = stackalloc byte[1024];
-                int error = enet_address_get_host(&address, hostName, 1024);
+                Span<char> hostName = stackalloc char[16];
+                int error = (int)enet_address_get_host(&address, ref hostName);
 
                 if (error == 0)
-                    Console.WriteLine(new string((sbyte*)hostName));
+                    Console.WriteLine(hostName.ToString());
 
-                host = enet_host_create(&address, 4095, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV4);
+                host = enet_host_create(&address, 4095, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE);
 
                 ENetPeer* peer = null;
 
@@ -68,7 +69,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                Console.WriteLine($"server Connected {peer->address.ToString()}");
+                                Console.WriteLine($"server Connected {peer->address.ToIpEndPoint().ToString()}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 peer = null;
@@ -99,14 +100,14 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_host_ip(&address, "127.0.0.1");
-                address.port = 7777;
+                enet_address_set_ip_address(&address, IPAddress.Loopback);
+                address.Port = 7777;
 
                 ENetAddress local = new ENetAddress();
-                enet_address_set_host_ip(&local, "0.0.0.0");
-                local.port = 7778;
+                enet_address_set_ip_ipv4(&local, "0.0.0.0");
+                local.Port = 7778;
 
-                host = enet_host_create(&local, 1, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV4);
+                host = enet_host_create(&local, 1, 0, 0, 0);
 
                 ENetPeer* peer = enet_host_connect(host, &address, 0, 0);
 
@@ -136,7 +137,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 connected = true;
-                                Console.WriteLine($"client Connected {netEvent.peer->address.ToString()}");
+                                Console.WriteLine($"client Connected {netEvent.peer->address.ToIpEndPoint().ToString()}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 connected = false;
@@ -160,7 +161,7 @@ namespace enet
                                 else
                                 {
                                     Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine($"length not same");
+                                    Console.WriteLine("length not same");
                                     Console.ForegroundColor = ConsoleColor.White;
                                     Console.WriteLine((int)netEvent.packet->dataLength + " " + count);
                                 }

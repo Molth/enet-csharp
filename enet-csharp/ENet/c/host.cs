@@ -133,9 +133,7 @@ namespace enet
             host->commandCount = 0;
             host->bufferCount = 0;
             host->checksum = null;
-            host->receivedAddress.host = ENET_HOST_ANY;
-            host->receivedAddress.port = 0;
-            host->receivedAddress.scopeID = 0;
+            host->receivedAddress = default;
             host->receivedData = null;
             host->receivedDataLength = 0;
 

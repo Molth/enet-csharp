@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using NativeSockets;
 using static enet.ENet;
 
@@ -17,11 +17,11 @@ namespace enet
         public const uint ENET_VERSION_MAJOR = 1;
         public const uint ENET_VERSION_MINOR = 3;
         public const uint ENET_VERSION_PATCH = 18;
+        public static readonly uint ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
         public static uint ENET_VERSION_CREATE(uint major, uint minor, uint patch) => (((major) << 16) | ((minor) << 8) | (patch));
         public static uint ENET_VERSION_GET_MAJOR(uint version) => (((version) >> 16) & 0xFF);
         public static uint ENET_VERSION_GET_MINOR(uint version) => (((version) >> 8) & 0xFF);
         public static uint ENET_VERSION_GET_PATCH(uint version) => ((version) & 0xFF);
-        public static readonly uint ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
     }
 
     public enum ENetSocketType
@@ -69,181 +69,230 @@ namespace enet
 
     public static partial class ENet
     {
-        public static readonly ENetIP ENET_HOST_ANY = new ENetIP();
-        public static readonly ENetIP ENET_HOST_BROADCAST = new ENetIP(stackalloc byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255 });
-        public const uint ENET_PORT_ANY = 0;
-    }
+        public static readonly ENetAddress ENET_HOST_ANY_V4;
+        public static readonly ENetAddress ENET_HOST_ANY_V6;
+        public static readonly ENetAddress ENET_HOST_BROADCAST;
 
-    [StructLayout(LayoutKind.Explicit, Size = 16)]
-    public unsafe struct ENetIP : IEquatable<ENetIP>
-    {
-        [FieldOffset(0)] public fixed byte ipv6[16];
-        [FieldOffset(12)] public fixed byte ipv4[4];
+        public const ushort ENET_PORT_ANY = 0;
 
-        public Span<byte> IPv6
+        static ENet()
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 16);
+            ENET_HOST_ANY_V4.GetInner().SetIp(IPAddress.Any, ENET_PORT_ANY, 0);
+            ENET_HOST_ANY_V6.GetInner().SetIp(IPAddress.IPv6Any, ENET_PORT_ANY, 0);
+            ENET_HOST_BROADCAST.GetInner().SetIp(IPAddress.Broadcast, ENET_PORT_ANY, 0);
         }
-
-        public Span<byte> IPv4
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), 12), 4);
-        }
-
-        public bool IsIPv4
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ref int reference = ref Unsafe.As<ENetIP, int>(ref Unsafe.AsRef(in this));
-                return Unsafe.Add(ref reference, 2) == WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 && reference == 0 && Unsafe.Add(ref reference, 1) == 0;
-            }
-        }
-
-        public bool IsIPv6
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => !IsIPv4;
-        }
-
-        public ENetIP(ReadOnlySpan<byte> buffer) => Unsafe.CopyBlockUnaligned(ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this)), ref MemoryMarshal.GetReference(buffer), (uint)buffer.Length);
-
-        public bool Equals(ENetIP other)
-        {
-            ref byte local1 = ref Unsafe.As<ENetIP, byte>(ref Unsafe.AsRef(in this));
-            ref byte local2 = ref Unsafe.As<ENetIP, byte>(ref other);
-            return SpanHelpers.Compare(ref local1, ref local2, (nuint)sizeof(ENetIP));
-        }
-
-        public override bool Equals(object? obj) => obj is ENetIP other && Equals(other);
-
-        public override int GetHashCode() => XxHash.Hash32(this);
-
-        public override string ToString()
-        {
-            byte* buffer = stackalloc byte[128];
-            _ = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this)), buffer, 128);
-            return new string((sbyte*)buffer);
-        }
-
-        public static bool operator ==(ENetIP left, ENetIP right) => left.Equals(right);
-        public static bool operator !=(ENetIP left, ENetIP right) => !left.Equals(right);
-
-        public static implicit operator Span<byte>(ENetIP ip) => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetIP, byte>(ref ip), 16);
-        public static implicit operator ReadOnlySpan<byte>(ENetIP ip) => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<ENetIP, byte>(ref ip), 16);
     }
 
     /// <summary>
     ///     Portable internet address structure.
     /// </summary>
     /// <remarks>
-    ///     The host must be specified in <b>network byte-order</b>, and the port must be in host
+    ///     The host must be specified in <b>network byte-order</b>, and the port must be host
     ///     byte-order. The constant ENET_HOST_ANY may be used to specify the default
     ///     server host. The constant ENET_HOST_BROADCAST may be used to specify the
     ///     broadcast address (255.255.255.255).  This makes sense for enet_host_connect,
     ///     but not for enet_host_create.  Once a server responds to a broadcast, the
     ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = 24)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>
     {
-        [FieldOffset(0)] public ENetIP host;
-        [FieldOffset(12)] public uint address;
-        [FieldOffset(16)] public ushort port;
-        [FieldOffset(20)] public uint scopeID;
+        /// <summary>
+        ///     The native socket address.
+        /// </summary>
+        private NativeSocketAddress _socketAddress;
 
-        public Span<byte> IPv6
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="ENetAddress" /> structure.
+        /// </summary>
+        /// <param name="socketAddress">The native socket address.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ENetAddress(NativeSocketAddress socketAddress) => _socketAddress = socketAddress;
+
+        /// <summary>
+        ///     Gets a value that indicates whether this has been allocated or initialized.
+        /// </summary>
+        public readonly bool IsCreated => _socketAddress.IsCreated;
+
+        /// <summary>
+        ///     Gets whether the address is an Ipv4 address.
+        /// </summary>
+        public readonly bool IsIpv4 => _socketAddress.IsIpv4;
+
+        /// <summary>
+        ///     Gets whether the address is an Ipv6 address.
+        /// </summary>
+        public readonly bool IsIpv6 => _socketAddress.IsIpv6;
+
+        /// <summary>
+        ///     Gets the address family of the socket address.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        ///     Family != <see cref="AddressFamily.InterNetwork" />
+        ///     or <see cref="AddressFamily.InterNetworkV6" />.
+        /// </exception>
+        public AddressFamily Family
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MemoryMarshal.CreateSpan(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 16);
+            readonly get => _socketAddress.Family;
+            set => _socketAddress.Family = value;
         }
 
-        public Span<byte> IPv4
+        /// <summary>
+        ///     Gets or sets the port number of the socket address.
+        /// </summary>
+        /// <returns>An unsigned integer value indicating the port number of the socket address.</returns>
+        public ushort Port
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this)), 12), 4);
+            readonly get => _socketAddress.Port;
+            set => _socketAddress.Port = value;
         }
 
-        public bool IsIPv4
+        /// <summary>
+        ///     Gets or sets the Ipv6 address scope identifier.
+        /// </summary>
+        /// <returns>An unsigned integer that specifies the scope of the address.</returns>
+        public uint ScopeId
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                ref int reference = ref Unsafe.As<ENetAddress, int>(ref Unsafe.AsRef(in this));
-                return Unsafe.Add(ref reference, 2) == WinSock2.ADDRESS_FAMILY_INTER_NETWORK_V4_MAPPED_V6 && reference == 0 && Unsafe.Add(ref reference, 1) == 0;
-            }
+            readonly get => _socketAddress.ScopeId;
+            set => _socketAddress.ScopeId = value;
         }
 
-        public bool IsIPv6
+        /// <summary>
+        ///     Gets whether the socket address is an Ipv4-mapped Ipv6 address.
+        /// </summary>
+        /// <returns>
+        ///     Returns true if the socket address is an Ipv4-mapped Ipv6 address;
+        ///     otherwise, false.
+        /// </returns>
+        public readonly bool IsIpv4MappedToIpv6 => _socketAddress.IsIpv4MappedToIpv6;
+
+        /// <summary>
+        ///     Gets the underlying buffer size of this.
+        /// </summary>
+        /// <returns>The underlying buffer size of this.</returns>
+        public readonly int Size => _socketAddress.Size;
+
+        /// <summary>
+        ///     Gets or sets the specified index element in the underlying buffer.
+        /// </summary>
+        /// <param name="offset">The array index element of the desired information.</param>
+        /// <exception cref="T:System.IndexOutOfRangeException">The specified index does not exist in the buffer.</exception>
+        /// <returns>The value of the specified index element in the underlying buffer.</returns>
+        public byte this[int offset]
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => !IsIPv4;
+            readonly get => _socketAddress[offset];
+            set => _socketAddress[offset] = value;
         }
 
-        public bool Equals(ENetAddress other)
-        {
-            ref byte local1 = ref Unsafe.As<ENetAddress, byte>(ref Unsafe.AsRef(in this));
-            ref byte local2 = ref Unsafe.As<ENetAddress, byte>(ref other);
-            return SpanHelpers.Compare(ref local1, ref local2, (nuint)sizeof(ENetAddress));
-        }
+        /// <summary>
+        ///     Maps the socket address object to an Ipv6 address.
+        /// </summary>
+        /// <returns>Returns socket address. An Ipv6 address.</returns>
+        public readonly ENetAddress MapToIpv6() => new(_socketAddress.MapToIpv6());
 
-        public override bool Equals(object? obj) => obj is ENetAddress other && Equals(other);
+        /// <summary>
+        ///     Maps the socket address object to an Ipv4 address.
+        /// </summary>
+        /// <returns>Returns socket address. An Ipv4 address.</returns>
+        public readonly ENetAddress MapToIpv4() => new(_socketAddress.MapToIpv6());
 
-        public override int GetHashCode() => XxHash.Hash32(this);
+        /// <summary>
+        ///     Gets the underlying memory that can be passed to native OS calls.
+        /// </summary>
+        public Span<byte> Buffer => _socketAddress.Buffer;
 
-        public override string ToString()
-        {
-            Span<byte> buffer = stackalloc byte[128];
+        /// <summary>
+        ///     Gets the ip address of the endpoint.
+        /// </summary>
+        public Span<byte> Address => _socketAddress.Address;
 
-            int error = enet_address_get_host_ip((ENetAddress*)Unsafe.AsPointer(ref Unsafe.AsRef(in this).host), (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(buffer)), 128);
-            if (error != 0)
-                return "ERROR";
+        /// <summary>
+        ///     Returns a span that represents the raw byte buffer of the address.
+        /// </summary>
+        /// <returns>A span of bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<byte> AsSpan() => _socketAddress.AsSpan();
 
-            Span<char> destination = stackalloc char[256];
+        /// <summary>
+        ///     Returns a span that represents the raw byte buffer of the address.
+        /// </summary>
+        /// <returns>A span of bytes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly ReadOnlySpan<byte> AsReadOnlySpan() => _socketAddress.AsReadOnlySpan();
 
-            int chars = 0;
-            int charsWritten;
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool Equals(ENetAddress other) => _socketAddress.Equals(other._socketAddress);
 
-            if (IsIPv6)
-            {
-                destination[0] = '[';
-                ++chars;
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
+        public readonly override bool Equals(object? obj) => obj is ENetAddress other && other.Equals(this);
 
-                chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        public readonly override int GetHashCode() => _socketAddress.GetHashCode();
 
-                if (scopeID != 0)
-                {
-                    destination[chars] = '%';
-                    ++chars;
-
-                    scopeID.TryFormat(destination.Slice(chars), out charsWritten);
-                    chars += charsWritten;
-                }
-
-                destination[chars] = ']';
-                ++chars;
-            }
-            else
-            {
-                chars += Encoding.ASCII.GetChars(buffer.Slice(0, buffer.IndexOf((byte)'\0')), destination.Slice(chars));
-            }
-
-            destination[chars] = ':';
-            ++chars;
-
-            port.TryFormat(destination.Slice(chars), out charsWritten);
-            chars += charsWritten;
-
-            destination[chars] = '\0';
-            ++chars;
-
-            return destination.Slice(0, chars).ToString();
-        }
-
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
         public static bool operator ==(ENetAddress left, ENetAddress right) => left.Equals(right);
+
+        /// <summary>
+        ///     Indicates whether the current object is not equal to another object.
+        /// </summary>
         public static bool operator !=(ENetAddress left, ENetAddress right) => !left.Equals(right);
+
+        /// <summary>
+        ///     Tries to format the current socket address into the provided span.
+        /// </summary>
+        /// <param name="destination">When this method returns, the socket address as a span of characters.</param>
+        /// <param name="charsWritten">When this method returns, the number of characters written into the span.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the formatting was successful;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        public readonly bool TryFormat(Span<char> destination, out int charsWritten) => _socketAddress.TryFormat(destination, out charsWritten);
+
+        /// <summary>
+        ///     Returns information about the socket address.
+        /// </summary>
+        /// <returns>A string that contains information about this.</returns>
+        public readonly override string ToString() => _socketAddress.ToString();
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IPAddress" /> class with the specified address.
+        /// </summary>
+        /// <exception cref="ArgumentException">Address contains a bad ip address.</exception>
+        /// <returns>A new instance of the <see cref="IPAddress" /> class.</returns>
+        public readonly IPAddress ToIpAddress() => _socketAddress.ToIpAddress();
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IPEndPoint" /> class with the specified address and port number.
+        /// </summary>
+        /// <exception cref="ArgumentException">Address contains a bad ip address.</exception>
+        /// <returns>A new instance of the <see cref="IPEndPoint" /> class.</returns>
+        public readonly IPEndPoint ToIpEndPoint() => _socketAddress.ToIpEndPoint();
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="SocketAddress" /> class with the specified address.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        ///     Family != <see cref="AddressFamily.InterNetwork" />
+        ///     or <see cref="AddressFamily.InterNetworkV6" />.
+        /// </exception>
+        /// <returns>A new instance of the <see cref="SocketAddress" /> class.</returns>
+        public readonly SocketAddress ToSocketAddress() => _socketAddress.ToSocketAddress();
+
+        /// <summary>
+        ///     Gets the native socket address.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#pragma warning disable CS9084 // Struct member returns 'this' or other instance members by reference
+        internal ref NativeSocketAddress GetInner() => ref _socketAddress;
+#pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference
     }
 
     /// <summary>

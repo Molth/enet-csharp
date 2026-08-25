@@ -2,6 +2,8 @@ This project is a pure C# translation of [enet](https://github.com/lsalzman/enet
 
 Where udp implementation: [NativeSockets](https://github.com/Molth/NativeSockets).
 
+**It is fully wire‑compatible with the original C library.**
+
 ## Why?
 
 The original ENet relies on platform-specific native binaries,
