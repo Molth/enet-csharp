@@ -47,7 +47,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NativeSockets" Version="1.1.6" />
+      <PackageReference Include="NativeSockets" Version="1.2.0" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">

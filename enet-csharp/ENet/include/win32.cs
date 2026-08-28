@@ -49,11 +49,6 @@ namespace enet
         internal ENetSocket(NativeSocket handle) => _handle = handle;
 
         /// <summary>
-        ///     Gets a value that indicates whether this has been allocated or initialized.
-        /// </summary>
-        public bool IsCreated => _handle.IsCreated;
-
-        /// <summary>
         ///     Gets the native socket handle.
         /// </summary>
         public nint Handle => _handle.Handle;

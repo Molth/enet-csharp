@@ -50,13 +50,13 @@ namespace enet
         /// <param name="option">
         ///     <list type="bullet">
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV4 (default): IPv4</description>
+        ///             <description>ENET_HOSTOPT_IPV4 (default): Ipv4</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_ONLY: IPv6-only</description>
+        ///             <description>ENET_HOSTOPT_IPV6_ONLY: Ipv6-only</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both IPv4 and IPv6</description>
+        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both Ipv4 and Ipv6</description>
         ///         </item>
         ///     </list>
         /// </param>

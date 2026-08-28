@@ -102,14 +102,15 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_ip_endpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_ip_endpoint(address, ip);
+        public static int enet_address_set_from_endpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_from_endpoint(address, ip);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
         ///     and sets the host field in the address parameter if successful.
         /// </summary>
         /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to parse</param>
+        /// <param name="ip">IP address to set</param>
+        /// <param name="port">port number in host byte order</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -121,7 +122,7 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_ip_address(ENetAddress* address, IPAddress ip) => ENet.enet_address_set_ip_address(address, ip);
+        public static int enet_address_set_from_address(ENetAddress* address, IPAddress ip, ushort port) => ENet.enet_address_set_from_address(address, ip, port);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
@@ -129,26 +130,7 @@ namespace enet
         /// </summary>
         /// <param name="address">destination to store the parsed IP address</param>
         /// <param name="ip">IP address to parse</param>
-        /// <returns>
-        ///     <list type="bullet">
-        ///         <item>
-        ///             <description>0 on success</description>
-        ///         </item>
-        ///         <item>
-        ///             <description>&lt; 0 on failure</description>
-        ///         </item>
-        ///     </list>
-        ///     the address of the given hostName in address on success
-        /// </returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_ip_ipv4(address, ip);
-
-        /// <summary>
-        ///     Attempts to parse the printable form of the IP address in the parameter hostName
-        ///     and sets the host field in the address parameter if successful.
-        /// </summary>
-        /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to parse</param>
+        /// <param name="port">port number in host byte order</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -161,7 +143,29 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip) => ENet.enet_address_set_ip_ipv6(address, ip);
+        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => ENet.enet_address_set_ip_ipv4(address, ip, port);
+
+        /// <summary>
+        ///     Attempts to parse the printable form of the IP address in the parameter hostName
+        ///     and sets the host field in the address parameter if successful.
+        /// </summary>
+        /// <param name="address">destination to store the parsed IP address</param>
+        /// <param name="ip">IP address to parse</param>
+        /// <param name="port">port number in host byte order</param>
+        /// <param name="scopeId">Ipv6 scope identifier for link‑local or site‑local addresses</param>
+        /// <returns>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <description>0 on success</description>
+        ///         </item>
+        ///         <item>
+        ///             <description>&lt; 0 on failure</description>
+        ///         </item>
+        ///     </list>
+        ///     the address of the given hostName in address on success
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId) => ENet.enet_address_set_ip_ipv6(address, ip, port, scopeId);
 
         /// <summary>
         ///     Attempts to resolve the host named by the parameter hostName and sets
@@ -169,6 +173,7 @@ namespace enet
         /// </summary>
         /// <param name="address">destination to store resolved address</param>
         /// <param name="hostName">host name to lookup</param>
+        /// <param name="port">port number in host byte order</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -181,7 +186,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ipv4(address, hostName);
+        public static int enet_address_set_host_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => ENet.enet_address_set_host_ipv4(address, hostName, port);
 
         /// <summary>
         ///     Attempts to resolve the host named by the parameter hostName and sets
@@ -189,6 +194,8 @@ namespace enet
         /// </summary>
         /// <param name="address">destination to store resolved address</param>
         /// <param name="hostName">host name to lookup</param>
+        /// <param name="port">port number in host byte order</param>
+        /// <param name="scopeId">Ipv6 scope identifier for link‑local or site‑local addresses</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -201,7 +208,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName) => ENet.enet_address_set_host_ipv6(address, hostName);
+        public static int enet_address_set_host_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => ENet.enet_address_set_host_ipv6(address, hostName, port, scopeId);
 
         /// <summary>
         ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
@@ -302,13 +309,13 @@ namespace enet
         /// <param name="option">
         ///     <list type="bullet">
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV4 (default): IPv4</description>
+        ///             <description>ENET_HOSTOPT_IPV4 (default): Ipv4</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_ONLY: IPv6-only</description>
+        ///             <description>ENET_HOSTOPT_IPV6_ONLY: Ipv6-only</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both IPv4 and IPv6</description>
+        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both Ipv4 and Ipv6</description>
         ///         </item>
         ///     </list>
         /// </param>

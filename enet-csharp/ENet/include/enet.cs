@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using NativeSockets;
 using static enet.ENet;
 
@@ -17,7 +18,7 @@ namespace enet
         public const uint ENET_VERSION_MAJOR = 1;
         public const uint ENET_VERSION_MINOR = 3;
         public const uint ENET_VERSION_PATCH = 18;
-        public static readonly uint ENET_VERSION = ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH);
+        public const uint ENET_VERSION = 66322;
         public static uint ENET_VERSION_CREATE(uint major, uint minor, uint patch) => (((major) << 16) | ((minor) << 8) | (patch));
         public static uint ENET_VERSION_GET_MAJOR(uint version) => (((version) >> 16) & 0xFF);
         public static uint ENET_VERSION_GET_MINOR(uint version) => (((version) >> 8) & 0xFF);
@@ -69,17 +70,17 @@ namespace enet
 
     public static partial class ENet
     {
-        public static readonly ENetAddress ENET_HOST_ANY_V4;
-        public static readonly ENetAddress ENET_HOST_ANY_V6;
-        public static readonly ENetAddress ENET_HOST_BROADCAST;
+        public static ENetAddress ENET_HOST_ANY_V4 { get; }
+        public static ENetAddress ENET_HOST_ANY_V6 { get; }
+        public static ENetAddress ENET_HOST_BROADCAST { get; }
 
         public const ushort ENET_PORT_ANY = 0;
 
         static ENet()
         {
-            ENET_HOST_ANY_V4.GetInner().SetIp(IPAddress.Any, ENET_PORT_ANY, 0);
-            ENET_HOST_ANY_V6.GetInner().SetIp(IPAddress.IPv6Any, ENET_PORT_ANY, 0);
-            ENET_HOST_BROADCAST.GetInner().SetIp(IPAddress.Broadcast, ENET_PORT_ANY, 0);
+            ENET_HOST_ANY_V4.GetInner().FromIpAddress(IPAddress.Any, ENET_PORT_ANY);
+            ENET_HOST_ANY_V6.GetInner().FromIpAddress(IPAddress.IPv6Any, ENET_PORT_ANY);
+            ENET_HOST_BROADCAST.GetInner().FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
         }
     }
 
@@ -94,7 +95,10 @@ namespace enet
     ///     but not for enet_host_create.  Once a server responds to a broadcast, the
     ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
     /// </remarks>
-    public unsafe struct ENetAddress : IEquatable<ENetAddress>
+    public unsafe struct ENetAddress : IEquatable<ENetAddress>, IComparable<ENetAddress>
+#if NET6_0_OR_GREATER
+        , ISpanFormattable
+#endif
     {
         /// <summary>
         ///     The native socket address.
@@ -107,11 +111,6 @@ namespace enet
         /// <param name="socketAddress">The native socket address.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ENetAddress(NativeSocketAddress socketAddress) => _socketAddress = socketAddress;
-
-        /// <summary>
-        ///     Gets a value that indicates whether this has been allocated or initialized.
-        /// </summary>
-        public readonly bool IsCreated => _socketAddress.IsCreated;
 
         /// <summary>
         ///     Gets whether the address is an Ipv4 address.
@@ -193,7 +192,7 @@ namespace enet
         ///     Maps the socket address object to an Ipv4 address.
         /// </summary>
         /// <returns>Returns socket address. An Ipv4 address.</returns>
-        public readonly ENetAddress MapToIpv4() => new(_socketAddress.MapToIpv6());
+        public readonly ENetAddress MapToIpv4() => new(_socketAddress.MapToIpv4());
 
         /// <summary>
         ///     Gets the underlying memory that can be passed to native OS calls.
@@ -226,6 +225,34 @@ namespace enet
         public readonly bool Equals(ENetAddress other) => _socketAddress.Equals(other._socketAddress);
 
         /// <summary>
+        ///     Compares the current instance with another object of the same type and returns an integer that indicates
+        ///     whether the current instance precedes, follows, or occurs in the same position in the sort order as the other
+        ///     object.
+        /// </summary>
+        /// <param name="other">An object to compare with this instance.</param>
+        /// <returns>
+        ///     A value that indicates the relative order of the objects being compared. The return value has these meanings:
+        ///     <list type="table">
+        ///         <listheader>
+        ///             <term> Value</term><description> Meaning</description>
+        ///         </listheader>
+        ///         <item>
+        ///             <term> Less than zero</term>
+        ///             <description> This instance precedes <paramref name="other" /> in the sort order.</description>
+        ///         </item>
+        ///         <item>
+        ///             <term> Zero</term>
+        ///             <description> This instance occurs in the same position in the sort order as <paramref name="other" />.</description>
+        ///         </item>
+        ///         <item>
+        ///             <term> Greater than zero</term>
+        ///             <description> This instance follows <paramref name="other" /> in the sort order.</description>
+        ///         </item>
+        ///     </list>
+        /// </returns>
+        public readonly int CompareTo(ENetAddress other) => _socketAddress.CompareTo(other._socketAddress);
+
+        /// <summary>
         ///     Indicates whether the current object is equal to another object.
         /// </summary>
         public readonly override bool Equals(object? obj) => obj is ENetAddress other && other.Equals(this);
@@ -246,6 +273,12 @@ namespace enet
         public static bool operator !=(ENetAddress left, ENetAddress right) => !left.Equals(right);
 
         /// <summary>
+        ///     Returns information about the socket address.
+        /// </summary>
+        /// <returns>A string that contains information about this.</returns>
+        public readonly override string ToString() => _socketAddress.ToString();
+
+        /// <summary>
         ///     Tries to format the current socket address into the provided span.
         /// </summary>
         /// <param name="destination">When this method returns, the socket address as a span of characters.</param>
@@ -257,34 +290,52 @@ namespace enet
         public readonly bool TryFormat(Span<char> destination, out int charsWritten) => _socketAddress.TryFormat(destination, out charsWritten);
 
         /// <summary>
-        ///     Returns information about the socket address.
+        ///     Returns the string representation of the current socket address.
         /// </summary>
-        /// <returns>A string that contains information about this.</returns>
-        public readonly override string ToString() => _socketAddress.ToString();
+        /// <param name="_">The format specifier (ignored).</param>
+        /// <param name="__">The format provider (ignored).</param>
+        /// <returns>A string representation of the socket address.</returns>
+        public readonly string ToString(string? _, IFormatProvider? __) => _socketAddress.ToString(_, __);
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="IPAddress" /> class with the specified address.
+        ///     Tries to format the current socket address into the provided span.
         /// </summary>
-        /// <exception cref="ArgumentException">Address contains a bad ip address.</exception>
-        /// <returns>A new instance of the <see cref="IPAddress" /> class.</returns>
-        public readonly IPAddress ToIpAddress() => _socketAddress.ToIpAddress();
+        /// <param name="destination">The span to receive the formatted characters.</param>
+        /// <param name="charsWritten">When this method returns, the number of characters written.</param>
+        /// <param name="_">The format specifier (ignored).</param>
+        /// <param name="__">The format provider (ignored).</param>
+        /// <returns><see langword="true" /> if the formatting succeeded; otherwise, <see langword="false" />.</returns>
+        public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> _, IFormatProvider? __) => _socketAddress.TryFormat(destination, out charsWritten, _, __);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IPEndPoint" /> class with the specified address and port number.
         /// </summary>
-        /// <exception cref="ArgumentException">Address contains a bad ip address.</exception>
-        /// <returns>A new instance of the <see cref="IPEndPoint" /> class.</returns>
-        public readonly IPEndPoint ToIpEndPoint() => _socketAddress.ToIpEndPoint();
+        /// <param name="result">A new instance of the <see cref="IPEndPoint" /> class.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        public readonly SocketError ToIpEndPoint(out IPEndPoint? result) => _socketAddress.ToIpEndPoint(out result);
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IPAddress" /> class with the specified address.
+        /// </summary>
+        /// <param name="result">A new instance of the <see cref="IPAddress" /> class.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        public readonly SocketError ToIpAddress(out IPAddress? result) => _socketAddress.ToIpAddress(out result);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="SocketAddress" /> class with the specified address.
         /// </summary>
-        /// <exception cref="NotSupportedException">
-        ///     Family != <see cref="AddressFamily.InterNetwork" />
-        ///     or <see cref="AddressFamily.InterNetworkV6" />.
-        /// </exception>
-        /// <returns>A new instance of the <see cref="SocketAddress" /> class.</returns>
-        public readonly SocketAddress ToSocketAddress() => _socketAddress.ToSocketAddress();
+        /// <param name="result">A new instance of the <see cref="SocketAddress" /> class.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        public readonly SocketError ToSocketAddress(out SocketAddress? result) => _socketAddress.ToSocketAddress(out result);
 
         /// <summary>
         ///     Gets the native socket address.
@@ -658,6 +709,7 @@ namespace enet
     /// <seealso cref="enet_host_channel_limit(ENetHost*, nuint)" />
     /// <seealso cref="enet_host_bandwidth_limit(ENetHost*, uint, uint)" />
     /// <seealso cref="enet_host_bandwidth_throttle(ENetHost*)" />
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetHost
     {
         public ENetSocket socket;
@@ -702,10 +754,10 @@ namespace enet
         public uint totalQueued;
         public nuint packetSize;
         public ushort headerFlags;
-        public ENetProtocols commands_t;
+        private ENetProtocols commands_t;
         public ENetProtocol* commands => (ENetProtocol*)Unsafe.AsPointer(ref commands_t);
         public nuint commandCount;
-        public ENetBuffers buffers_t;
+        private ENetBuffers buffers_t;
         public ENetBuffer* buffers => (ENetBuffer*)Unsafe.AsPointer(ref buffers_t);
         public nuint bufferCount;
 
@@ -765,7 +817,7 @@ namespace enet
     }
 
     [AttributeUsage(AttributeTargets.Struct)]
-    public sealed class ENetArrayAttribute : Attribute
+    internal sealed class ENetArrayAttribute : Attribute
     {
         public readonly uint Length;
 
@@ -773,124 +825,111 @@ namespace enet
     }
 
     [ENetArray(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS)]
-    public struct ENetProtocols
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ENetProtocols
     {
-        public ENetProtocol command0;
-        public ENetProtocol command1;
-        public ENetProtocol command2;
-        public ENetProtocol command3;
-        public ENetProtocol command4;
-        public ENetProtocol command5;
-        public ENetProtocol command6;
-        public ENetProtocol command7;
-        public ENetProtocol command8;
-        public ENetProtocol command9;
-        public ENetProtocol command10;
-        public ENetProtocol command11;
-        public ENetProtocol command12;
-        public ENetProtocol command13;
-        public ENetProtocol command14;
-        public ENetProtocol command15;
-        public ENetProtocol command16;
-        public ENetProtocol command17;
-        public ENetProtocol command18;
-        public ENetProtocol command19;
-        public ENetProtocol command20;
-        public ENetProtocol command21;
-        public ENetProtocol command22;
-        public ENetProtocol command23;
-        public ENetProtocol command24;
-        public ENetProtocol command25;
-        public ENetProtocol command26;
-        public ENetProtocol command27;
-        public ENetProtocol command28;
-        public ENetProtocol command29;
-        public ENetProtocol command30;
-        public ENetProtocol command31;
+        private ENetProtocols16 _element0;
+        private ENetProtocols16 _element1;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetProtocols2
+        {
+            private ENetProtocol _element0;
+            private ENetProtocol _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetProtocols4
+        {
+            private ENetProtocols2 _element0;
+            private ENetProtocols2 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetProtocols8
+        {
+            private ENetProtocols4 _element0;
+            private ENetProtocols4 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetProtocols16
+        {
+            private ENetProtocols8 _element0;
+            private ENetProtocols8 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetProtocols32
+        {
+            private ENetProtocols16 _element0;
+            private ENetProtocols16 _element1;
+        }
     }
 
     [ENetArray(ENET_BUFFER_MAXIMUM)]
-    public struct ENetBuffers
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ENetBuffers
     {
-        public ENetBuffer buffer0;
-        public ENetBuffer buffer1;
-        public ENetBuffer buffer2;
-        public ENetBuffer buffer3;
-        public ENetBuffer buffer4;
-        public ENetBuffer buffer5;
-        public ENetBuffer buffer6;
-        public ENetBuffer buffer7;
-        public ENetBuffer buffer8;
-        public ENetBuffer buffer9;
-        public ENetBuffer buffer10;
-        public ENetBuffer buffer11;
-        public ENetBuffer buffer12;
-        public ENetBuffer buffer13;
-        public ENetBuffer buffer14;
-        public ENetBuffer buffer15;
-        public ENetBuffer buffer16;
-        public ENetBuffer buffer17;
-        public ENetBuffer buffer18;
-        public ENetBuffer buffer19;
-        public ENetBuffer buffer20;
-        public ENetBuffer buffer21;
-        public ENetBuffer buffer22;
-        public ENetBuffer buffer23;
-        public ENetBuffer buffer24;
-        public ENetBuffer buffer25;
-        public ENetBuffer buffer26;
-        public ENetBuffer buffer27;
-        public ENetBuffer buffer28;
-        public ENetBuffer buffer29;
-        public ENetBuffer buffer30;
-        public ENetBuffer buffer31;
-        public ENetBuffer buffer32;
-        public ENetBuffer buffer33;
-        public ENetBuffer buffer34;
-        public ENetBuffer buffer35;
-        public ENetBuffer buffer36;
-        public ENetBuffer buffer37;
-        public ENetBuffer buffer38;
-        public ENetBuffer buffer39;
-        public ENetBuffer buffer40;
-        public ENetBuffer buffer41;
-        public ENetBuffer buffer42;
-        public ENetBuffer buffer43;
-        public ENetBuffer buffer44;
-        public ENetBuffer buffer45;
-        public ENetBuffer buffer46;
-        public ENetBuffer buffer47;
-        public ENetBuffer buffer48;
-        public ENetBuffer buffer49;
-        public ENetBuffer buffer50;
-        public ENetBuffer buffer51;
-        public ENetBuffer buffer52;
-        public ENetBuffer buffer53;
-        public ENetBuffer buffer54;
-        public ENetBuffer buffer55;
-        public ENetBuffer buffer56;
-        public ENetBuffer buffer57;
-        public ENetBuffer buffer58;
-        public ENetBuffer buffer59;
-        public ENetBuffer buffer60;
-        public ENetBuffer buffer61;
-        public ENetBuffer buffer62;
-        public ENetBuffer buffer63;
-        public ENetBuffer buffer64;
+        private ENetBuffers64 _element0;
+        private ENetBuffer _element1;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers2
+        {
+            private ENetBuffer _element0;
+            private ENetBuffer _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers4
+        {
+            private ENetBuffers2 _element0;
+            private ENetBuffers2 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers8
+        {
+            private ENetBuffers4 _element0;
+            private ENetBuffers4 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers16
+        {
+            private ENetBuffers8 _element0;
+            private ENetBuffers8 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers32
+        {
+            private ENetBuffers16 _element0;
+            private ENetBuffers16 _element1;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct ENetBuffers64
+        {
+            private ENetBuffers32 _element0;
+            private ENetBuffers32 _element1;
+        }
     }
 
     [ENetArray(2)]
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetPacketData
     {
-        public ENetPacketDataBuffer buffer0;
-        public ENetPacketDataBuffer buffer1;
+        private ENetPacketDataBuffer _element0;
+        private ENetPacketDataBuffer _element1;
 
         public byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref Unsafe.AsRef(in this))) + i)->data;
-    }
 
-    public unsafe struct ENetPacketDataBuffer
-    {
-        public fixed byte data[(int)ENET_PROTOCOL_MAXIMUM_MTU];
+        private unsafe struct ENetPacketDataBuffer
+        {
+            public fixed byte data[(int)ENET_PROTOCOL_MAXIMUM_MTU];
+        }
     }
 
     /// <summary>

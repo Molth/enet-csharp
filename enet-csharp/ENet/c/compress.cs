@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 #pragma warning disable CS1591
 
@@ -22,10 +23,12 @@ namespace enet
         public const uint ENET_SUBCONTEXT_ESCAPE_DELTA = 5;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetRangeCoder
     {
         /* only allocate enough symbols for reasonable MTUs, would need to be larger for large file compression */
-        public ENetSymbols symbols_t;
+        private ENetSymbols symbols_t;
+
         public ENetSymbol* symbols => (ENetSymbol*)Unsafe.AsPointer(ref symbols_t);
     }
 

@@ -34,8 +34,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_ip_address(&address, IPAddress.IPv6Any);
-                address.Port = 7777;
+                enet_address_set_from_address(&address, IPAddress.IPv6Any, 7777);
 
                 Span<char> hostName = stackalloc char[16];
                 int error = (int)enet_address_get_host(&address, ref hostName);
@@ -69,7 +68,8 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                Console.WriteLine($"server Connected {peer->address.ToIpEndPoint().ToString()}");
+                                peer->address.ToIpEndPoint(out var endPoint);
+                                Console.WriteLine($"server Connected {endPoint}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 peer = null;
@@ -100,12 +100,10 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_ip_address(&address, IPAddress.Loopback);
-                address.Port = 7777;
+                enet_address_set_from_address(&address, IPAddress.Loopback, 7777);
 
                 ENetAddress local = new ENetAddress();
-                enet_address_set_ip_ipv4(&local, "0.0.0.0");
-                local.Port = 7778;
+                enet_address_set_ip_ipv4(&local, "0.0.0.0", 7778);
 
                 host = enet_host_create(&local, 1, 0, 0, 0);
 
@@ -137,7 +135,8 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 connected = true;
-                                Console.WriteLine($"client Connected {netEvent.peer->address.ToIpEndPoint().ToString()}");
+                                netEvent.peer->address.ToIpEndPoint(out var endPoint);
+                                Console.WriteLine($"client Connected {endPoint}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                 connected = false;
