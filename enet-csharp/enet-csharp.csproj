@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>ENet-no_binaries</PackageId>
-        <Version>1.0.9</Version>
+        <Version>1.1.0</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -47,7 +47,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NativeSockets" Version="1.2.0" />
+      <PackageReference Include="NativeSockets" Version="1.2.5" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">

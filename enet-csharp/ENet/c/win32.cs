@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using NativeSockets;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
@@ -59,10 +61,10 @@ namespace enet
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
             {
                 bool ipv6 = option == ENET_HOSTOPT_IPV6_ONLY || option == ENET_HOSTOPT_IPV6_DUALMODE;
-                SocketError error = NativeSocketPal.Create(ipv6, out NativeSocket socket);
+                SocketError error = NativeSocket.Create(ipv6, out NativeSocket socket);
                 if (error == SocketError.Success && option == ENET_HOSTOPT_IPV6_DUALMODE && enet_socket_set_option(new ENetSocket(socket), ENET_SOCKOPT_IPV6_ONLY, 0) < 0)
                 {
-                    NativeSocketPal.Close(socket);
+                    socket.Dispose();
                     goto error;
                 }
 
@@ -76,37 +78,38 @@ namespace enet
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
+            var optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<int, byte>(ref value), 4);
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
                     result = enet_socket_set_nonblocking(socket, value);
                     break;
                 case ENET_SOCKOPT_BROADCAST:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, optionValue);
                     break;
                 case ENET_SOCKOPT_RCVBUF:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, optionValue);
                     break;
                 case ENET_SOCKOPT_SNDBUF:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, optionValue);
                     break;
                 case ENET_SOCKOPT_REUSEADDR:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, optionValue);
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, optionValue);
                     break;
                 case ENET_SOCKOPT_SNDTIMEO:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, optionValue);
                     break;
                 case ENET_SOCKOPT_NODELAY:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, optionValue);
                     break;
                 case ENET_SOCKOPT_TTL:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, optionValue);
                     break;
                 case ENET_SOCKOPT_IPV6_ONLY:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, ref value);
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, optionValue);
                     break;
                 default:
                     break;
@@ -119,7 +122,7 @@ namespace enet
 
         public static void enet_socket_destroy(ENetSocket* socket)
         {
-            NativeSocketPal.Close((*socket).GetInner());
+            socket->GetInner().Dispose();
             *socket = new ENetSocket(new NativeSocket(INVALID_SOCKET, AddressFamily.Unspecified));
         }
 
