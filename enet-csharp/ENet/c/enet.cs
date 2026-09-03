@@ -77,7 +77,7 @@ namespace enet
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_wait(ENetSocket socket, uint* condition, uint timeout) => ENet.enet_socket_wait(socket, condition, timeout);
+        public static int enet_socket_wait(ENetSocket socket, uint* condition, uint milliseconds) => ENet.enet_socket_wait(socket, condition, milliseconds);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
@@ -102,7 +102,7 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_from_endpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_from_endpoint(address, ip);
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_from_ipendpoint(address, ip);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
@@ -122,7 +122,7 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_from_address(ENetAddress* address, IPAddress ip, ushort port) => ENet.enet_address_set_from_address(address, ip, port);
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ip, ushort port) => ENet.enet_address_set_from_ipaddress(address, ip, port);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
@@ -186,7 +186,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => ENet.enet_address_set_host_ipv4(address, hostName, port);
+        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => ENet.enet_address_set_hostname_ipv4(address, hostName, port);
 
         /// <summary>
         ///     Attempts to resolve the host named by the parameter hostName and sets
@@ -208,7 +208,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_host_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => ENet.enet_address_set_host_ipv6(address, hostName, port, scopeId);
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => ENet.enet_address_set_hostname_ipv6(address, hostName, port, scopeId);
 
         /// <summary>
         ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
@@ -246,7 +246,7 @@ namespace enet
         ///     the null-terminated name of the host in hostName on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_get_host(ENetAddress* address, ref Span<char> hostName) => ENet.enet_address_get_host(address, ref hostName);
+        public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => ENet.enet_address_get_hostname(address, ref hostName);
 
         /// <summary>
         ///     Creates a packet that may be sent to a peer.

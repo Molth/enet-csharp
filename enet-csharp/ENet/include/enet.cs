@@ -70,10 +70,6 @@ namespace enet
 
     public static partial class ENet
     {
-        public static ENetAddress ENET_HOST_ANY_V4 { get; }
-        public static ENetAddress ENET_HOST_ANY_V6 { get; }
-        public static ENetAddress ENET_HOST_BROADCAST { get; }
-
         public const ushort ENET_PORT_ANY = 0;
 
         static ENet()
@@ -82,6 +78,10 @@ namespace enet
             ENET_HOST_ANY_V6.GetInner().FromIpAddress(IPAddress.IPv6Any, ENET_PORT_ANY);
             ENET_HOST_BROADCAST.GetInner().FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
         }
+
+        public static ENetAddress ENET_HOST_ANY_V4 { get; }
+        public static ENetAddress ENET_HOST_ANY_V6 { get; }
+        public static ENetAddress ENET_HOST_BROADCAST { get; }
     }
 
     /// <summary>
@@ -95,44 +95,41 @@ namespace enet
     ///     but not for enet_host_create.  Once a server responds to a broadcast, the
     ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
     /// </remarks>
+    [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>, IComparable<ENetAddress>
 #if NET6_0_OR_GREATER
         , ISpanFormattable
 #endif
     {
         /// <summary>
-        ///     The native socket address.
+        ///     Gets the handle to the underlying object.
         /// </summary>
-        private NativeSocketAddress _socketAddress;
+        private NativeSocketAddress _handle;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ENetAddress" /> structure.
         /// </summary>
-        /// <param name="socketAddress">The native socket address.</param>
+        /// <param name="handle">The native socket address.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ENetAddress(NativeSocketAddress socketAddress) => _socketAddress = socketAddress;
+        private ENetAddress(NativeSocketAddress handle) => _handle = handle;
 
         /// <summary>
         ///     Gets whether the address is an Ipv4 address.
         /// </summary>
-        public readonly bool IsIpv4 => _socketAddress.IsIpv4;
+        public readonly bool IsIpv4 => _handle.IsIpv4;
 
         /// <summary>
         ///     Gets whether the address is an Ipv6 address.
         /// </summary>
-        public readonly bool IsIpv6 => _socketAddress.IsIpv6;
+        public readonly bool IsIpv6 => _handle.IsIpv6;
 
         /// <summary>
         ///     Gets the address family of the socket address.
         /// </summary>
-        /// <exception cref="NotSupportedException">
-        ///     Family != <see cref="AddressFamily.InterNetwork" />
-        ///     or <see cref="AddressFamily.InterNetworkV6" />.
-        /// </exception>
         public AddressFamily Family
         {
-            readonly get => _socketAddress.Family;
-            set => _socketAddress.Family = value;
+            readonly get => _handle.Family;
+            set => _handle.Family = value;
         }
 
         /// <summary>
@@ -141,8 +138,8 @@ namespace enet
         /// <returns>An unsigned integer value indicating the port number of the socket address.</returns>
         public ushort Port
         {
-            readonly get => _socketAddress.Port;
-            set => _socketAddress.Port = value;
+            readonly get => _handle.Port;
+            set => _handle.Port = value;
         }
 
         /// <summary>
@@ -151,8 +148,8 @@ namespace enet
         /// <returns>An unsigned integer that specifies the scope of the address.</returns>
         public uint ScopeId
         {
-            readonly get => _socketAddress.ScopeId;
-            set => _socketAddress.ScopeId = value;
+            readonly get => _handle.ScopeId;
+            set => _handle.ScopeId = value;
         }
 
         /// <summary>
@@ -162,67 +159,67 @@ namespace enet
         ///     Returns true if the socket address is an Ipv4-mapped Ipv6 address;
         ///     otherwise, false.
         /// </returns>
-        public readonly bool IsIpv4MappedToIpv6 => _socketAddress.IsIpv4MappedToIpv6;
+        public readonly bool IsIpv4MappedToIpv6 => _handle.IsIpv4MappedToIpv6;
 
         /// <summary>
         ///     Gets the underlying buffer size of this.
         /// </summary>
         /// <returns>The underlying buffer size of this.</returns>
-        public readonly int Size => _socketAddress.Size;
+        public readonly int Size => _handle.Size;
 
         /// <summary>
         ///     Gets or sets the specified index element in the underlying buffer.
         /// </summary>
-        /// <param name="offset">The array index element of the desired information.</param>
-        /// <exception cref="T:System.IndexOutOfRangeException">The specified index does not exist in the buffer.</exception>
+        /// <param name="index">The array index element of the desired information.</param>
         /// <returns>The value of the specified index element in the underlying buffer.</returns>
-        public byte this[int offset]
+        /// <exception cref="T:System.ArgumentOutOfRangeException">The specified index does not exist in the buffer.</exception>
+        public byte this[int index]
         {
-            readonly get => _socketAddress[offset];
-            set => _socketAddress[offset] = value;
+            readonly get => _handle[index];
+            set => _handle[index] = value;
         }
 
         /// <summary>
         ///     Maps the socket address object to an Ipv6 address.
         /// </summary>
         /// <returns>Returns socket address. An Ipv6 address.</returns>
-        public readonly ENetAddress MapToIpv6() => new(_socketAddress.MapToIpv6());
+        public readonly ENetAddress MapToIpv6() => new(_handle.MapToIpv6());
 
         /// <summary>
         ///     Maps the socket address object to an Ipv4 address.
         /// </summary>
         /// <returns>Returns socket address. An Ipv4 address.</returns>
-        public readonly ENetAddress MapToIpv4() => new(_socketAddress.MapToIpv4());
+        public readonly ENetAddress MapToIpv4() => new(_handle.MapToIpv4());
 
         /// <summary>
         ///     Gets the underlying memory that can be passed to native OS calls.
         /// </summary>
-        public Span<byte> Buffer => _socketAddress.Buffer;
+        public Span<byte> Buffer => _handle.Buffer;
 
         /// <summary>
         ///     Gets the ip address of the endpoint.
         /// </summary>
-        public Span<byte> Address => _socketAddress.Address;
+        public Span<byte> Address => _handle.Address;
 
         /// <summary>
-        ///     Returns a span that represents the raw byte buffer of the address.
+        ///     Returns a span that represents the raw (28 bytes) buffer of the address.
         /// </summary>
         /// <returns>A span of bytes.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<byte> AsSpan() => _socketAddress.AsSpan();
+        public Span<byte> AsSpan() => _handle.AsSpan();
 
         /// <summary>
-        ///     Returns a span that represents the raw byte buffer of the address.
+        ///     Returns a read-only span that represents the raw (28 bytes) buffer of the address.
         /// </summary>
-        /// <returns>A span of bytes.</returns>
+        /// <returns>A read-only span of bytes.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly ReadOnlySpan<byte> AsReadOnlySpan() => _socketAddress.AsReadOnlySpan();
+        public readonly ReadOnlySpan<byte> AsReadOnlySpan() => _handle.AsReadOnlySpan();
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly bool Equals(ENetAddress other) => _socketAddress.Equals(other._socketAddress);
+        public readonly bool Equals(ENetAddress other) => _handle.Equals(other._handle);
 
         /// <summary>
         ///     Compares the current instance with another object of the same type and returns an integer that indicates
@@ -250,7 +247,7 @@ namespace enet
         ///         </item>
         ///     </list>
         /// </returns>
-        public readonly int CompareTo(ENetAddress other) => _socketAddress.CompareTo(other._socketAddress);
+        public readonly int CompareTo(ENetAddress other) => _handle.CompareTo(other._handle);
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object.
@@ -260,7 +257,7 @@ namespace enet
         /// <summary>
         ///     Returns the hash code for this instance.
         /// </summary>
-        public readonly override int GetHashCode() => _socketAddress.GetHashCode();
+        public readonly override int GetHashCode() => _handle.GetHashCode();
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object.
@@ -276,7 +273,7 @@ namespace enet
         ///     Returns information about the socket address.
         /// </summary>
         /// <returns>A string that contains information about this.</returns>
-        public readonly override string ToString() => _socketAddress.ToString();
+        public readonly override string ToString() => _handle.ToString();
 
         /// <summary>
         ///     Tries to format the current socket address into the provided span.
@@ -287,7 +284,7 @@ namespace enet
         ///     <see langword="true" /> if the formatting was successful;
         ///     otherwise, <see langword="false" />.
         /// </returns>
-        public readonly bool TryFormat(Span<char> destination, out int charsWritten) => _socketAddress.TryFormat(destination, out charsWritten);
+        public readonly bool TryFormat(Span<char> destination, out int charsWritten) => _handle.TryFormat(destination, out charsWritten);
 
         /// <summary>
         ///     Returns the string representation of the current socket address.
@@ -295,7 +292,7 @@ namespace enet
         /// <param name="_">The format specifier (ignored).</param>
         /// <param name="__">The format provider (ignored).</param>
         /// <returns>A string representation of the socket address.</returns>
-        public readonly string ToString(string? _, IFormatProvider? __) => _socketAddress.ToString(_, __);
+        public readonly string ToString(string? _, IFormatProvider? __) => _handle.ToString(_, __);
 
         /// <summary>
         ///     Tries to format the current socket address into the provided span.
@@ -305,7 +302,7 @@ namespace enet
         /// <param name="_">The format specifier (ignored).</param>
         /// <param name="__">The format provider (ignored).</param>
         /// <returns><see langword="true" /> if the formatting succeeded; otherwise, <see langword="false" />.</returns>
-        public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> _, IFormatProvider? __) => _socketAddress.TryFormat(destination, out charsWritten, _, __);
+        public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> _, IFormatProvider? __) => _handle.TryFormat(destination, out charsWritten, _, __);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IPEndPoint" /> class with the specified address and port number.
@@ -315,7 +312,7 @@ namespace enet
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
         /// </returns>
-        public readonly SocketError ToIpEndPoint(out IPEndPoint? result) => _socketAddress.ToIpEndPoint(out result);
+        public readonly SocketError ToIpEndPoint(out IPEndPoint? result) => _handle.ToIpEndPoint(out result);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="IPAddress" /> class with the specified address.
@@ -325,7 +322,7 @@ namespace enet
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
         /// </returns>
-        public readonly SocketError ToIpAddress(out IPAddress? result) => _socketAddress.ToIpAddress(out result);
+        public readonly SocketError ToIpAddress(out IPAddress? result) => _handle.ToIpAddress(out result);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="SocketAddress" /> class with the specified address.
@@ -335,25 +332,103 @@ namespace enet
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
         /// </returns>
-        public readonly SocketError ToSocketAddress(out SocketAddress? result) => _socketAddress.ToSocketAddress(out result);
+        public readonly SocketError ToSocketAddress(out SocketAddress? result) => _handle.ToSocketAddress(out result);
 
         /// <summary>
-        ///     Gets the native socket address.
+        ///     Populates this address from the specified <see cref="IPEndPoint" />.
+        /// </summary>
+        /// <param name="source">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
+        public SocketError FromIpEndPoint(IPEndPoint source) => _handle.FromIpEndPoint(source);
+
+        /// <summary>
+        ///     Populates this address from the specified <see cref="IPAddress" /> and port.
+        /// </summary>
+        /// <param name="source">The <see cref="IPAddress" /> to set.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
+        public SocketError FromIpAddress(IPAddress source, ushort port) => _handle.FromIpAddress(source, port);
+
+        /// <summary>
+        ///     Populates this address from the specified <see cref="SocketAddress" />.
+        /// </summary>
+        /// <param name="source">The source <see cref="SocketAddress" /> to copy from.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if the address is valid and copied successfully;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6,
+        ///     or the buffer size is insufficient.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
+        public SocketError FromSocketAddress(SocketAddress source) => _handle.FromSocketAddress(source);
+
+        /// <summary>
+        ///     Converts an Ipv4 address and port into this address.
+        /// </summary>
+        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        public SocketError SetIpIpv4(ReadOnlySpan<char> ip, ushort port) => _handle.SetIpIpv4(ip, port);
+
+        /// <summary>
+        ///     Converts an Ipv6 address, port, and scope id into this address.
+        /// </summary>
+        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        public SocketError SetIpIpv6(ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => _handle.SetIpIpv6(ip, port, scopeId);
+
+        /// <summary>
+        ///     Populates this address by resolving the specified host name to an Ipv4 address.
+        /// </summary>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
+        /// <param name="port">The port number.</param>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        public SocketError SetHostNameIpv4(ReadOnlySpan<char> hostName, ushort port) => _handle.SetHostNameIpv4(hostName, port);
+
+        /// <summary>
+        ///     Populates this address by resolving the specified host name to an Ipv6 address.
+        /// </summary>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        public SocketError SetHostNameIpv6(ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => _handle.SetHostNameIpv6(hostName, port, scopeId);
+
+        /// <summary>
+        ///     Retrieves the address from this socket address as a character span.
+        /// </summary>
+        /// <param name="ip">A span to receive the address chars. On success, it is resized to the actual character count.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        public readonly SocketError GetIp(ref Span<char> ip) => _handle.GetIp(ref ip);
+
+        /// <summary>
+        ///     Retrieves the host name (reverse DNS) from this address.
+        /// </summary>
+        /// <param name="hostName">A span to receive the host name chars. On success, it is resized to the actual character count.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        public readonly SocketError GetHostName(ref Span<char> hostName) => _handle.GetHostName(ref hostName);
+
+        /// <summary>
+        ///     Gets the handle to the underlying object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 #pragma warning disable CS9084 // Struct member returns 'this' or other instance members by reference
-        internal ref NativeSocketAddress GetInner() => ref _socketAddress;
+        internal ref NativeSocketAddress GetInner() => ref _handle;
 #pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference
     }
 
     /// <summary>
     ///     Packet flag bit constants.
     /// </summary>
-    /// <remarks>
-    ///     The host must be specified in <b>network byte-order</b>, and the port must be in
-    ///     host byte-order. The constant ENET_HOST_ANY may be used to specify the
-    ///     default server host.
-    /// </remarks>
     /// <seealso cref="ENetPacket" />
     [Flags]
     public enum ENetPacketFlag
@@ -690,6 +765,14 @@ namespace enet
         ///     Destroys the context when compression is disabled or the host is destroyed. May be NULL.
         /// </summary>
         public delegate* managed<void*, void> destroy;
+
+        public ENetCompressor(void* context, delegate* managed<void*, ENetBuffer*, nuint, nuint, byte*, nuint, nuint> compress, delegate* managed<void*, byte*, nuint, byte*, nuint, nuint> decompress, delegate* managed<void*, void> destroy)
+        {
+            this.context = context;
+            this.compress = compress;
+            this.decompress = decompress;
+            this.destroy = destroy;
+        }
     }
 
     /// <summary>
@@ -924,7 +1007,7 @@ namespace enet
         private ENetPacketDataBuffer _element0;
         private ENetPacketDataBuffer _element1;
 
-        public byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref Unsafe.AsRef(in this))) + i)->data;
+        public readonly byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref Unsafe.AsRef(in this))) + i)->data;
 
         private unsafe struct ENetPacketDataBuffer
         {

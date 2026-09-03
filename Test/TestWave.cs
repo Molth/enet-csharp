@@ -34,10 +34,10 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_from_address(&address, IPAddress.IPv6Any, 7777);
+                enet_address_set_from_ipaddress(&address, IPAddress.IPv6Any, 7777);
 
                 Span<char> hostName = stackalloc char[16];
-                int error = (int)enet_address_get_host(&address, ref hostName);
+                int error = enet_address_get_hostname(&address, ref hostName);
 
                 if (error == 0)
                     Console.WriteLine(hostName.ToString());
@@ -68,7 +68,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 peer = netEvent.peer;
-                                peer->address.ToIpEndPoint(out var endPoint);
+                                peer->address.ToIpEndPoint(out IPEndPoint? endPoint);
                                 Console.WriteLine($"server Connected {endPoint}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
@@ -100,7 +100,7 @@ namespace enet
             try
             {
                 ENetAddress address = new ENetAddress();
-                enet_address_set_from_address(&address, IPAddress.Loopback, 7777);
+                enet_address_set_from_ipaddress(&address, IPAddress.Loopback, 7777);
 
                 ENetAddress local = new ENetAddress();
                 enet_address_set_ip_ipv4(&local, "0.0.0.0", 7778);
@@ -135,7 +135,7 @@ namespace enet
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                 connected = true;
-                                netEvent.peer->address.ToIpEndPoint(out var endPoint);
+                                netEvent.peer->address.ToIpEndPoint(out IPEndPoint? endPoint);
                                 Console.WriteLine($"client Connected {endPoint}");
                                 break;
                             case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:

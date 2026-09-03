@@ -37,7 +37,7 @@ namespace enet
     public readonly struct ENetSocket
     {
         /// <summary>
-        ///     The native socket handle.
+        ///     Gets the handle to the underlying object.
         /// </summary>
         private readonly NativeSocket _handle;
 
@@ -77,7 +77,7 @@ namespace enet
         public static implicit operator nint(ENetSocket socket) => socket.Handle;
 
         /// <summary>
-        ///     Gets the native socket handle.
+        ///     Gets the handle to the underlying object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal NativeSocket GetInner() => _handle;

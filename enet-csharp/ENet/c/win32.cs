@@ -24,7 +24,7 @@ namespace enet
     {
         public const int SOCKET_ERROR = -1;
 
-        public static uint timeBase = 0;
+        public static uint timeBase;
 
         /// <summary>
         ///     Initializes ENet globally.
@@ -62,7 +62,11 @@ namespace enet
             {
                 bool ipv6 = option == ENET_HOSTOPT_IPV6_ONLY || option == ENET_HOSTOPT_IPV6_DUALMODE;
                 SocketError error = NativeSocket.Create(ipv6, out NativeSocket socket);
-                if (error == SocketError.Success && option == ENET_HOSTOPT_IPV6_DUALMODE && enet_socket_set_option(new ENetSocket(socket), ENET_SOCKOPT_IPV6_ONLY, 0) < 0)
+
+                if (error != SocketError.Success)
+                    goto error;
+
+                if (option == ENET_HOSTOPT_IPV6_DUALMODE && enet_socket_set_option(new ENetSocket(socket), ENET_SOCKOPT_IPV6_ONLY, 0) < 0)
                 {
                     socket.Dispose();
                     goto error;
@@ -78,7 +82,7 @@ namespace enet
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
-            var optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<int, byte>(ref value), 4);
+            ReadOnlySpan<byte> optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<int, byte>(ref value), 4);
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
@@ -111,8 +115,6 @@ namespace enet
                 case ENET_SOCKOPT_IPV6_ONLY:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, optionValue);
                     break;
-                default:
-                    break;
             }
 
             return result == 0 ? 0 : -1;
@@ -128,80 +130,108 @@ namespace enet
 
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            Debug.Assert(bufferCount <= 16);
+            Debug.Assert(bufferCount <= ENET_BUFFER_MAXIMUM);
 
             Span<NativeIoSlice> __buffers = stackalloc NativeIoSlice[(int)bufferCount];
             for (int i = 0; i < (int)bufferCount; ++i)
+            {
+                Debug.Assert(buffers[i].dataLength <= int.MaxValue);
                 __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
+            }
 
-            return socket.GetInner().SendMessageTo(__buffers, address->GetInner());
+            int num = socket.GetInner().SendMessageTo(__buffers, address->GetInner());
+
+            if (num == -1)
+            {
+                if (NativeSocketPal.GetLastSocketError() == SocketError.WouldBlock)
+                    return 0;
+
+                return -1;
+            }
+
+            return num;
         }
 
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            Debug.Assert(bufferCount <= 16);
+            Debug.Assert(bufferCount <= ENET_BUFFER_MAXIMUM);
 
             Span<NativeIoSlice> __buffers = stackalloc NativeIoSlice[(int)bufferCount];
             for (int i = 0; i < (int)bufferCount; ++i)
+            {
+                Debug.Assert(buffers[i].dataLength <= int.MaxValue);
                 __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
+            }
 
-            return socket.GetInner().ReceiveMessageFrom(__buffers, ref address->GetInner());
+            SocketFlags flags = 0;
+            int num = socket.GetInner().ReceiveMessageFrom(__buffers, ref flags, ref address->GetInner());
+
+            if (num == -1)
+            {
+                switch (NativeSocketPal.GetLastSocketError())
+                {
+                    case SocketError.WouldBlock:
+                    case SocketError.ConnectionReset:
+                        return 0;
+                    case SocketError.Interrupted:
+                    case SocketError.MessageSize:
+                    case SocketError.Success when (flags & SocketFlags.Partial) != 0:
+                        return -2;
+                    default:
+                        return -1;
+                }
+            }
+
+            return num;
         }
 
         public static int enet_socket_wait(ENetSocket socket, uint* condition, uint milliseconds)
         {
-            int error;
-            bool status;
+            SelectModeFlags inFlags = 0;
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_SEND) != 0)
-            {
-                error = (int)socket.GetInner().Poll((int)(milliseconds * 1000), SelectMode.SelectWrite, out status);
-                if (error == 0)
-                {
-                    *condition = (uint)ENET_SOCKET_WAIT_NONE;
-                    if (status)
-                    {
-                        *condition |= (uint)ENET_SOCKET_WAIT_SEND;
-                        return 0;
-                    }
-                }
-
-                return -1;
-            }
+                inFlags |= SelectModeFlags.SelectWrite;
 
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
-            {
-                error = (int)socket.GetInner().Poll((int)(milliseconds * 1000), SelectMode.SelectRead, out status);
-                if (error == 0)
-                {
-                    *condition = (uint)ENET_SOCKET_WAIT_NONE;
-                    if (status)
-                    {
-                        *condition |= (uint)ENET_SOCKET_WAIT_RECEIVE;
-                        return 0;
-                    }
-                }
+                inFlags |= SelectModeFlags.SelectRead;
 
-                return -1;
+            if ((*condition & (uint)ENET_SOCKET_WAIT_INTERRUPT) != 0)
+                inFlags |= SelectModeFlags.SelectError;
+
+            *condition = 0;
+
+            int error = (int)socket.GetInner().PollFlags((int)(milliseconds * 1000), inFlags, out SelectModeFlags outFlags);
+            if (error == 0)
+            {
+                if ((outFlags & SelectModeFlags.SelectWrite) != 0)
+                    *condition |= (uint)ENET_SOCKET_WAIT_SEND;
+
+                if ((outFlags & SelectModeFlags.SelectRead) != 0)
+                    *condition |= (uint)ENET_SOCKET_WAIT_RECEIVE;
+
+                if ((outFlags & SelectModeFlags.SelectError) != 0)
+                    *condition |= (uint)ENET_SOCKET_WAIT_INTERRUPT;
+
+                return 0;
             }
 
-            return 0;
+            return -1;
         }
 
-        public static int enet_address_set_from_endpoint(ENetAddress* address, IPEndPoint ip) => address->GetInner().FromIpEndPoint(ip) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ip) => address->GetInner().FromIpEndPoint(ip) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_from_address(ENetAddress* address, IPAddress ip, ushort port) => address->GetInner().FromIpAddress(ip, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ip, ushort port) => address->GetInner().FromIpAddress(ip, port) == SocketError.Success ? 0 : -1;
 
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->GetInner().SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
 
         public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId) => address->GetInner().SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_host_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->GetInner().SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->GetInner().SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_host_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => address->GetInner().SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => address->GetInner().SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
 
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetInner().GetIp(ref ip) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_get_host(ENetAddress* address, ref Span<char> hostName) => address->GetInner().GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
+        public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetInner().GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
     }
 }

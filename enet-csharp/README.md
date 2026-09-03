@@ -12,10 +12,10 @@ which poses challenges for cross-platform distribution and deployment.
 
 This project eliminates that dependency while preserving full compatibility with the original implementation.
 
----
-
 [![NuGet](https://img.shields.io/nuget/v/xENet.svg?style=flat-square)](https://www.nuget.org/packages/xENet/)
 
----
+## Supporters
 
-[![NuGet](https://img.shields.io/nuget/v/yENet.svg?style=flat-square)](https://www.nuget.org/packages/yENet/)
+This project is sponsored by: no one.
+
+### a lifetime of living in obscurity, struggling to make ends meet, and enduring humiliation.
