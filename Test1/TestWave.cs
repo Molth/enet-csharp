@@ -4,8 +4,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using static enet.ENET_API;
 
-#pragma warning disable CA1806
-
 // ReSharper disable ALL
 
 namespace enet
@@ -18,7 +16,7 @@ namespace enet
 
         public static void Start()
         {
-            Console.CancelKeyPress += (sender, args) => _running = false;
+            Console.CancelKeyPress += (_, _) => _running = false;
             _running = true;
             new Thread(StartServer).Start();
             Thread.Sleep(1000);
@@ -47,8 +45,6 @@ namespace enet
                 ENetPeer* peer = null;
 
                 ENetEvent netEvent = new ENetEvent();
-
-                byte* buffer = stackalloc byte[1024];
 
                 while (_running)
                 {

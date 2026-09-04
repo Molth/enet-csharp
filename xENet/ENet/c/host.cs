@@ -5,7 +5,7 @@ using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 using static enet.ENetHostOption;
 
-#pragma warning disable CS1591
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -21,7 +21,7 @@ namespace enet
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
             ENetBuffer buffer;
-            byte* data = stackalloc byte[1];
+            byte* data = stackalloc byte[1] { 0 };
             buffer.data = data;
             buffer.dataLength = 1;
             return enet_socket_send(host->socket, address, &buffer, 1) > 0 ? 0 : -1;

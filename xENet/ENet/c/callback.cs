@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS1591
-#pragma warning disable CA2211
+﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -7,7 +6,9 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+#pragma warning disable CA2211 // Non-constant fields should not be visible
         public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free, &abort);
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         /// <summary>
         ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in

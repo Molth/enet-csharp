@@ -185,7 +185,7 @@ namespace Enet
         ///     bypassing the usual ENet queuing and reliability mechanisms.
         ///     This function does not affect the peer's state or round‑trip time statistics.
         /// </remarks>
-        public bool Ping(ENetAddress address) => _handle.TryPing(address);
+        public bool TryPing(ENetAddress address) => _handle.TryPing(address);
 
         /// <summary>
         ///     Initiates a connection to a foreign host.

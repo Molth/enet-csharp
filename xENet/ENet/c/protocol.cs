@@ -9,7 +9,7 @@ using static enet.ENetPacketFlag;
 using static enet.ENetProtocolFlag;
 using static enet.ENetSocketWait;
 
-#pragma warning disable CS1591
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -1024,7 +1024,7 @@ namespace enet
                 if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                     peer->state == ENET_PEER_STATE_ZOMBIE ||
                     (host->receivedAddress != peer->address &&
-                     !peer->address.Address.SequenceEqual(ENET_HOST_BROADCAST.Address)) ||
+                     !peer->address.Address.SequenceEqual(ENET_ADDRESS_BROADCAST)) ||
                     (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
                      sessionID != peer->incomingSessionID))
                     return 0;

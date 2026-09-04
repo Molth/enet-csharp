@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using enet;
 
-// ReSharper disable ALL
-
 namespace Enet
 {
     /// <summary>
@@ -116,6 +114,85 @@ namespace Enet
         }
 
         /// <summary>
+        ///     Attempts to copy the packet's data to the specified destination buffer.
+        /// </summary>
+        /// <param name="destination">Pointer to the first byte of the destination buffer.</param>
+        /// <param name="byteCount">The size of the destination buffer in bytes.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the packet is valid, has data, and its data length does not exceed
+        ///     <paramref name="byteCount" />;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     This method copies the packet's payload into the caller-provided buffer.
+        ///     It ensures that the packet is created,
+        ///     has a non-null data pointer,
+        ///     and that the data fits within the provided buffer.
+        /// </remarks>
+        public bool TryCopyTo(void* destination, nuint byteCount)
+        {
+            var packet = _handle;
+            if (packet == null || packet->data == null || packet->dataLength > byteCount)
+                return false;
+
+            ENet.memcpy(destination, packet->data, byteCount);
+            return true;
+        }
+
+        /// <summary>
+        ///     Attempts to copy the packet's data to the specified destination buffer.
+        /// </summary>
+        /// <param name="destination">Reference to the first byte of the destination buffer.</param>
+        /// <param name="byteCount">The size of the destination buffer in bytes.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the packet is valid, has data, and its data length does not exceed
+        ///     <paramref name="byteCount" />;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     This method copies the packet's payload into the caller-provided buffer.
+        ///     It ensures that the packet is created,
+        ///     has a non-null data pointer,
+        ///     and that the data fits within the provided buffer.
+        /// </remarks>
+        public bool TryCopyTo(ref byte destination, nuint byteCount)
+        {
+            fixed (byte* pBuffer = &destination)
+            {
+                return TryCopyTo(pBuffer, byteCount);
+            }
+        }
+
+        /// <summary>
+        ///     Attempts to get a <see cref="Span{Byte}" /> that wraps the packet's data buffer.
+        /// </summary>
+        /// <param name="result">
+        ///     When this method returns, contains a span representing the packet data if successful;
+        ///     otherwise, the default span.
+        /// </param>
+        /// <returns>
+        ///     <see langword="true" /> if the packet is valid, has data, and the data length fits within
+        ///     <see cref="int.MaxValue" />;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     This method does not throw exceptions. If the packet is invalid or the data length is too large,
+        ///     it returns <see langword="false" /> and sets <paramref name="result" /> to default.
+        /// </remarks>
+        public readonly bool TryAsSpan(out Span<byte> result)
+        {
+            var packet = _handle;
+            if (packet == null || packet->data == null || packet->dataLength > int.MaxValue)
+            {
+                result = default;
+                return false;
+            }
+
+            result = MemoryMarshal.CreateSpan(ref Unsafe.AsRef<byte>(packet->data), (int)packet->dataLength);
+            return true;
+        }
+
+        /// <summary>
         ///     Returns a <see cref="Span{T}" /> that wraps the packet's data buffer.
         ///     This enables efficient read/write access to the packet payload.
         /// </summary>
@@ -166,20 +243,43 @@ namespace Enet
         ///     initial contents of the packet's data;
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
+        /// <param name="dataLength">size of the data allocated for this packet</param>
         /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
         /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
-        public static EnetPacket Create(ReadOnlySpan<byte> data, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null)
+        public static EnetPacket Create(ref byte data, nuint dataLength, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null)
         {
-            EnetPacket packet;
-            fixed (byte* pData = &MemoryMarshal.GetReference(data))
+            fixed (byte* pData = &data)
             {
-                packet = Create(pData, (nuint)data.Length, flags, freeCallback, userData);
+                return Create(pData, dataLength, flags, freeCallback, userData);
             }
-
-            return packet;
         }
+
+        /// <summary>
+        ///     Creates a packet that may be sent to a peer.
+        /// </summary>
+        /// <param name="data">
+        ///     initial contents of the packet's data;
+        ///     the packet's data will remain uninitialized if data is NULL.
+        /// </param>
+        /// <param name="dataLength">size of the data allocated for this packet</param>
+        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <returns>the packet on success, NULL on failure</returns>
+        public static EnetPacket Create(ref byte data, nuint dataLength, EnetPacketFlag flags) => Create(ref data, dataLength, flags, null);
+
+        /// <summary>
+        ///     Creates a packet that may be sent to a peer.
+        /// </summary>
+        /// <param name="data">
+        ///     initial contents of the packet's data;
+        ///     the packet's data will remain uninitialized if data is NULL.
+        /// </param>
+        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
+        /// <param name="userData">application private data, may be freely modified</param>
+        /// <returns>the packet on success, NULL on failure</returns>
+        public static EnetPacket Create(ReadOnlySpan<byte> data, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null) => Create(ref MemoryMarshal.GetReference(data), (nuint)data.Length, flags, freeCallback, userData);
 
         /// <summary>
         ///     Creates a packet that may be sent to a peer.
@@ -191,5 +291,25 @@ namespace Enet
         /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         public static EnetPacket Create(ReadOnlySpan<byte> data, EnetPacketFlag flags) => Create(data, flags, null);
+
+        /// <summary>
+        ///     Creates a packet that may be sent to a peer.
+        /// </summary>
+        /// <param name="dataLength">size of the data allocated for this packet</param>
+        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
+        /// <param name="userData">application private data, may be freely modified</param>
+        /// <returns>the packet on success, NULL on failure</returns>
+        /// <remarks>the packet's data will remain uninitialized because data is NULL.</remarks>
+        public static EnetPacket Create(nuint dataLength, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null) => Create(null, dataLength, flags, freeCallback, userData);
+
+        /// <summary>
+        ///     Creates a packet that may be sent to a peer.
+        /// </summary>
+        /// <param name="dataLength">size of the data allocated for this packet</param>
+        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <returns>the packet on success, NULL on failure</returns>
+        /// <remarks>the packet's data will remain uninitialized because data is NULL.</remarks>
+        public static EnetPacket Create(nuint dataLength, EnetPacketFlag flags) => Create(dataLength, flags, null);
     }
 }

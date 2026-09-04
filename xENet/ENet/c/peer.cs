@@ -5,7 +5,7 @@ using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;
 using static enet.ENetPeerFlag;
 
-#pragma warning disable CS1591
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -13,9 +13,9 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
-#pragma warning disable CS0649
+#pragma warning disable CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
         private static ENetIncomingCommand dummyCommand;
-#pragma warning restore CS0649
+#pragma warning restore CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
 
         /// <summary>
         ///     Configures throttle parameter for a peer.

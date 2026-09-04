@@ -6,8 +6,7 @@ using System.Runtime.InteropServices;
 using NativeSockets;
 using static enet.ENet;
 
-#pragma warning disable CS1591
-#pragma warning disable CS8632
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -19,6 +18,7 @@ namespace enet
         public const uint ENET_VERSION_MINOR = 3;
         public const uint ENET_VERSION_PATCH = 18;
         public const uint ENET_VERSION = 66322;
+
         public static uint ENET_VERSION_CREATE(uint major, uint minor, uint patch) => (((major) << 16) | ((minor) << 8) | (patch));
         public static uint ENET_VERSION_GET_MAJOR(uint version) => (((version) >> 16) & 0xFF);
         public static uint ENET_VERSION_GET_MINOR(uint version) => (((version) >> 8) & 0xFF);
@@ -82,6 +82,8 @@ namespace enet
         public static ENetAddress ENET_HOST_ANY_V4 { get; }
         public static ENetAddress ENET_HOST_ANY_V6 { get; }
         public static ENetAddress ENET_HOST_BROADCAST { get; }
+
+        private static ReadOnlySpan<byte> ENET_ADDRESS_BROADCAST => new byte[4] { 255, 255, 255, 255 };
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -10,11 +11,7 @@ using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
 using static enet.ENetHostOption;
 
-#pragma warning disable CA1401
-#pragma warning disable CA2101
-#pragma warning disable CA2211
-#pragma warning disable SYSLIB1054
-#pragma warning disable CS1591
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -24,7 +21,9 @@ namespace enet
     {
         public const int SOCKET_ERROR = -1;
 
+#pragma warning disable CA2211 // Non-constant fields should not be visible
         public static uint timeBase;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
         /// <summary>
         ///     Initializes ENet globally.
@@ -130,16 +129,26 @@ namespace enet
 
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            Debug.Assert(bufferCount <= ENET_BUFFER_MAXIMUM);
+            int num;
 
-            Span<NativeIoSlice> __buffers = stackalloc NativeIoSlice[(int)bufferCount];
-            for (int i = 0; i < (int)bufferCount; ++i)
+            NativeIoSlice[]? array = null;
+            Span<NativeIoSlice> __buffers = bufferCount <= 16 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+
+            try
             {
-                Debug.Assert(buffers[i].dataLength <= int.MaxValue);
-                __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
-            }
+                for (int i = 0; i < (int)bufferCount; ++i)
+                {
+                    Debug.Assert(buffers[i].dataLength <= int.MaxValue);
+                    __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
+                }
 
-            int num = socket.GetInner().SendMessageTo(__buffers, address->GetInner());
+                num = socket.GetInner().SendMessageTo(__buffers, address->GetInner());
+            }
+            finally
+            {
+                if (array != null)
+                    ArrayPool<NativeIoSlice>.Shared.Return(array);
+            }
 
             if (num == -1)
             {
@@ -154,17 +163,27 @@ namespace enet
 
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            Debug.Assert(bufferCount <= ENET_BUFFER_MAXIMUM);
-
-            Span<NativeIoSlice> __buffers = stackalloc NativeIoSlice[(int)bufferCount];
-            for (int i = 0; i < (int)bufferCount; ++i)
-            {
-                Debug.Assert(buffers[i].dataLength <= int.MaxValue);
-                __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
-            }
-
+            int num;
             SocketFlags flags = 0;
-            int num = socket.GetInner().ReceiveMessageFrom(__buffers, ref flags, ref address->GetInner());
+
+            NativeIoSlice[]? array = null;
+            Span<NativeIoSlice> __buffers = bufferCount <= 16 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+
+            try
+            {
+                for (int i = 0; i < (int)bufferCount; ++i)
+                {
+                    Debug.Assert(buffers[i].dataLength <= int.MaxValue);
+                    __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
+                }
+
+                num = socket.GetInner().ReceiveMessageFrom(__buffers, ref flags, ref address->GetInner());
+            }
+            finally
+            {
+                if (array != null)
+                    ArrayPool<NativeIoSlice>.Shared.Return(array);
+            }
 
             if (num == -1)
             {
