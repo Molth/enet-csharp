@@ -56,7 +56,7 @@ namespace enet
 
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().GetName(ref address->GetInner());
 
-        public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option = 0)
+        public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
             {

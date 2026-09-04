@@ -282,14 +282,14 @@ namespace Enet
         /// </summary>
         /// <param name="channelId">Channel on which to send.</param>
         /// <param name="packet">Packet to send.</param>
-        /// <returns>0 on success, &lt; 0 on failure.</returns>
+        /// <returns>true on success, false on failure.</returns>
         /// <remarks>
         ///     On success, ENet will assume ownership of the packet. On failure, the caller must still destroy the packet.
         /// </remarks>
-        public int Send(byte channelId, ref EnetPacket packet)
+        public bool Send(byte channelId, ref EnetPacket packet)
         {
-            var result = ENET_API.enet_peer_send(_handle, channelId, packet.GetInner());
-            if (result == 0)
+            var result = ENET_API.enet_peer_send(_handle, channelId, packet.GetInner()) == 0;
+            if (result)
                 packet = new EnetPacket();
             return result;
         }
@@ -307,9 +307,16 @@ namespace Enet
         {
             byte internalChannelId = 0;
             var internalPacket = ENET_API.enet_peer_receive(_handle, &internalChannelId);
+            if (internalPacket == null)
+            {
+                channelId = 0;
+                packet = default;
+                return false;
+            }
+
             channelId = internalChannelId;
             packet = new EnetPacket(internalPacket);
-            return packet.IsCreated;
+            return true;
         }
 
         /// <summary>

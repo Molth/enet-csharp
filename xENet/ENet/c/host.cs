@@ -67,7 +67,7 @@ namespace enet
         ///     the window size of a connection which limits the amount of reliable packets that may be in transit
         ///     at any given time.
         /// </remarks>
-        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option = 0)
+        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option)
         {
             if (option < ENET_HOSTOPT_IPV4 || option > ENET_HOSTOPT_IPV6_DUALMODE)
                 return null;

@@ -105,7 +105,7 @@ namespace enet
                 ENetAddress local = new ENetAddress();
                 enet_address_set_ip_ipv4(&local, "0.0.0.0", 7778);
 
-                host = enet_host_create(&local, 1, 0, 0, 0);
+                host = enet_host_create(&local, 1, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV4);
 
                 ENetPeer* peer = enet_host_connect(host, &address, 0, 0);
 

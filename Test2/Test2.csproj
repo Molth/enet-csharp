@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ENet\ENet.csproj" />
+      <ProjectReference Include="..\yENet\yENet.csproj" />
     </ItemGroup>
 
 </Project>

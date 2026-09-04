@@ -62,7 +62,7 @@ namespace enet
         public static void enet_time_set(uint newTimeBase) => ENet.enet_time_set(newTimeBase);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option = 0) => ENet.enet_socket_create(type, option);
+        public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option) => ENet.enet_socket_create(type, option);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
@@ -327,7 +327,7 @@ namespace enet
         ///     at any given time.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option = 0) => ENet.enet_host_create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);
+        public static ENetHost* enet_host_create(ENetAddress* address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, ENetHostOption option) => ENet.enet_host_create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);
 
         /// <summary>
         ///     Destroys the host and all resources associated with it.

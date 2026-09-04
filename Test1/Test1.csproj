@@ -10,7 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\enet-csharp\enet-csharp.csproj" />
+      <ProjectReference Include="..\xENet\xENet.csproj" />
     </ItemGroup>
 
 </Project>

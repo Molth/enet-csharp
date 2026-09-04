@@ -18,7 +18,7 @@ namespace Test2
             Thread.Sleep(1000);
 
             new Thread(StartClient).Start();
-            Thread.Sleep(1500);
+            Thread.Sleep(2000);
 
             StartClient();
         }
@@ -53,6 +53,9 @@ namespace Test2
                             case EnetEventType.Connect:
                                 peer.Address.ToIpEndPoint(out ipEndPoint);
                                 Console.WriteLine("[Server] connected - Id: " + peer.IncomingPeerId + ", Address: " + ipEndPoint);
+
+                                peer.SetTimeout(0, 100_000, 1_000_000);
+
                                 break;
 
                             case EnetEventType.Disconnect:
@@ -69,10 +72,10 @@ namespace Test2
                                 packet.Dispose();
 
                                 Console.WriteLine();
-                                Thread.Sleep(750);
+                                Thread.Sleep(1000);
                                 var reply = text + " " + "Hello client!";
                                 packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
-                                if (peer.Send(0, ref packet) != 0)
+                                if (!peer.Send(0, ref packet))
                                     packet.Dispose();
 
                                 break;
@@ -92,9 +95,11 @@ namespace Test2
             var serverAddress = new ENetAddress();
             serverAddress.FromIpAddress(IPAddress.Loopback, 12345);
 
+            var ip = new char[256];
+
             using (var client = ManagedEnetHost.Create(address, 1, 0, 0, 0, EnetHostOption.Ipv4))
             {
-                client.Connect(serverAddress, 0, 0);
+                client.TryConnect(serverAddress, 0, 0, out _);
 
                 while (!Console.KeyAvailable)
                 {
@@ -117,10 +122,13 @@ namespace Test2
                                 break;
 
                             case EnetEventType.Connect:
-                                Console.WriteLine("[Client] connected.");
+                                var span = ip.AsSpan();
+                                peer.Address.GetIp(ref span);
+
+                                Console.WriteLine($"[Client] connected. {span}:{peer.Address.Port}");
 
                                 packet = EnetPacket.Create("Hello server!"u8, EnetPacketFlag.Reliable);
-                                if (peer.Send(0, ref packet) != 0)
+                                if (!peer.Send(0, ref packet))
                                     packet.Dispose();
 
                                 break;
@@ -137,10 +145,10 @@ namespace Test2
                                 packet.Dispose();
 
                                 Console.WriteLine();
-                                Thread.Sleep(1000);
+                                Thread.Sleep(1500);
                                 var reply = text + " " + "Hello server!";
                                 packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
-                                if (peer.Send(0, ref packet) != 0)
+                                if (!peer.Send(0, ref packet))
                                     packet.Dispose();
                                 break;
                         }
