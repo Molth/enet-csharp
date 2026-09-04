@@ -75,7 +75,7 @@ namespace Test2
                                 Thread.Sleep(1000);
                                 var reply = text + " " + "Hello client!";
                                 packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
-                                if (!peer.Send(0, ref packet))
+                                if (!peer.TrySend(0, ref packet))
                                     packet.Dispose();
 
                                 break;
@@ -128,7 +128,7 @@ namespace Test2
                                 Console.WriteLine($"[Client] connected. {span}:{peer.Address.Port}");
 
                                 packet = EnetPacket.Create("Hello server!"u8, EnetPacketFlag.Reliable);
-                                if (!peer.Send(0, ref packet))
+                                if (!peer.TrySend(0, ref packet))
                                     packet.Dispose();
 
                                 break;
@@ -148,7 +148,7 @@ namespace Test2
                                 Thread.Sleep(1500);
                                 var reply = text + " " + "Hello server!";
                                 packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
-                                if (!peer.Send(0, ref packet))
+                                if (!peer.TrySend(0, ref packet))
                                     packet.Dispose();
                                 break;
                         }

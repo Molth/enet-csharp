@@ -152,9 +152,7 @@ namespace Enet
                 return;
 
             GC.SuppressFinalize(this);
-            var handle = _handle;
-            _handle = default;
-            handle.Dispose();
+            _handle.Dispose();
         }
 
         /// <summary>
@@ -174,10 +172,20 @@ namespace Enet
         ~ManagedEnetHost() => Dispose();
 
         /// <summary>
-        ///     Sends a ping request to an address.
+        ///     Sends a 1‑byte dummy packet directly to the specified address without queuing.
+        ///     This is typically used for NAT hole‑punching or to elicit a response from a remote host.
         /// </summary>
-        /// <param name="address">destination for the ping request</param>
-        public bool Ping(ENetAddress address) => _handle.Ping(address);
+        /// <param name="address">The destination address to ping.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the packet was successfully sent;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
+        ///     bypassing the usual ENet queuing and reliability mechanisms.
+        ///     This function does not affect the peer's state or round‑trip time statistics.
+        /// </remarks>
+        public bool Ping(ENetAddress address) => _handle.TryPing(address);
 
         /// <summary>
         ///     Initiates a connection to a foreign host.
@@ -186,7 +194,10 @@ namespace Enet
         /// <param name="channelCount">number of channels to allocate</param>
         /// <param name="data">user data supplied to the receiving host</param>
         /// <param name="peer">a peer representing the foreign host on success, NULL on failure</param>
-        /// <returns>a peer representing the foreign host on success, NULL on failure</returns>
+        /// <returns>
+        ///     <see langword="true" /> if the connection attempt was initiated and the peer object is valid;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
         /// <remarks>
         ///     The peer returned will have not completed the connection until enet_host_service()
         ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
@@ -252,7 +263,18 @@ namespace Enet
         ///     Queues a packet to be sent to all peers associated with the host.
         /// </summary>
         /// <param name="channelId">channel on which to broadcast</param>
-        /// <param name="packet">packet to broadcast</param>
+        /// <param name="packet">
+        ///     The packet to broadcast.
+        ///     <para>
+        ///         <b>Ownership transfer</b>: After calling this method, ENet assumes ownership of the underlying native handle
+        ///         regardless of whether the broadcast is fully successful (e.g., even if some peers cannot accept the packet).
+        ///         The <paramref name="packet" /> reference will be reset to a default (invalid) state, and the caller must not
+        ///         use or destroy it afterwards.
+        ///     </para>
+        /// </param>
+        /// <remarks>
+        ///     This method always transfers ownership of the packet to the host.
+        /// </remarks>
         public void Broadcast(byte channelId, ref EnetPacket packet) => _handle.Broadcast(channelId, ref packet);
 
         /// <summary>

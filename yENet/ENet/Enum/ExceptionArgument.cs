@@ -8,7 +8,6 @@ namespace Enet
     internal enum ExceptionArgument
     {
         address,
-        context,
         handle,
         option,
         peerCount,

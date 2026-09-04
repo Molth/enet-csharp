@@ -80,7 +80,6 @@ namespace Enet
         private static string? GetArgumentName(ExceptionArgument argument) => argument switch
         {
             ExceptionArgument.address => "address",
-            ExceptionArgument.context => "context",
             ExceptionArgument.handle => "handle",
             ExceptionArgument.option => "option",
             ExceptionArgument.peerCount => "peerCount",

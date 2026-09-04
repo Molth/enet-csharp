@@ -281,16 +281,28 @@ namespace Enet
         ///     Queues a packet to be sent to this peer.
         /// </summary>
         /// <param name="channelId">Channel on which to send.</param>
-        /// <param name="packet">Packet to send.</param>
+        /// <param name="packet">
+        ///     The packet to send.
+        ///     <para>
+        ///         <b>On success</b>: ENet assumes ownership of the underlying native handle; the <paramref name="packet" />
+        ///         reference
+        ///         will be reset to a default (invalid) state, and the caller must not use it further.
+        ///     </para>
+        ///     <para>
+        ///         <b>On failure</b>: the caller retains full ownership and is responsible for destroying the packet (e.g., via
+        ///         <c>Dispose</c>).
+        ///     </para>
+        /// </param>
         /// <returns>true on success, false on failure.</returns>
         /// <remarks>
-        ///     On success, ENet will assume ownership of the packet. On failure, the caller must still destroy the packet.
+        ///     On success, ENet will assume ownership of the packet.
+        ///     On failure, the caller must still destroy the packet.
         /// </remarks>
-        public bool Send(byte channelId, ref EnetPacket packet)
+        public bool TrySend(byte channelId, ref EnetPacket packet)
         {
             var result = ENET_API.enet_peer_send(_handle, channelId, packet.GetInner()) == 0;
             if (result)
-                packet = new EnetPacket();
+                packet = default;
             return result;
         }
 
@@ -305,7 +317,7 @@ namespace Enet
         /// <returns>There are available incoming queued packets.</returns>
         public bool TryReceive(out byte channelId, out EnetPacket packet)
         {
-            byte internalChannelId = 0;
+            Unsafe.SkipInit(out byte internalChannelId);
             var internalPacket = ENET_API.enet_peer_receive(_handle, &internalChannelId);
             if (internalPacket == null)
             {

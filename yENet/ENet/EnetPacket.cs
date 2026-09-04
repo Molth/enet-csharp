@@ -52,7 +52,7 @@ namespace Enet
     ///     </list>
     /// </remarks>
     /// <seealso cref="EnetPacketFlag" />
-    public readonly unsafe struct EnetPacket : IIsCreated, IDisposable
+    public unsafe struct EnetPacket : IIsCreated, IDisposable
     {
         /// <summary>
         ///     Gets the handle to the underlying object.
@@ -68,48 +68,52 @@ namespace Enet
         ///     Gets the handle to the underlying object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ENetPacket* GetInner() => _handle;
+        public readonly ENetPacket* GetInner() => _handle;
 
         /// <summary>
         ///     Gets a value that indicates whether this has been allocated or initialized.
         /// </summary>
-        public bool IsCreated => _handle != null;
+        public readonly bool IsCreated => _handle != null;
 
         /// <summary>
         ///     internal use only
         /// </summary>
-        public nuint ReferenceCount => _handle->referenceCount;
+        public readonly nuint ReferenceCount => _handle->referenceCount;
 
         /// <summary>
         ///     bitwise-or of ENetPacketFlag constants
         /// </summary>
-        public uint Flags => _handle->flags;
+        public readonly uint Flags => _handle->flags;
 
         /// <summary>
         ///     allocated data for packet
         /// </summary>
-        public byte* Data => _handle->data;
+        public readonly byte* Data => _handle->data;
 
         /// <summary>
         ///     length of data
         /// </summary>
-        public nuint DataLength => _handle->dataLength;
+        public readonly nuint DataLength => _handle->dataLength;
 
         /// <summary>
         ///     function to be called when the packet is no longer in use
         /// </summary>
-        public delegate* managed<ENetPacket*, void> FreeCallback => _handle->freeCallback;
+        public readonly delegate* managed<ENetPacket*, void> FreeCallback => _handle->freeCallback;
 
         /// <summary>
         ///     application private data, may be freely modified
         /// </summary>
-        public void* UserData => _handle->userData;
+        public readonly void* UserData => _handle->userData;
 
         /// <summary>
         ///     Performs application-defined tasks associated with freeing,
         ///     releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose() => ENET_API.enet_packet_destroy(_handle);
+        public void Dispose()
+        {
+            ENET_API.enet_packet_destroy(_handle);
+            this = default;
+        }
 
         /// <summary>
         ///     Returns a <see cref="Span{T}" /> that wraps the packet's data buffer.
@@ -124,7 +128,7 @@ namespace Enet
         ///     Thrown if the packet's data length exceeds the maximum representable size of a <see cref="Span{T}" />
         ///     (i.e., greater than <see cref="int.MaxValue" />).
         /// </exception>
-        public Span<byte> AsSpan()
+        public readonly Span<byte> AsSpan()
         {
             var packet = _handle;
             ThrowHelpers.ThrowIfNull(packet, ExceptionArgument._dummy);
