@@ -2,7 +2,7 @@ using enet;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     The payload of an outgoing connect command.

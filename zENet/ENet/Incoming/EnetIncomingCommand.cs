@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     A discriminated union of the command payloads carried by incoming (host-to-user) events.

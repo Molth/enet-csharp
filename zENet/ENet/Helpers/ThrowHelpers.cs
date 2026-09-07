@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 // ReSharper disable ALL
 
-namespace Enet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Provides helper methods for validating arguments and

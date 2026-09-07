@@ -1,6 +1,6 @@
 // ReSharper disable ALL
 
-namespace Enet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Contains constant string resources used for exception messages and formatting.

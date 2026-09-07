@@ -1,6 +1,6 @@
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     The payload of an incoming connect event.

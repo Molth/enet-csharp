@@ -3,13 +3,13 @@ using NativeCollections;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Implements the background worker loop that services the host, processes queued commands,
     ///     and forwards host events to the incoming event queue.
     /// </summary>
-    internal static class ManagedThreadedEnetHostRunner
+    internal static class EnetHostRunner
     {
         /// <summary>
         ///     Attempts to increment the active thread count for the given host state.

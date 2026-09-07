@@ -4,7 +4,7 @@ using NativeCollections;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Uniquely identifies a connection within a host by combining the fixed peer slot

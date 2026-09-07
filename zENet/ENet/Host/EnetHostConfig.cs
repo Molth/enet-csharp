@@ -3,12 +3,12 @@ using Enet;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Configuration options used to create and run a threaded ENet host.
     /// </summary>
-    public unsafe struct EnetHostConfig
+    public struct EnetHostConfig
     {
         /// <summary>
         ///     The local address to bind the host socket to.
@@ -53,13 +53,13 @@ namespace ENet
         ///     A callback used to compute packet checksums,
         ///     or <see langword="null" /> to use the default checksum behavior.
         /// </summary>
-        public delegate* managed<ENetBuffer*, nuint, uint> ChecksumCallback;
+        public unsafe delegate* managed<ENetBuffer*, nuint, uint> ChecksumCallback;
 
         /// <summary>
         ///     A callback invoked to intercept incoming events before they are processed,
         ///     or <see langword="null" /> to disable interception.
         /// </summary>
-        public delegate* managed<ENetHost*, ENetEvent*, int> InterceptCallback;
+        public unsafe delegate* managed<ENetHost*, ENetEvent*, int> InterceptCallback;
 
         /// <summary>
         ///     The maximum number of duplicate peers the host will track;

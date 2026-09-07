@@ -1,6 +1,6 @@
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     An event describing an operation requested through the public API and queued for the background thread.

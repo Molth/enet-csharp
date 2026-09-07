@@ -3,7 +3,7 @@ using Enet;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     An ENet event as returned by enet_host_service().

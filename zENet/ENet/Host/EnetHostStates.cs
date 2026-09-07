@@ -3,7 +3,7 @@ using NativeCollections;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Shared state that connects the public host API with its dedicated background thread.

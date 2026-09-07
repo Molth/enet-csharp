@@ -1,6 +1,6 @@
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Identifies the kind of operation requested through the outgoing event queue.

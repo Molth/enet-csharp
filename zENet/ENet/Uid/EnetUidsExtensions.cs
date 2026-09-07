@@ -2,7 +2,7 @@ using NativeCollections;
 
 // ReSharper disable ALL
 
-namespace ENet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Provides validation helpers for peer uid tables.

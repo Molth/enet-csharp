@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using enet;
 using Enet;
-using ENet;
+using ThreadedEnet;
 
 namespace Test3
 {
@@ -44,7 +44,7 @@ namespace Test3
             config.Option = EnetHostOption.Ipv6DualMode;
             config.ServiceTimeout = 15;
 
-            using (var server = new ManagedThreadedEnetHost())
+            using (var server = new ThreadedManagedEnetHost())
             {
                 server.Start(config);
 
@@ -97,7 +97,7 @@ namespace Test3
             var serverAddress = new ENetAddress();
             serverAddress.FromIpAddress(IPAddress.Loopback, 12345);
 
-            using (var client = new ManagedThreadedEnetHost())
+            using (var client = new ThreadedManagedEnetHost())
             {
                 client.Start(config);
                 client.Connect(serverAddress, 0, 0);

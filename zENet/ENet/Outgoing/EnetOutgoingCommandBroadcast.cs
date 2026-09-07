@@ -1,8 +1,8 @@
-using Enet;
-
 // ReSharper disable ALL
 
-namespace ENet
+using Enet;
+
+namespace ThreadedEnet
 {
     /// <summary>
     ///     The payload of an outgoing broadcast command.

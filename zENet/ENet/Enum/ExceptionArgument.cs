@@ -1,6 +1,6 @@
 // ReSharper disable ALL
 
-namespace Enet
+namespace ThreadedEnet
 {
     /// <summary>
     ///     Identifies parameter names for exception messages.
