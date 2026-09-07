@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using enet;
 
+// ReSharper disable ALL
+
 namespace Enet
 {
     /// <summary>
@@ -74,6 +76,15 @@ namespace Enet
         public readonly bool IsCreated => _handle != null;
 
         /// <summary>
+        ///     Validates that the instance has been properly allocated and initialized.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown if the instance is not created
+        ///     (i.e., the underlying native handle is <see langword="null" />).
+        /// </exception>
+        public void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
+
+        /// <summary>
         ///     internal use only
         /// </summary>
         public readonly nuint ReferenceCount => _handle->referenceCount;
@@ -135,7 +146,7 @@ namespace Enet
             if (packet == null || packet->data == null || packet->dataLength > byteCount)
                 return false;
 
-            ENet.memcpy(destination, packet->data, byteCount);
+            ENet.memcpy(destination, packet->data, packet->dataLength);
             return true;
         }
 
@@ -162,6 +173,18 @@ namespace Enet
                 return TryCopyTo(pBuffer, byteCount);
             }
         }
+
+        /// <summary>
+        ///     Attempts to copy the packet's data to the specified destination buffer.
+        /// </summary>
+        /// <param name="destination">Reference to the first byte of the destination buffer.</param>
+        /// <remarks>
+        ///     This method copies the packet's payload into the caller-provided buffer.
+        ///     It ensures that the packet is created,
+        ///     has a non-null data pointer,
+        ///     and that the data fits within the provided buffer.
+        /// </remarks>
+        public bool TryCopyTo(Span<byte> destination) => TryCopyTo(ref MemoryMarshal.GetReference(destination), (nuint)destination.Length);
 
         /// <summary>
         ///     Attempts to get a <see cref="Span{Byte}" /> that wraps the packet's data buffer.
@@ -231,6 +254,8 @@ namespace Enet
         public static EnetPacket Create(void* data, nuint dataLength, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback = null, void* userData = null)
         {
             var packet = ENET_API.enet_packet_create(data, dataLength, (uint)flags);
+            if (packet == null)
+                return default;
             packet->freeCallback = freeCallback;
             packet->userData = userData;
             return new EnetPacket(packet);
@@ -301,7 +326,7 @@ namespace Enet
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
         /// <remarks>the packet's data will remain uninitialized because data is NULL.</remarks>
-        public static EnetPacket Create(nuint dataLength, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null) => Create(null, dataLength, flags, freeCallback, userData);
+        public static EnetPacket CreateUninitialized(nuint dataLength, EnetPacketFlag flags, delegate* managed<ENetPacket*, void> freeCallback, void* userData = null) => Create(null, dataLength, flags, freeCallback, userData);
 
         /// <summary>
         ///     Creates a packet that may be sent to a peer.
@@ -310,6 +335,6 @@ namespace Enet
         /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         /// <remarks>the packet's data will remain uninitialized because data is NULL.</remarks>
-        public static EnetPacket Create(nuint dataLength, EnetPacketFlag flags) => Create(dataLength, flags, null);
+        public static EnetPacket CreateUninitialized(nuint dataLength, EnetPacketFlag flags) => CreateUninitialized(dataLength, flags, null);
     }
 }

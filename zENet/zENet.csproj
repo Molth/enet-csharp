@@ -8,8 +8,8 @@
 
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <PackageId>yENet</PackageId>
-        <Version>1.0.5</Version>
+        <PackageId>zENet</PackageId>
+        <Version>1.0.0</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -33,7 +33,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="xENet" Version="1.0.4" />
+        <PackageReference Include="NativeCollections" Version="1.7.3" />
+        <PackageReference Include="yENet" Version="1.0.5" />
     </ItemGroup>
 
     <ItemGroup>

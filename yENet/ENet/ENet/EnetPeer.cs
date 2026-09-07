@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using enet;
 
 // ReSharper disable ALL
@@ -33,6 +34,15 @@ namespace Enet
         ///     Gets a value that indicates whether this has been allocated or initialized.
         /// </summary>
         public bool IsCreated => _handle != null;
+
+        /// <summary>
+        ///     Validates that the instance has been properly allocated and initialized.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown if the instance is not created
+        ///     (i.e., the underlying native handle is <see langword="null" />).
+        /// </exception>
+        public void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
 
         /// <summary>
         ///     Gets the host that manages this peer.
@@ -73,11 +83,7 @@ namespace Enet
         /// <summary>
         ///     Gets the application private data pointer, which may be freely modified.
         /// </summary>
-        public void* Data
-        {
-            get => _handle->data;
-            set => _handle->data = value;
-        }
+        public void* Data => _handle->data;
 
         /// <summary>
         ///     Gets the current state of the peer.
@@ -354,6 +360,13 @@ namespace Enet
         /// <param name="timeoutMinimum">The timeout minimum; defaults to ENET_PEER_TIMEOUT_MINIMUM if 0.</param>
         /// <param name="timeoutMaximum">The timeout maximum; defaults to ENET_PEER_TIMEOUT_MAXIMUM if 0.</param>
         public void SetTimeout(uint timeoutLimit, uint timeoutMinimum, uint timeoutMaximum) => ENET_API.enet_peer_timeout(_handle, timeoutLimit, timeoutMinimum, timeoutMaximum);
+
+        /// <summary>
+        ///     Sets the application private data pointer associated with this peer.
+        ///     This pointer can be used to store arbitrary user data and may be freely modified.
+        /// </summary>
+        /// <param name="data">The user data pointer to set.</param>
+        public void SetData(void* data) => _handle->data = data;
 
         /// <summary>
         ///     Forcefully disconnects this peer. The foreign host is not notified and will timeout on its connection.

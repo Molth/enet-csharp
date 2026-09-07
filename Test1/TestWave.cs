@@ -2,11 +2,10 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Threading;
+using enet;
 using static enet.ENET_API;
 
-// ReSharper disable ALL
-
-namespace enet
+namespace Test1
 {
     public sealed unsafe class TestWave
     {

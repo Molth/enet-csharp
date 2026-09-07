@@ -8,6 +8,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "yENet", "yENet\yENet.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test2", "Test2\Test2.csproj", "{CC8A739F-4B33-409E-A43B-FF804D4CE95B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zENet", "zENet\zENet.csproj", "{686F5EBA-353A-452A-8EF8-376D30EEF8A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test3", "Test3\Test3.csproj", "{30D61093-612D-4DF9-9401-1384E16D43E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +34,13 @@ Global
 		{CC8A739F-4B33-409E-A43B-FF804D4CE95B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC8A739F-4B33-409E-A43B-FF804D4CE95B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC8A739F-4B33-409E-A43B-FF804D4CE95B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{686F5EBA-353A-452A-8EF8-376D30EEF8A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{686F5EBA-353A-452A-8EF8-376D30EEF8A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{686F5EBA-353A-452A-8EF8-376D30EEF8A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{686F5EBA-353A-452A-8EF8-376D30EEF8A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30D61093-612D-4DF9-9401-1384E16D43E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30D61093-612D-4DF9-9401-1384E16D43E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30D61093-612D-4DF9-9401-1384E16D43E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30D61093-612D-4DF9-9401-1384E16D43E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

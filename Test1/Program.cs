@@ -1,4 +1,4 @@
-﻿namespace enet
+﻿namespace Test1
 {
     internal sealed class Program
     {
