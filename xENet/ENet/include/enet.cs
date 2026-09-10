@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -6,72 +6,216 @@ using System.Runtime.InteropServices;
 using NativeSockets;
 using static enet.ENet;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 // ReSharper disable ALL
 
 namespace enet
 {
+    /// <summary>
+    ///     ENet reliable UDP networking library
+    /// </summary>
     public static partial class ENet
     {
+        /// <summary>
+        ///     The major component of the ENet version.
+        /// </summary>
         public const uint ENET_VERSION_MAJOR = 1;
+
+        /// <summary>
+        ///     The minor component of the ENet version.
+        /// </summary>
         public const uint ENET_VERSION_MINOR = 3;
+
+        /// <summary>
+        ///     The patch component of the ENet version.
+        /// </summary>
         public const uint ENET_VERSION_PATCH = 18;
+
+        /// <summary>
+        ///     The packed ENet version value.
+        /// </summary>
         public const uint ENET_VERSION = 66322;
 
+        /// <summary>
+        ///     Packs a major, minor and patch version into a single version value.
+        /// </summary>
+        /// <param name="major">The major version component.</param>
+        /// <param name="minor">The minor version component.</param>
+        /// <param name="patch">The patch version component.</param>
+        /// <returns>The packed version value.</returns>
         public static uint ENET_VERSION_CREATE(uint major, uint minor, uint patch) => (((major) << 16) | ((minor) << 8) | (patch));
+
+        /// <summary>
+        ///     Extracts the major version component from a packed version value.
+        /// </summary>
+        /// <param name="version">The packed version value.</param>
+        /// <returns>The major version component.</returns>
         public static uint ENET_VERSION_GET_MAJOR(uint version) => (((version) >> 16) & 0xFF);
+
+        /// <summary>
+        ///     Extracts the minor version component from a packed version value.
+        /// </summary>
+        /// <param name="version">The packed version value.</param>
+        /// <returns>The minor version component.</returns>
         public static uint ENET_VERSION_GET_MINOR(uint version) => (((version) >> 8) & 0xFF);
+
+        /// <summary>
+        ///     Extracts the patch version component from a packed version value.
+        /// </summary>
+        /// <param name="version">The packed version value.</param>
+        /// <returns>The patch version component.</returns>
         public static uint ENET_VERSION_GET_PATCH(uint version) => ((version) & 0xFF);
     }
 
+    /// <summary>
+    ///     The type of a native socket.
+    /// </summary>
     public enum ENetSocketType
     {
-        ENET_SOCKET_TYPE_STREAM = 1,
+        /// <summary>
+        ///     A connectionless datagram socket.
+        /// </summary>
         ENET_SOCKET_TYPE_DATAGRAM = 2
     }
 
+    /// <summary>
+    ///     The wait states that can be requested on a socket.
+    /// </summary>
     public enum ENetSocketWait
     {
+        /// <summary>
+        ///     Wait for no specific state.
+        /// </summary>
         ENET_SOCKET_WAIT_NONE = 0,
+
+        /// <summary>
+        ///     Wait until the socket can send data.
+        /// </summary>
         ENET_SOCKET_WAIT_SEND = (1 << 0),
+
+        /// <summary>
+        ///     Wait until the socket can receive data.
+        /// </summary>
         ENET_SOCKET_WAIT_RECEIVE = (1 << 1),
+
+        /// <summary>
+        ///     Wait until the wait is interrupted.
+        /// </summary>
         ENET_SOCKET_WAIT_INTERRUPT = (1 << 2)
     }
 
+    /// <summary>
+    ///     The addressing mode used when creating a host.
+    /// </summary>
     public enum ENetHostOption
     {
+        /// <summary>
+        ///     Use Ipv4 addressing only.
+        /// </summary>
         ENET_HOSTOPT_IPV4 = 0,
+
+        /// <summary>
+        ///     Use Ipv6 addressing only.
+        /// </summary>
         ENET_HOSTOPT_IPV6_ONLY = 1,
+
+        /// <summary>
+        ///     Use Ipv6 dual stack addressing, accepting both Ipv4 and Ipv6.
+        /// </summary>
         ENET_HOSTOPT_IPV6_DUALMODE = 2
     }
 
+    /// <summary>
+    ///     The socket options that can be configured on a native socket.
+    /// </summary>
     public enum ENetSocketOption
     {
+        /// <summary>
+        ///     Toggles non-blocking mode on the socket.
+        /// </summary>
         ENET_SOCKOPT_NONBLOCK = 1,
+
+        /// <summary>
+        ///     Enables or disables broadcast on the socket.
+        /// </summary>
         ENET_SOCKOPT_BROADCAST = 2,
+
+        /// <summary>
+        ///     Sets the receive buffer size of the socket.
+        /// </summary>
         ENET_SOCKOPT_RCVBUF = 3,
+
+        /// <summary>
+        ///     Sets the send buffer size of the socket.
+        /// </summary>
         ENET_SOCKOPT_SNDBUF = 4,
+
+        /// <summary>
+        ///     Allows the socket to reuse a bound address.
+        /// </summary>
         ENET_SOCKOPT_REUSEADDR = 5,
+
+        /// <summary>
+        ///     Sets the receive timeout of the socket.
+        /// </summary>
         ENET_SOCKOPT_RCVTIMEO = 6,
+
+        /// <summary>
+        ///     Sets the send timeout of the socket.
+        /// </summary>
         ENET_SOCKOPT_SNDTIMEO = 7,
+
+        /// <summary>
+        ///     Retrieves the last error of the socket.
+        /// </summary>
         ENET_SOCKOPT_ERROR = 8,
+
+        /// <summary>
+        ///     Disables the Nagle algorithm on the socket.
+        /// </summary>
         ENET_SOCKOPT_NODELAY = 9,
+
+        /// <summary>
+        ///     Sets the time to live of packets sent on the socket.
+        /// </summary>
         ENET_SOCKOPT_TTL = 10,
+
+        /// <summary>
+        ///     Restricts the socket to Ipv6 only.
+        /// </summary>
         ENET_SOCKOPT_IPV6_ONLY = 11
     }
 
+    /// <summary>
+    ///     The shutdown directions that can be applied to a socket.
+    /// </summary>
     public enum ENetSocketShutdown
     {
+        /// <summary>
+        ///     Shut down reading from the socket.
+        /// </summary>
         ENET_SOCKET_SHUTDOWN_READ = 0,
+
+        /// <summary>
+        ///     Shut down writing to the socket.
+        /// </summary>
         ENET_SOCKET_SHUTDOWN_WRITE = 1,
+
+        /// <summary>
+        ///     Shut down both reading and writing to the socket.
+        /// </summary>
         ENET_SOCKET_SHUTDOWN_READ_WRITE = 2
     }
 
     public static partial class ENet
     {
+        /// <summary>
+        ///     A port value indicating that the operating system should choose an available port.
+        /// </summary>
         public const ushort ENET_PORT_ANY = 0;
 
+        /// <summary>
+        ///     Initializes the well-known addresses used by the ENet runtime.
+        /// </summary>
         static ENet()
         {
             ENET_HOST_ANY_V4.GetInner().FromIpAddress(IPAddress.Any, ENET_PORT_ANY);
@@ -79,10 +223,24 @@ namespace enet
             ENET_HOST_BROADCAST.GetInner().FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
         }
 
+        /// <summary>
+        ///     The well-known address representing any Ipv4 host.
+        /// </summary>
         public static ENetAddress ENET_HOST_ANY_V4 { get; }
+
+        /// <summary>
+        ///     The well-known address representing any Ipv6 host.
+        /// </summary>
         public static ENetAddress ENET_HOST_ANY_V6 { get; }
+
+        /// <summary>
+        ///     The well-known broadcast address.
+        /// </summary>
         public static ENetAddress ENET_HOST_BROADCAST { get; }
 
+        /// <summary>
+        ///     The Ipv4 broadcast address bytes.
+        /// </summary>
         private static ReadOnlySpan<byte> ENET_ADDRESS_BROADCAST => new byte[4] { 255, 255, 255, 255 };
     }
 
@@ -90,17 +248,20 @@ namespace enet
     ///     Portable internet address structure.
     /// </summary>
     /// <remarks>
-    ///     The host must be specified in <b>network byte-order</b>, and the port must be host
-    ///     byte-order. The constant ENET_HOST_ANY may be used to specify the default
-    ///     server host. The constant ENET_HOST_BROADCAST may be used to specify the
+    ///     The port must be host byte-order.
+    ///     <br />
+    ///     The constant <see cref="ENET_HOST_ANY_V4" /> or <see cref="ENET_HOST_ANY_V6" /> may be used to specify the default
+    ///     server host. The constant <see cref="ENET_HOST_BROADCAST" /> may be used to specify the
     ///     broadcast address (255.255.255.255).  This makes sense for enet_host_connect,
     ///     but not for enet_host_create.  Once a server responds to a broadcast, the
-    ///     address is updated from ENET_HOST_BROADCAST to the server's actual IP address.
+    ///     address is updated from <see cref="ENET_HOST_BROADCAST" /> to the server's actual IP address.
     /// </remarks>
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>, IComparable<ENetAddress>
 #if NET6_0_OR_GREATER
         , ISpanFormattable
+#else
+        , IFormattable
 #endif
     {
         /// <summary>
@@ -541,101 +702,387 @@ namespace enet
         public void* userData;
     }
 
+    /// <summary>
+    ///     An acknowledgement tracking a reliably sent command waiting for confirmation.
+    /// </summary>
     public struct ENetAcknowledgement
     {
+        /// <summary>
+        ///     The list node linking this acknowledgement into the peer acknowledgement queue.
+        /// </summary>
         public ENetListNode acknowledgementList;
+
+        /// <summary>
+        ///     The time the acknowledged command was sent.
+        /// </summary>
         public uint sentTime;
+
+        /// <summary>
+        ///     The protocol command being acknowledged.
+        /// </summary>
         public ENetProtocol command;
     }
 
+    /// <summary>
+    ///     A command queued for transmission to a peer.
+    /// </summary>
     public unsafe struct ENetOutgoingCommand
     {
+        /// <summary>
+        ///     The list node linking this command into the peer outgoing command queue.
+        /// </summary>
         public ENetListNode outgoingCommandList;
+
+        /// <summary>
+        ///     The reliable sequence number assigned to this command.
+        /// </summary>
         public ushort reliableSequenceNumber;
+
+        /// <summary>
+        ///     The unreliable sequence number assigned to this command.
+        /// </summary>
         public ushort unreliableSequenceNumber;
+
+        /// <summary>
+        ///     The time this command was last sent.
+        /// </summary>
         public uint sentTime;
+
+        /// <summary>
+        ///     The timeout in milliseconds after which the command is resent.
+        /// </summary>
         public uint roundTripTimeout;
+
+        /// <summary>
+        ///     The time this command was enqueued.
+        /// </summary>
         public uint queueTime;
+
+        /// <summary>
+        ///     The byte offset of the current fragment within the packet.
+        /// </summary>
         public uint fragmentOffset;
+
+        /// <summary>
+        ///     The length in bytes of the current fragment payload.
+        /// </summary>
         public ushort fragmentLength;
+
+        /// <summary>
+        ///     The number of times this command has been sent.
+        /// </summary>
         public ushort sendAttempts;
+
+        /// <summary>
+        ///     The protocol command data to transmit.
+        /// </summary>
         public ENetProtocol command;
+
+        /// <summary>
+        ///     The packet associated with this command, or <see langword="null" /> for control commands.
+        /// </summary>
         public ENetPacket* packet;
     }
 
+    /// <summary>
+    ///     A command received from a peer awaiting processing or reassembly.
+    /// </summary>
     public unsafe struct ENetIncomingCommand
     {
+        /// <summary>
+        ///     The list node linking this command into the peer incoming command queue.
+        /// </summary>
         public ENetListNode incomingCommandList;
+
+        /// <summary>
+        ///     The reliable sequence number of this command.
+        /// </summary>
         public ushort reliableSequenceNumber;
+
+        /// <summary>
+        ///     The unreliable sequence number of this command.
+        /// </summary>
         public ushort unreliableSequenceNumber;
+
+        /// <summary>
+        ///     The protocol command data received.
+        /// </summary>
         public ENetProtocol command;
+
+        /// <summary>
+        ///     The total number of fragments expected for the fragmented packet.
+        /// </summary>
         public uint fragmentCount;
+
+        /// <summary>
+        ///     The number of fragments still awaiting arrival.
+        /// </summary>
         public uint fragmentsRemaining;
+
+        /// <summary>
+        ///     The bit field tracking which fragments have been received.
+        /// </summary>
         public uint* fragments;
+
+        /// <summary>
+        ///     The packet being assembled from this command.
+        /// </summary>
         public ENetPacket* packet;
     }
 
+    /// <summary>
+    ///     The connection states a peer can occupy.
+    /// </summary>
     public enum ENetPeerState
     {
+        /// <summary>
+        ///     The peer is not connected.
+        /// </summary>
         ENET_PEER_STATE_DISCONNECTED = 0,
+
+        /// <summary>
+        ///     A connection attempt is in progress.
+        /// </summary>
         ENET_PEER_STATE_CONNECTING = 1,
+
+        /// <summary>
+        ///     The connection request has been acknowledged and awaits the final confirmation.
+        /// </summary>
         ENET_PEER_STATE_ACKNOWLEDGING_CONNECT = 2,
+
+        /// <summary>
+        ///     The connection is pending but has not yet been established.
+        /// </summary>
         ENET_PEER_STATE_CONNECTION_PENDING = 3,
+
+        /// <summary>
+        ///     The connection attempt has succeeded.
+        /// </summary>
         ENET_PEER_STATE_CONNECTION_SUCCEEDED = 4,
+
+        /// <summary>
+        ///     The peer is connected and ready for communication.
+        /// </summary>
         ENET_PEER_STATE_CONNECTED = 5,
+
+        /// <summary>
+        ///     The peer will be disconnected after pending commands are flushed.
+        /// </summary>
         ENET_PEER_STATE_DISCONNECT_LATER = 6,
+
+        /// <summary>
+        ///     A disconnect request is in progress.
+        /// </summary>
         ENET_PEER_STATE_DISCONNECTING = 7,
+
+        /// <summary>
+        ///     The disconnect request has been acknowledged and awaits the final confirmation.
+        /// </summary>
         ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT = 8,
+
+        /// <summary>
+        ///     The peer connection has been terminated and only awaits cleanup.
+        /// </summary>
         ENET_PEER_STATE_ZOMBIE = 9
     }
 
     public static partial class ENet
     {
+        /// <summary>
+        ///     The maximum number of buffers used when assembling a packet.
+        /// </summary>
         public const uint ENET_BUFFER_MAXIMUM = (1 + 2 * ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS);
 
+        /// <summary>
+        ///     The default size of the host receive buffer in bytes.
+        /// </summary>
         public const uint ENET_HOST_RECEIVE_BUFFER_SIZE = 256 * 1024;
+
+        /// <summary>
+        ///     The default size of the host send buffer in bytes.
+        /// </summary>
         public const uint ENET_HOST_SEND_BUFFER_SIZE = 256 * 1024;
+
+        /// <summary>
+        ///     The interval in milliseconds between bandwidth throttle computations.
+        /// </summary>
         public const uint ENET_HOST_BANDWIDTH_THROTTLE_INTERVAL = 1000;
+
+        /// <summary>
+        ///     The default maximum transmission unit used when the peer does not negotiate one.
+        /// </summary>
         public const uint ENET_HOST_DEFAULT_MTU = 1392;
+
+        /// <summary>
+        ///     The default maximum packet size that may be sent or received on a peer.
+        /// </summary>
         public const uint ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE = 32 * 1024 * 1024;
+
+        /// <summary>
+        ///     The default maximum aggregate amount of buffer space a peer may use waiting for delivery.
+        /// </summary>
         public const uint ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA = 32 * 1024 * 1024;
+
+        /// <summary>
+        ///     The default round trip time in milliseconds assumed for a new peer.
+        /// </summary>
         public const uint ENET_PEER_DEFAULT_ROUND_TRIP_TIME = 500;
+
+        /// <summary>
+        ///     The default packet throttle value assumed for a new peer.
+        /// </summary>
         public const uint ENET_PEER_DEFAULT_PACKET_THROTTLE = 32;
+
+        /// <summary>
+        ///     The scale factor applied to the packet throttle value.
+        /// </summary>
         public const uint ENET_PEER_PACKET_THROTTLE_SCALE = 32;
+
+        /// <summary>
+        ///     The number of throttle samples collected before the throttle value is adjusted.
+        /// </summary>
         public const uint ENET_PEER_PACKET_THROTTLE_COUNTER = 7;
+
+        /// <summary>
+        ///     The rate at which the packet throttle value is increased on successful samples.
+        /// </summary>
         public const uint ENET_PEER_PACKET_THROTTLE_ACCELERATION = 2;
+
+        /// <summary>
+        ///     The rate at which the packet throttle value is decreased on failed samples.
+        /// </summary>
         public const uint ENET_PEER_PACKET_THROTTLE_DECELERATION = 2;
+
+        /// <summary>
+        ///     The default interval in milliseconds between packet throttle measurements.
+        /// </summary>
         public const uint ENET_PEER_PACKET_THROTTLE_INTERVAL = 5000;
+
+        /// <summary>
+        ///     The scale factor applied to the packet loss ratio.
+        /// </summary>
         public const uint ENET_PEER_PACKET_LOSS_SCALE = (1 << 16);
+
+        /// <summary>
+        ///     The interval in milliseconds over which packet loss is measured.
+        /// </summary>
         public const uint ENET_PEER_PACKET_LOSS_INTERVAL = 10000;
+
+        /// <summary>
+        ///     The scale factor applied to the window size.
+        /// </summary>
         public const uint ENET_PEER_WINDOW_SIZE_SCALE = 64 * 1024;
+
+        /// <summary>
+        ///     The default timeout limit in milliseconds before a connection is considered timed out.
+        /// </summary>
         public const uint ENET_PEER_TIMEOUT_LIMIT = 32;
+
+        /// <summary>
+        ///     The default minimum timeout in milliseconds before a connection is considered timed out.
+        /// </summary>
         public const uint ENET_PEER_TIMEOUT_MINIMUM = 5000;
+
+        /// <summary>
+        ///     The default maximum timeout in milliseconds before a connection is considered timed out.
+        /// </summary>
         public const uint ENET_PEER_TIMEOUT_MAXIMUM = 30000;
+
+        /// <summary>
+        ///     The default interval in milliseconds between keep-alive pings.
+        /// </summary>
         public const uint ENET_PEER_PING_INTERVAL = 500;
+
+        /// <summary>
+        ///     The number of windows used to track unsequenced packets.
+        /// </summary>
         public const uint ENET_PEER_UNSEQUENCED_WINDOWS = 64;
+
+        /// <summary>
+        ///     The number of unsequenced packets tracked per window.
+        /// </summary>
         public const uint ENET_PEER_UNSEQUENCED_WINDOW_SIZE = 1024;
+
+        /// <summary>
+        ///     The number of free unsequenced windows a peer may shift.
+        /// </summary>
         public const uint ENET_PEER_FREE_UNSEQUENCED_WINDOWS = 32;
+
+        /// <summary>
+        ///     The number of windows used to track reliable packets.
+        /// </summary>
         public const uint ENET_PEER_RELIABLE_WINDOWS = 16;
+
+        /// <summary>
+        ///     The number of reliable packets tracked per window.
+        /// </summary>
         public const uint ENET_PEER_RELIABLE_WINDOW_SIZE = 0x1000;
+
+        /// <summary>
+        ///     The number of free reliable windows a peer may shift.
+        /// </summary>
         public const uint ENET_PEER_FREE_RELIABLE_WINDOWS = 8;
     }
 
+    /// <summary>
+    ///     The per-channel state tracking reliable and unreliable sequencing for a peer.
+    /// </summary>
     public unsafe struct ENetChannel
     {
+        /// <summary>
+        ///     The next reliable sequence number to assign on this channel.
+        /// </summary>
         public ushort outgoingReliableSequenceNumber;
+
+        /// <summary>
+        ///     The next unreliable sequence number to assign on this channel.
+        /// </summary>
         public ushort outgoingUnreliableSequenceNumber;
+
+        /// <summary>
+        ///     The number of reliable windows currently in use.
+        /// </summary>
         public ushort usedReliableWindows;
+
+        /// <summary>
+        ///     The sliding windows tracking which reliable packets have been sent on this channel.
+        /// </summary>
         public fixed ushort reliableWindows[(int)ENET_PEER_RELIABLE_WINDOWS];
+
+        /// <summary>
+        ///     The highest reliable sequence number received on this channel.
+        /// </summary>
         public ushort incomingReliableSequenceNumber;
+
+        /// <summary>
+        ///     The highest unreliable sequence number received on this channel.
+        /// </summary>
         public ushort incomingUnreliableSequenceNumber;
+
+        /// <summary>
+        ///     The queue of reliable commands received on this channel.
+        /// </summary>
         public ENetList incomingReliableCommands;
+
+        /// <summary>
+        ///     The queue of unreliable commands received on this channel.
+        /// </summary>
         public ENetList incomingUnreliableCommands;
     }
 
+    /// <summary>
+    ///     The flags that can be set on a peer.
+    /// </summary>
     public enum ENetPeerFlag
     {
+        /// <summary>
+        ///     Indicates the peer has events waiting to be dispatched.
+        /// </summary>
         ENET_PEER_FLAG_NEEDS_DISPATCH = (1 << 0),
+
+        /// <summary>
+        ///     Indicates the peer still has commands queued for sending.
+        /// </summary>
         ENET_PEER_FLAG_CONTINUE_SENDING = (1 << 1)
     }
 
@@ -647,12 +1094,39 @@ namespace enet
     /// </remarks>
     public unsafe struct ENetPeer
     {
+        /// <summary>
+        ///     The list node linking this peer into the host dispatch queue.
+        /// </summary>
         public ENetListNode dispatchList;
+
+        /// <summary>
+        ///     The host this peer belongs to.
+        /// </summary>
         public ENetHost* host;
+
+        /// <summary>
+        ///     The peer identifier by which the remote side knows this peer.
+        /// </summary>
         public ushort outgoingPeerID;
+
+        /// <summary>
+        ///     The peer identifier by which this host knows the remote peer.
+        /// </summary>
         public ushort incomingPeerID;
+
+        /// <summary>
+        ///     A unique value identifying the connection attempt.
+        /// </summary>
         public uint connectID;
+
+        /// <summary>
+        ///     The session identifier of the outgoing connection.
+        /// </summary>
         public byte outgoingSessionID;
+
+        /// <summary>
+        ///     The session identifier of the incoming connection.
+        /// </summary>
         public byte incomingSessionID;
 
         /// <summary>
@@ -665,7 +1139,14 @@ namespace enet
         /// </summary>
         public void* data;
 
+        /// <summary>
+        ///     The current connection state of the peer.
+        /// </summary>
         public ENetPeerState state;
+
+        /// <summary>
+        ///     The array of channels allocated for the peer.
+        /// </summary>
         public ENetChannel* channels;
 
         /// <summary>
@@ -683,16 +1164,59 @@ namespace enet
         /// </summary>
         public uint outgoingBandwidth;
 
+        /// <summary>
+        ///     The time of the next incoming bandwidth throttle sample.
+        /// </summary>
         public uint incomingBandwidthThrottleEpoch;
+
+        /// <summary>
+        ///     The time of the next outgoing bandwidth throttle sample.
+        /// </summary>
         public uint outgoingBandwidthThrottleEpoch;
+
+        /// <summary>
+        ///     The total number of bytes received from the peer.
+        /// </summary>
         public uint incomingDataTotal;
+
+        /// <summary>
+        ///     The total number of bytes sent to the peer.
+        /// </summary>
         public uint outgoingDataTotal;
+
+        /// <summary>
+        ///     The last time data was sent to the peer.
+        /// </summary>
         public uint lastSendTime;
+
+        /// <summary>
+        ///     The last time data was received from the peer.
+        /// </summary>
         public uint lastReceiveTime;
+
+        /// <summary>
+        ///     The time at which the current timeout period expires.
+        /// </summary>
         public uint nextTimeout;
+
+        /// <summary>
+        ///     The earliest time at which a pending command times out.
+        /// </summary>
         public uint earliestTimeout;
+
+        /// <summary>
+        ///     The time of the next packet loss sample.
+        /// </summary>
         public uint packetLossEpoch;
+
+        /// <summary>
+        ///     The total number of reliable packets sent to the peer.
+        /// </summary>
         public uint packetsSent;
+
+        /// <summary>
+        ///     The total number of reliable packets lost to the peer.
+        /// </summary>
         public uint packetsLost;
 
         /// <summary>
@@ -700,21 +1224,84 @@ namespace enet
         /// </summary>
         public uint packetLoss;
 
+        /// <summary>
+        ///     The variance of the packet loss ratio.
+        /// </summary>
         public uint packetLossVariance;
+
+        /// <summary>
+        ///     The current packet throttle value in the range zero to ENET_PEER_PACKET_THROTTLE_SCALE.
+        /// </summary>
         public uint packetThrottle;
+
+        /// <summary>
+        ///     The maximum packet throttle value allowed for the peer.
+        /// </summary>
         public uint packetThrottleLimit;
+
+        /// <summary>
+        ///     The number of samples collected within the current throttle interval.
+        /// </summary>
         public uint packetThrottleCounter;
+
+        /// <summary>
+        ///     The time of the next packet throttle sample.
+        /// </summary>
         public uint packetThrottleEpoch;
+
+        /// <summary>
+        ///     The packet throttle acceleration rate.
+        /// </summary>
         public uint packetThrottleAcceleration;
+
+        /// <summary>
+        ///     The packet throttle deceleration rate.
+        /// </summary>
         public uint packetThrottleDeceleration;
+
+        /// <summary>
+        ///     The packet throttle measurement interval in milliseconds.
+        /// </summary>
         public uint packetThrottleInterval;
+
+        /// <summary>
+        ///     The interval in milliseconds between keep-alive pings.
+        /// </summary>
         public uint pingInterval;
+
+        /// <summary>
+        ///     The timeout limit in milliseconds before the connection is considered timed out.
+        /// </summary>
         public uint timeoutLimit;
+
+        /// <summary>
+        ///     The minimum timeout in milliseconds before the connection is considered timed out.
+        /// </summary>
         public uint timeoutMinimum;
+
+        /// <summary>
+        ///     The maximum timeout in milliseconds before the connection is considered timed out.
+        /// </summary>
         public uint timeoutMaximum;
+
+        /// <summary>
+        ///     The most recently measured round trip time in milliseconds.
+        /// </summary>
         public uint lastRoundTripTime;
+
+        /// <summary>
+        ///     The lowest round trip time ever measured for the peer.
+        /// </summary>
         public uint lowestRoundTripTime;
+
+        /// <summary>
+        ///     The variance of the most recent round trip time measurement.
+        /// </summary>
         public uint lastRoundTripTimeVariance;
+
+        /// <summary>
+        ///     The highest round trip time variance ever measured for the peer.
+        /// </summary>
         public uint highestRoundTripTimeVariance;
 
         /// <summary>
@@ -722,22 +1309,89 @@ namespace enet
         /// </summary>
         public uint roundTripTime;
 
+        /// <summary>
+        ///     The variance of the round trip time.
+        /// </summary>
         public uint roundTripTimeVariance;
+
+        /// <summary>
+        ///     The maximum transmission unit negotiated for the peer.
+        /// </summary>
         public uint mtu;
+
+        /// <summary>
+        ///     The receive window size negotiated for the peer.
+        /// </summary>
         public uint windowSize;
+
+        /// <summary>
+        ///     The number of reliable bytes currently awaiting acknowledgement.
+        /// </summary>
         public uint reliableDataInTransit;
+
+        /// <summary>
+        ///     The next reliable sequence number to assign on the peer.
+        /// </summary>
         public ushort outgoingReliableSequenceNumber;
+
+        /// <summary>
+        ///     The queue of acknowledgements awaiting transmission.
+        /// </summary>
         public ENetList acknowledgements;
+
+        /// <summary>
+        ///     The queue of reliable commands sent but not yet acknowledged.
+        /// </summary>
         public ENetList sentReliableCommands;
+
+        /// <summary>
+        ///     The queue of reliable commands waiting to be sent.
+        /// </summary>
         public ENetList outgoingSendReliableCommands;
+
+        /// <summary>
+        ///     The queue of commands waiting to be sent.
+        /// </summary>
         public ENetList outgoingCommands;
+
+        /// <summary>
+        ///     The queue of commands awaiting dispatch to the application.
+        /// </summary>
         public ENetList dispatchedCommands;
+
+        /// <summary>
+        ///     The flags set on this peer.
+        /// </summary>
         public ushort flags;
+
+        /// <summary>
+        ///     Reserved for internal use.
+        /// </summary>
         public ushort reserved;
+
+        /// <summary>
+        ///     The highest unsequenced group received from the peer.
+        /// </summary>
         public ushort incomingUnsequencedGroup;
+
+        /// <summary>
+        ///     The next unsequenced group to assign on the peer.
+        /// </summary>
         public ushort outgoingUnsequencedGroup;
+
+        /// <summary>
+        ///     The sliding windows tracking which unsequenced packets have been received.
+        /// </summary>
         public fixed uint unsequencedWindow[(int)ENET_PEER_UNSEQUENCED_WINDOW_SIZE / 32];
+
+        /// <summary>
+        ///     Application defined data carried with the last disconnect event.
+        /// </summary>
         public uint eventData;
+
+        /// <summary>
+        ///     The total number of bytes queued waiting to be delivered to the peer.
+        /// </summary>
         public nuint totalWaitingData;
     }
 
@@ -768,6 +1422,13 @@ namespace enet
         /// </summary>
         public delegate* managed<void*, void> destroy;
 
+        /// <summary>
+        ///     Initializes the compressor with the specified context and callbacks.
+        /// </summary>
+        /// <param name="context">The compressor context data.</param>
+        /// <param name="compress">The compression callback.</param>
+        /// <param name="decompress">The decompression callback.</param>
+        /// <param name="destroy">The context destruction callback, or <see langword="null" />.</param>
         public ENetCompressor(void* context, delegate* managed<void*, ENetBuffer*, nuint, nuint, byte*, nuint, nuint> compress, delegate* managed<void*, byte*, nuint, byte*, nuint, nuint> decompress, delegate* managed<void*, void> destroy)
         {
             this.context = context;
@@ -783,20 +1444,12 @@ namespace enet
     /// <remarks>
     ///     No fields should be modified unless otherwise stated.
     /// </remarks>
-    /// <seealso cref="enet_host_create(ENetAddress*, nuint, nuint, uint, uint, ENetHostOption)" />
-    /// <seealso cref="enet_host_destroy(ENetHost*)" />
-    /// <seealso cref="enet_host_connect(ENetHost*, ENetAddress*, nuint, uint)" />
-    /// <seealso cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
-    /// <seealso cref="enet_host_flush(ENetHost*)" />
-    /// <seealso cref="enet_host_broadcast(ENetHost*, byte, ENetPacket*)" />
-    /// <seealso cref="enet_host_compress(ENetHost*, ENetCompressor*)" />
-    /// <seealso cref="enet_host_compress_with_range_coder(ENetHost*)" />
-    /// <seealso cref="enet_host_channel_limit(ENetHost*, nuint)" />
-    /// <seealso cref="enet_host_bandwidth_limit(ENetHost*, uint, uint)" />
-    /// <seealso cref="enet_host_bandwidth_throttle(ENetHost*)" />
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetHost
     {
+        /// <summary>
+        ///     The native socket the host receives and sends data on.
+        /// </summary>
         public ENetSocket socket;
 
         /// <summary>
@@ -814,9 +1467,24 @@ namespace enet
         /// </summary>
         public uint outgoingBandwidth;
 
+        /// <summary>
+        ///     The time of the next bandwidth throttle computation.
+        /// </summary>
         public uint bandwidthThrottleEpoch;
+
+        /// <summary>
+        ///     The maximum transmission unit of the host socket.
+        /// </summary>
         public uint mtu;
+
+        /// <summary>
+        ///     The random seed used to generate connect identifiers.
+        /// </summary>
         public uint randomSeed;
+
+        /// <summary>
+        ///     Non-zero when the bandwidth limits must be recalculated for all peers.
+        /// </summary>
         public int recalculateBandwidthLimits;
 
         /// <summary>
@@ -834,16 +1502,64 @@ namespace enet
         /// </summary>
         public nuint channelLimit;
 
+        /// <summary>
+        ///     The time of the last service pass.
+        /// </summary>
         public uint serviceTime;
+
+        /// <summary>
+        ///     The queue of peers with events waiting to be dispatched.
+        /// </summary>
         public ENetList dispatchQueue;
+
+        /// <summary>
+        ///     The total number of bytes queued waiting for delivery across all peers.
+        /// </summary>
         public uint totalQueued;
+
+        /// <summary>
+        ///     The size in bytes of the packets being assembled for transmission.
+        /// </summary>
         public nuint packetSize;
+
+        /// <summary>
+        ///     The flags applied to the header of outgoing packets.
+        /// </summary>
         public ushort headerFlags;
+
+        /// <summary>
+        ///     When non-zero, the host ignores incoming connection requests instead of accepting them.
+        /// </summary>
+        public ushort ignoreConnectRequests;
+
+        /// <summary>
+        ///     The backing storage for the outgoing command array.
+        /// </summary>
         private ENetProtocols commands_t;
+
+        /// <summary>
+        ///     The array of protocol commands being assembled for the next packet.
+        /// </summary>
         public ENetProtocol* commands => (ENetProtocol*)Unsafe.AsPointer(ref commands_t);
+
+        /// <summary>
+        ///     The number of commands currently assembled for the next packet.
+        /// </summary>
         public nuint commandCount;
+
+        /// <summary>
+        ///     The backing storage for the outgoing buffer array.
+        /// </summary>
         private ENetBuffers buffers_t;
+
+        /// <summary>
+        ///     The array of buffers being assembled for the next packet.
+        /// </summary>
         public ENetBuffer* buffers => (ENetBuffer*)Unsafe.AsPointer(ref buffers_t);
+
+        /// <summary>
+        ///     The number of buffers currently assembled for the next packet.
+        /// </summary>
         public nuint bufferCount;
 
         /// <summary>
@@ -851,10 +1567,29 @@ namespace enet
         /// </summary>
         public delegate* managed<ENetBuffer*, nuint, uint> checksum;
 
+        /// <summary>
+        ///     The compressor applied to packets, if any.
+        /// </summary>
         public ENetCompressor compressor;
+
+        /// <summary>
+        ///     The fixed buffers used to store the payload data of outgoing packets.
+        /// </summary>
         public ENetPacketData packetData;
+
+        /// <summary>
+        ///     The address the currently received packet came from.
+        /// </summary>
         public ENetAddress receivedAddress;
+
+        /// <summary>
+        ///     The buffer holding the currently received packet payload.
+        /// </summary>
         public byte* receivedData;
+
+        /// <summary>
+        ///     The length in bytes of the currently received packet payload.
+        /// </summary>
         public nuint receivedDataLength;
 
         /// <summary>
@@ -882,7 +1617,14 @@ namespace enet
         /// </summary>
         public delegate* managed<ENetHost*, ENetEvent*, int> intercept;
 
+        /// <summary>
+        ///     The number of peers currently in the connected state.
+        /// </summary>
         public nuint connectedPeers;
+
+        /// <summary>
+        ///     The number of peers currently limited by bandwidth throttling.
+        /// </summary>
         public nuint bandwidthLimitedPeers;
 
         /// <summary>
@@ -901,14 +1643,27 @@ namespace enet
         public nuint maximumWaitingData;
     }
 
+    /// <summary>
+    ///     Marks a structure as a fixed-size array of the given length.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Struct)]
     internal sealed class ENetArrayAttribute : Attribute
     {
+        /// <summary>
+        ///     The number of elements in the fixed-size array.
+        /// </summary>
         public readonly uint Length;
 
+        /// <summary>
+        ///     Initializes the attribute with the specified array length.
+        /// </summary>
+        /// <param name="length">The number of elements in the array.</param>
         public ENetArrayAttribute(uint length) => Length = length;
     }
 
+    /// <summary>
+    ///     A fixed-size array of <see cref="ENetProtocol" /> commands laid out as a contiguous block.
+    /// </summary>
     [ENetArray(ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS)]
     [StructLayout(LayoutKind.Sequential)]
     internal struct ENetProtocols
@@ -916,6 +1671,9 @@ namespace enet
         private ENetProtocols16 _element0;
         private ENetProtocols16 _element1;
 
+        /// <summary>
+        ///     A fixed-size array of two <see cref="ENetProtocol" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetProtocols2
         {
@@ -923,6 +1681,9 @@ namespace enet
             private ENetProtocol _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of four <see cref="ENetProtocol" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetProtocols4
         {
@@ -930,6 +1691,9 @@ namespace enet
             private ENetProtocols2 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of eight <see cref="ENetProtocol" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetProtocols8
         {
@@ -937,6 +1701,9 @@ namespace enet
             private ENetProtocols4 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of sixteen <see cref="ENetProtocol" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetProtocols16
         {
@@ -944,6 +1711,9 @@ namespace enet
             private ENetProtocols8 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of thirty-two <see cref="ENetProtocol" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetProtocols32
         {
@@ -952,6 +1722,9 @@ namespace enet
         }
     }
 
+    /// <summary>
+    ///     A fixed-size array of <see cref="ENetBuffer" /> entries laid out as a contiguous block.
+    /// </summary>
     [ENetArray(ENET_BUFFER_MAXIMUM)]
     [StructLayout(LayoutKind.Sequential)]
     internal struct ENetBuffers
@@ -959,6 +1732,9 @@ namespace enet
         private ENetBuffers64 _element0;
         private ENetBuffer _element1;
 
+        /// <summary>
+        ///     A fixed-size array of two <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers2
         {
@@ -966,6 +1742,9 @@ namespace enet
             private ENetBuffer _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of four <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers4
         {
@@ -973,6 +1752,9 @@ namespace enet
             private ENetBuffers2 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of eight <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers8
         {
@@ -980,6 +1762,9 @@ namespace enet
             private ENetBuffers4 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of sixteen <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers16
         {
@@ -987,6 +1772,9 @@ namespace enet
             private ENetBuffers8 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of thirty-two <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers32
         {
@@ -994,6 +1782,9 @@ namespace enet
             private ENetBuffers16 _element1;
         }
 
+        /// <summary>
+        ///     A fixed-size array of sixty-four <see cref="ENetBuffer" /> elements.
+        /// </summary>
         [StructLayout(LayoutKind.Sequential)]
         private struct ENetBuffers64
         {
@@ -1002,6 +1793,9 @@ namespace enet
         }
     }
 
+    /// <summary>
+    ///     A fixed-size array of packet payload buffers used to store outgoing packet data.
+    /// </summary>
     [ENetArray(2)]
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetPacketData
@@ -1009,12 +1803,24 @@ namespace enet
         private ENetPacketDataBuffer _element0;
         private ENetPacketDataBuffer _element1;
 
-        public readonly byte* this[int i] => (((ENetPacketDataBuffer*)Unsafe.AsPointer(ref Unsafe.AsRef(in this))) + i)->data;
+        /// <summary>
+        ///     Gets a pointer to the payload buffer at the specified index.
+        /// </summary>
+        /// <param name="i">The zero based index of the buffer.</param>
+        /// <returns>A pointer to the start of the payload buffer.</returns>
+        public byte* this[int i] => (byte*)Unsafe.AsPointer(ref Unsafe.Add(ref _element0, i));
+    }
 
-        private unsafe struct ENetPacketDataBuffer
-        {
-            public fixed byte data[(int)ENET_PROTOCOL_MAXIMUM_MTU];
-        }
+    /// <summary>
+    ///     A fixed-size payload buffer large enough to hold the maximum MTU.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Size = (int)ENET_PROTOCOL_MAXIMUM_MTU)]
+    internal unsafe struct ENetPacketDataBuffer
+    {
+        /// <summary>
+        ///     Alignment padding to ensure the structure is properly aligned in memory.
+        /// </summary>
+        private nuint _padding;
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -11,16 +10,15 @@ using static enet.ENetSocketType;
 using static enet.ENetSocketWait;
 using static enet.ENetHostOption;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 // ReSharper disable ALL
 
 namespace enet
 {
     public static unsafe partial class ENet
     {
-        public const int SOCKET_ERROR = -1;
-
+        /// <summary>
+        ///     The wall-time base used to make <c>enet_time_get</c> values start at zero.
+        /// </summary>
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static uint timeBase;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
@@ -38,8 +36,15 @@ namespace enet
         /// </summary>
         public static void enet_deinitialize() => NativeSocketPal.Cleanup();
 
+        /// <summary>
+        ///     Returns a random seed derived from the current time for host initialization.
+        /// </summary>
+        /// <returns>A random seed value.</returns>
         public static uint enet_host_random_seed() => (uint)timeGetTime();
 
+        /// <summary>
+        ///     Returns the time in milliseconds elapsed since the time base was set.
+        /// </summary>
         /// <returns>
         ///     the wall-time in milliseconds.  Its initial value is unspecified
         ///     unless otherwise set.
@@ -51,10 +56,28 @@ namespace enet
         /// </summary>
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
+        /// <summary>
+        ///     Binds the socket to the specified local address.
+        /// </summary>
+        /// <param name="socket">The socket to bind.</param>
+        /// <param name="address">The local address to bind to.</param>
+        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().Bind(address->GetInner());
 
+        /// <summary>
+        ///     Retrieves the local address the socket is bound to.
+        /// </summary>
+        /// <param name="socket">The socket to query.</param>
+        /// <param name="address">Receives the local address.</param>
+        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().GetName(ref address->GetInner());
 
+        /// <summary>
+        ///     Creates a native socket of the requested type and addressing mode.
+        /// </summary>
+        /// <param name="type">The type of socket to create.</param>
+        /// <param name="option">The addressing mode to use.</param>
+        /// <returns>The created socket, or an invalid socket on failure.</returns>
         public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option)
         {
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
@@ -65,7 +88,12 @@ namespace enet
                 if (error != SocketError.Success)
                     goto error;
 
-                if (option == ENET_HOSTOPT_IPV6_DUALMODE && enet_socket_set_option(new ENetSocket(socket), ENET_SOCKOPT_IPV6_ONLY, 0) < 0)
+                if (option == ENET_HOSTOPT_IPV6_ONLY && socket.SetDualMode(false) != SocketError.Success)
+                {
+                    socket.Dispose();
+                    goto error;
+                }
+                else if (option == ENET_HOSTOPT_IPV6_DUALMODE && socket.SetDualMode(true) != SocketError.Success)
                 {
                     socket.Dispose();
                     goto error;
@@ -78,6 +106,13 @@ namespace enet
             return new ENetSocket(new NativeSocket(INVALID_SOCKET, AddressFamily.Unspecified));
         }
 
+        /// <summary>
+        ///     Applies a socket option to the given socket.
+        /// </summary>
+        /// <param name="socket">The socket to configure.</param>
+        /// <param name="option">The option to apply.</param>
+        /// <param name="value">The option value.</param>
+        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
@@ -105,6 +140,9 @@ namespace enet
                 case ENET_SOCKOPT_SNDTIMEO:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, optionValue);
                     break;
+                case ENET_SOCKOPT_ERROR:
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Error, optionValue);
+                    break;
                 case ENET_SOCKOPT_NODELAY:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, optionValue);
                     break;
@@ -119,30 +157,49 @@ namespace enet
             return result == 0 ? 0 : -1;
         }
 
+        /// <summary>
+        ///     Sets the socket to blocking or non-blocking mode.
+        /// </summary>
+        /// <param name="socket">The socket to configure.</param>
+        /// <param name="nonBlocking">Non-zero to enable non-blocking mode.</param>
+        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_set_nonblocking(ENetSocket socket, int nonBlocking) => (int)socket.GetInner().SetBlocking(nonBlocking == 0);
 
+        /// <summary>
+        ///     Closes and invalidates the given socket.
+        /// </summary>
+        /// <param name="socket">The socket to destroy.</param>
         public static void enet_socket_destroy(ENetSocket* socket)
         {
             socket->GetInner().Dispose();
             *socket = new ENetSocket(new NativeSocket(INVALID_SOCKET, AddressFamily.Unspecified));
         }
 
+        /// <summary>
+        ///     Sends a vectored payload to the specified address on the socket.
+        /// </summary>
+        /// <param name="socket">The socket to send on.</param>
+        /// <param name="address">The destination address.</param>
+        /// <param name="buffers">The buffers holding the payload.</param>
+        /// <param name="bufferCount">The number of buffers.</param>
+        /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown when any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     greater than <see cref="int.MaxValue" />.
+        /// </exception>
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             int num;
 
             NativeIoSlice[]? array = null;
-            Span<NativeIoSlice> __buffers = bufferCount <= 16 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+            Span<NativeIoSlice> __buffers = bufferCount <= 32 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
 
             try
             {
                 for (int i = 0; i < (int)bufferCount; ++i)
-                {
-                    Debug.Assert(buffers[i].dataLength <= int.MaxValue);
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
-                }
 
-                num = socket.GetInner().SendMessageTo(__buffers, address->GetInner());
+                num = socket.GetInner().SendToVectored(__buffers, address->GetInner());
             }
             finally
             {
@@ -161,23 +218,35 @@ namespace enet
             return num;
         }
 
+        /// <summary>
+        ///     Receives a vectored payload on the socket, reporting the sender address.
+        /// </summary>
+        /// <param name="socket">The socket to receive on.</param>
+        /// <param name="address">Receives the source address.</param>
+        /// <param name="buffers">The buffers receiving the payload.</param>
+        /// <param name="bufferCount">The number of buffers.</param>
+        /// <returns>
+        ///     The number of bytes received, 0 when no data is available,
+        ///     -2 when the receive was interrupted or truncated, -1 on failure.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown when any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     greater than <see cref="int.MaxValue" />.
+        /// </exception>
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
             int num;
             SocketFlags flags = 0;
 
             NativeIoSlice[]? array = null;
-            Span<NativeIoSlice> __buffers = bufferCount <= 16 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+            Span<NativeIoSlice> __buffers = bufferCount <= 32 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
 
             try
             {
                 for (int i = 0; i < (int)bufferCount; ++i)
-                {
-                    Debug.Assert(buffers[i].dataLength <= int.MaxValue);
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
-                }
 
-                num = socket.GetInner().ReceiveMessageFrom(__buffers, ref flags, ref address->GetInner());
+                num = socket.GetInner().ReceiveFromVectored(__buffers, ref flags, ref address->GetInner());
             }
             finally
             {
@@ -204,6 +273,15 @@ namespace enet
             return num;
         }
 
+        /// <summary>
+        ///     Waits until the socket becomes ready for the requested conditions or the timeout elapses.
+        /// </summary>
+        /// <param name="socket">The socket to wait on.</param>
+        /// <param name="condition">
+        ///     On input the conditions to wait for; on output the conditions that became ready.
+        /// </param>
+        /// <param name="milliseconds">The maximum time to wait in milliseconds.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_socket_wait(ENetSocket socket, uint* condition, uint milliseconds)
         {
             SelectModeFlags inFlags = 0;
@@ -237,20 +315,75 @@ namespace enet
             return -1;
         }
 
-        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ip) => address->GetInner().FromIpEndPoint(ip) == SocketError.Success ? 0 : -1;
+        /// <summary>
+        ///     Populates an ENet address from an <see cref="IPEndPoint" />.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="ipEndPoint">The endpoint containing the address and port.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => address->GetInner().FromIpEndPoint(ipEndPoint) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ip, ushort port) => address->GetInner().FromIpAddress(ip, port) == SocketError.Success ? 0 : -1;
+        /// <summary>
+        ///     Populates an ENet address from an <see cref="IPAddress" /> and port.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="ipAddress">The IP address to set.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => address->GetInner().FromIpAddress(ipAddress, port) == SocketError.Success ? 0 : -1;
 
+        /// <summary>
+        ///     Populates an ENet address by parsing an Ipv4 address string and port.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="ip">The Ipv4 address string.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->GetInner().SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId) => address->GetInner().SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
+        /// <summary>
+        ///     Populates an ENet address by parsing an Ipv6 address string, port and scope.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="ip">The Ipv6 address string.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The Ipv6 scope identifier.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => address->GetInner().SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
 
+        /// <summary>
+        ///     Populates an ENet address by resolving a host name to an Ipv4 address.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="hostName">The host name to resolve.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->GetInner().SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
 
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => address->GetInner().SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
+        /// <summary>
+        ///     Populates an ENet address by resolving a host name to an Ipv6 address.
+        /// </summary>
+        /// <param name="address">The address to populate.</param>
+        /// <param name="hostName">The host name to resolve.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The Ipv6 scope identifier.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => address->GetInner().SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
 
+        /// <summary>
+        ///     Retrieves the IP address of an ENet address as a character span.
+        /// </summary>
+        /// <param name="address">The address to query.</param>
+        /// <param name="ip">Receives the address characters.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetInner().GetIp(ref ip) == SocketError.Success ? 0 : -1;
 
+        /// <summary>
+        ///     Retrieves the host name (reverse DNS) of an ENet address.
+        /// </summary>
+        /// <param name="address">The address to query.</param>
+        /// <param name="hostName">Receives the host name characters.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetInner().GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
     }
 }

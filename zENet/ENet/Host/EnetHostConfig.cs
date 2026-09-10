@@ -39,7 +39,7 @@ namespace ThreadedEnet
         public uint OutgoingBandwidth;
 
         /// <summary>
-        ///     The IP addressing mode to use (IPv4, IPv6-only, or IPv6 dual-stack).
+        ///     The IP addressing mode to use (Ipv4, Ipv6-only, or Ipv6 dual-stack).
         /// </summary>
         public EnetHostOption Option;
 
@@ -66,6 +66,9 @@ namespace ThreadedEnet
         ///     zero uses the internal default.
         /// </summary>
         public nuint MaxDuplicatePeers;
+
+        /// TODO
+        public bool IgnoreConnectRequests;
 
         /// <summary>
         ///     The maximum time in milliseconds the background thread waits for network events during each service pass.

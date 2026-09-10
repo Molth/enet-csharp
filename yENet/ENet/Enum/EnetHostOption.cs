@@ -1,4 +1,4 @@
-﻿using enet;
+using enet;
 
 // ReSharper disable ALL
 
@@ -10,17 +10,17 @@ namespace Enet
     public enum EnetHostOption
     {
         /// <summary>
-        ///     The host will use Ipv4 only.
+        ///     The host listens using IPv4 addressing.
         /// </summary>
         Ipv4 = ENetHostOption.ENET_HOSTOPT_IPV4,
 
         /// <summary>
-        ///     The host will use Ipv6 only (no Ipv4 mapping or dual‑stack).
+        ///     The host listens using IPv6 addressing only.
         /// </summary>
         Ipv6Only = ENetHostOption.ENET_HOSTOPT_IPV6_ONLY,
 
         /// <summary>
-        ///     The host will use Ipv6 in dual‑mode, allowing both Ipv6 and Ipv4 connections.
+        ///     The host listens using IPv6 dual-stack mode, accepting both IPv4 and IPv6.
         /// </summary>
         Ipv6DualMode = ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE
     }

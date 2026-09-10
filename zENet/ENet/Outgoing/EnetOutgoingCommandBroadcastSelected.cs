@@ -1,23 +1,22 @@
 using Enet;
+using NativeCollections;
 
 // ReSharper disable ALL
 
 namespace ThreadedEnet
 {
     /// <summary>
-    ///     The payload of an outgoing send command.
+    ///     The payload of an outgoing broadcast selected command.
     /// </summary>
-    internal struct EnetOutgoingCommandSend
+    internal struct EnetOutgoingCommandBroadcastSelected
     {
-        /// <summary>
-        ///     The unique identifier of the target peer.
-        /// </summary>
-        public EnetUid Uid;
-
         /// <summary>
         ///     channel on the peer that generated the event, if appropriate
         /// </summary>
         public byte ChannelId;
+
+        /// TODO
+        public NativeArray<byte> IncomingPeerIds;
 
         /// <summary>
         ///     packet associated with the event, if appropriate

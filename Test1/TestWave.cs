@@ -30,53 +30,51 @@ namespace Test1
             ENetHost* host = null;
             try
             {
-                ENetAddress address = new ENetAddress();
+                var address = new ENetAddress();
                 enet_address_set_from_ipaddress(&address, IPAddress.IPv6Any, 7777);
 
                 Span<char> hostName = stackalloc char[16];
-                int error = enet_address_get_hostname(&address, ref hostName);
+                var error = enet_address_get_hostname(&address, ref hostName);
 
                 if (error == 0)
                     Console.WriteLine(hostName.ToString());
 
                 host = enet_host_create(&address, 4095, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE);
+                enet_host_compress_with_range_coder(host);
+                enet_host_checksum_with_crc32(host);
 
                 ENetPeer* peer = null;
 
-                ENetEvent netEvent = new ENetEvent();
+                var @event = new ENetEvent();
 
                 while (_running)
                 {
-                    bool polled = false;
-                    while (!polled)
+                    if (enet_host_service(host, &@event, 1) > 0)
                     {
-                        if (enet_host_check_events(host, &netEvent) <= 0)
+                        while (true)
                         {
-                            if (enet_host_service(host, &netEvent, 1) <= 0)
-                                break;
-                            polled = true;
-                        }
+                            switch (@event.type)
+                            {
+                                case ENetEventType.ENET_EVENT_TYPE_CONNECT:
+                                    peer = @event.peer;
+                                    peer->address.ToIpEndPoint(out var endPoint);
+                                    Console.WriteLine($"server Connected {endPoint}");
+                                    break;
+                                case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
+                                    peer = null;
+                                    Console.WriteLine("server Disconnected");
+                                    break;
+                                case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
+                                    if (enet_peer_send(peer, 0, @event.packet) != 0)
+                                        enet_packet_destroy(@event.packet);
+                                    break;
+                            }
 
-                        switch (netEvent.type)
-                        {
-                            case ENetEventType.ENET_EVENT_TYPE_NONE:
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_CONNECT:
-                                peer = netEvent.peer;
-                                peer->address.ToIpEndPoint(out IPEndPoint? endPoint);
-                                Console.WriteLine($"server Connected {endPoint}");
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
-                                peer = null;
-                                Console.WriteLine("server Disconnected");
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                enet_peer_send(peer, 0, netEvent.packet);
+                            if (enet_host_check_events(host, &@event) <= 0)
                                 break;
                         }
                     }
 
-                    enet_host_flush(host);
                     Thread.Sleep(INTERVAL);
                 }
             }
@@ -94,74 +92,72 @@ namespace Test1
             ENetHost* host = null;
             try
             {
-                ENetAddress address = new ENetAddress();
+                var address = new ENetAddress();
                 enet_address_set_from_ipaddress(&address, IPAddress.Loopback, 7777);
 
-                ENetAddress local = new ENetAddress();
+                var local = new ENetAddress();
                 enet_address_set_ip_ipv4(&local, "0.0.0.0", 7778);
 
                 host = enet_host_create(&local, 1, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV4);
+                enet_host_compress_with_range_coder(host);
+                enet_host_checksum_with_crc32(host);
 
-                ENetPeer* peer = enet_host_connect(host, &address, 0, 0);
+                var peer = enet_host_connect(host, &address, 0, 0);
 
-                ENetEvent netEvent = new ENetEvent();
+                var @event = new ENetEvent();
 
-                bool connected = false;
-                byte* buffer = stackalloc byte[2048];
-                bool sent = false;
-                bool reached = false;
-                int count = 0;
+                var connected = false;
+                var buffer = stackalloc byte[2048];
+                var sent = false;
+                var reached = false;
+                var count = 0;
 
                 while (_running)
                 {
-                    bool polled = false;
-                    while (!polled)
+                    if (enet_host_service(host, &@event, 1) > 0)
                     {
-                        if (enet_host_check_events(host, &netEvent) <= 0)
+                        while (true)
                         {
-                            if (enet_host_service(host, &netEvent, 1) <= 0)
-                                break;
-                            polled = true;
-                        }
-
-                        switch (netEvent.type)
-                        {
-                            case ENetEventType.ENET_EVENT_TYPE_NONE:
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_CONNECT:
-                                connected = true;
-                                netEvent.peer->address.ToIpEndPoint(out IPEndPoint? endPoint);
-                                Console.WriteLine($"client Connected {endPoint}");
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
-                                connected = false;
-                                Console.WriteLine("client Disconnected");
-                                break;
-                            case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
-                                sent = false;
-                                if ((int)netEvent.packet->dataLength == count)
-                                {
-                                    for (int i = 0; i < count; ++i)
+                            switch (@event.type)
+                            {
+                                case ENetEventType.ENET_EVENT_TYPE_CONNECT:
+                                    connected = true;
+                                    @event.peer->address.ToIpEndPoint(out var endPoint);
+                                    Console.WriteLine($"client Connected {endPoint}");
+                                    break;
+                                case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
+                                    connected = false;
+                                    Console.WriteLine("client Disconnected");
+                                    break;
+                                case ENetEventType.ENET_EVENT_TYPE_RECEIVE:
+                                    sent = false;
+                                    if ((int)@event.packet->dataLength == count)
                                     {
-                                        if (netEvent.packet->data[i] != buffer[i])
+                                        for (var i = 0; i < count; ++i)
                                         {
-                                            Console.ForegroundColor = ConsoleColor.Red;
-                                            Console.WriteLine("data not same");
-                                            Console.ForegroundColor = ConsoleColor.White;
-                                            goto label;
+                                            if (@event.packet->data[i] != buffer[i])
+                                            {
+                                                Console.ForegroundColor = ConsoleColor.Red;
+                                                Console.WriteLine("data not same");
+                                                Console.ForegroundColor = ConsoleColor.White;
+                                                goto label;
+                                            }
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Red;
-                                    Console.WriteLine("length not same");
-                                    Console.ForegroundColor = ConsoleColor.White;
-                                    Console.WriteLine((int)netEvent.packet->dataLength + " " + count);
-                                }
+                                    else
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Red;
+                                        Console.WriteLine("length not same");
+                                        Console.ForegroundColor = ConsoleColor.White;
+                                        Console.WriteLine((int)@event.packet->dataLength + " " + count);
+                                    }
 
-                                label:
-                                enet_packet_destroy(netEvent.packet);
+                                    label:
+                                    enet_packet_destroy(@event.packet);
+                                    break;
+                            }
+
+                            if (enet_host_check_events(host, &@event) <= 0)
                                 break;
                         }
                     }
@@ -195,11 +191,11 @@ namespace Test1
                         }
 
                         RandomNumberGenerator.Fill(new Span<byte>(buffer, count));
-                        ENetPacket* packet = enet_packet_create(buffer, (nuint)count, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
-                        enet_peer_send(peer, 0, packet);
+                        var packet = enet_packet_create(buffer, (nuint)count, (uint)ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE);
+                        if (enet_peer_send(peer, 0, packet) != 0)
+                            enet_packet_destroy(packet);
                     }
 
-                    enet_host_flush(host);
                     Thread.Sleep(INTERVAL);
                 }
             }

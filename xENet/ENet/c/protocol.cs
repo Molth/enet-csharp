@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetPeerFlag;
@@ -9,15 +7,22 @@ using static enet.ENetPacketFlag;
 using static enet.ENetProtocolFlag;
 using static enet.ENetSocketWait;
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 // ReSharper disable ALL
 
 namespace enet
 {
     public static unsafe partial class ENet
     {
-        public static ReadOnlySpan<nuint> commandSizes => new nuint[(int)ENET_PROTOCOL_COMMAND_COUNT]
+        /// <summary>
+        ///     Lookup table of the fixed size, in bytes, of each protocol command indexed by command number.
+        /// </summary>
+        /// <remarks>
+        ///     This array is allocated on the heap because <see cref="nuint" /> is not a compile‑time constant.
+        ///     It is therefore not possible to declare a <c>static readonly ReadOnlySpan&lt;nuint&gt;</c> initialized
+        ///     with a constant array at compile time without incurring a runtime allocation on each access.
+        ///     By using a static array, it ensure that the allocation occurs only once and is reused.
+        /// </remarks>
+        private static readonly nuint[] commandSizes_t = new nuint[(int)ENET_PROTOCOL_COMMAND_COUNT]
         {
             0,
             (nuint)sizeof(ENetProtocolAcknowledge),
@@ -34,8 +39,24 @@ namespace enet
             (nuint)sizeof(ENetProtocolSendFragment)
         };
 
-        public static nuint enet_protocol_command_size(byte commandNumber) => Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK);
+        /// <summary>
+        ///     Lookup table of the fixed size, in bytes, of each protocol command indexed by command number.
+        /// </summary>
+        public static ReadOnlySpan<nuint> commandSizes => commandSizes_t;
 
+        /// <summary>
+        ///     Returns the size in bytes of the given protocol command.
+        /// </summary>
+        /// <param name="commandNumber">The protocol command number.</param>
+        /// <returns>The size of the command in bytes.</returns>
+        public static nuint enet_protocol_command_size(byte commandNumber) => commandSizes[commandNumber & (int)ENET_PROTOCOL_COMMAND_MASK];
+
+        /// <summary>
+        ///     Transitions a peer to a new state, keeping the host connection counters in sync.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The peer whose state changes.</param>
+        /// <param name="state">The new peer state.</param>
         public static void enet_protocol_change_state(ENetHost* host, ENetPeer* peer, ENetPeerState state)
         {
             if (state == ENET_PEER_STATE_CONNECTED || state == ENET_PEER_STATE_DISCONNECT_LATER)
@@ -46,6 +67,12 @@ namespace enet
             peer->state = state;
         }
 
+        /// <summary>
+        ///     Transitions a peer to a new state and queues it in the host dispatch queue.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The peer whose state changes.</param>
+        /// <param name="state">The new peer state.</param>
         public static void enet_protocol_dispatch_state(ENetHost* host, ENetPeer* peer, ENetPeerState state)
         {
             enet_protocol_change_state(host, peer, state);
@@ -60,6 +87,12 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Dequeues peers from the dispatch queue and fills the event with a connect, disconnect or receive notification.
+        /// </summary>
+        /// <param name="host">The host whose dispatch queue is processed.</param>
+        /// <param name="event">The event to fill.</param>
+        /// <returns>1 when an event was produced, otherwise 0.</returns>
         public static int enet_protocol_dispatch_incoming_commands(ENetHost* host, ENetEvent* @event)
         {
             while (!enet_list_empty(&host->dispatchQueue))
@@ -123,6 +156,12 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Marks the peer as connected and fills the event with a connect notification.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The newly connected peer.</param>
+        /// <param name="event">The event to fill, or <see langword="null" />.</param>
         public static void enet_protocol_notify_connect(ENetHost* host, ENetPeer* peer, ENetEvent* @event)
         {
             host->recalculateBandwidthLimits = 1;
@@ -139,6 +178,12 @@ namespace enet
                 enet_protocol_dispatch_state(host, peer, peer->state == ENET_PEER_STATE_CONNECTING ? ENET_PEER_STATE_CONNECTION_SUCCEEDED : ENET_PEER_STATE_CONNECTION_PENDING);
         }
 
+        /// <summary>
+        ///     Marks the peer as disconnected and fills the event with a disconnect notification.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The disconnected peer.</param>
+        /// <param name="event">The event to fill, or <see langword="null" />.</param>
         public static void enet_protocol_notify_disconnect(ENetHost* host, ENetPeer* peer, ENetEvent* @event)
         {
             if (peer->state >= ENET_PEER_STATE_CONNECTION_PENDING)
@@ -162,6 +207,11 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Frees all unreliable commands previously marked as sent.
+        /// </summary>
+        /// <param name="peer">The peer that sent the commands.</param>
+        /// <param name="sentUnreliableCommands">The queue of sent unreliable commands.</param>
         public static void enet_protocol_remove_sent_unreliable_commands(ENetPeer* peer, ENetList* sentUnreliableCommands)
         {
             ENetOutgoingCommand* outgoingCommand;
@@ -195,6 +245,13 @@ namespace enet
                 enet_peer_disconnect(peer, peer->eventData);
         }
 
+        /// <summary>
+        ///     Searches the sent reliable command list for a command matching the given sequence number and channel.
+        /// </summary>
+        /// <param name="list">The list of sent reliable commands.</param>
+        /// <param name="reliableSequenceNumber">The reliable sequence number to find.</param>
+        /// <param name="channelID">The channel to match.</param>
+        /// <returns>A pointer to the matching command, or <see langword="null" /> when none is found.</returns>
         public static ENetOutgoingCommand* enet_protocol_find_sent_reliable_command(ENetList* list, ushort reliableSequenceNumber, byte channelID)
         {
             ENetListNode* currentCommand;
@@ -219,6 +276,13 @@ namespace enet
             return null;
         }
 
+        /// <summary>
+        ///     Handles the acknowledgement of a sent reliable command, removing it or scheduling retransmission on timeout.
+        /// </summary>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="reliableSequenceNumber">The reliable sequence number being acknowledged.</param>
+        /// <param name="channelID">The channel of the command.</param>
+        /// <returns>The protocol command that was processed.</returns>
         public static ENetProtocolCommand enet_protocol_remove_sent_reliable_command(ENetPeer* peer, ushort reliableSequenceNumber, byte channelID)
         {
             ENetOutgoingCommand* outgoingCommand = null;
@@ -296,8 +360,18 @@ namespace enet
             return commandNumber;
         }
 
+        /// <summary>
+        ///     Handles an incoming connect request, establishing a new peer when the host has free slots.
+        /// </summary>
+        /// <param name="host">The host receiving the connect request.</param>
+        /// <param name="header">The packet header.</param>
+        /// <param name="command">The connect command.</param>
+        /// <returns>A pointer to the new peer, or <see langword="null" /> when the connection is refused.</returns>
         public static ENetPeer* enet_protocol_handle_connect(ENetHost* host, ENetProtocolHeader* header, ENetProtocol* command)
         {
+            if (host->ignoreConnectRequests != 0)
+                return null;
+
             byte incomingSessionID, outgoingSessionID;
             uint mtu, windowSize;
             ENetChannel* channel;
@@ -441,6 +515,14 @@ namespace enet
             return peer;
         }
 
+        /// <summary>
+        ///     Handles a reliable data command, validating its bounds and queueing the payload.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <param name="currentData">Cursor advanced past the command payload.</param>
+        /// <returns>0 on success, -1 on validation failure or out of memory.</returns>
         public static int enet_protocol_handle_send_reliable(ENetHost* host, ENetPeer* peer, ENetProtocol* command, byte** currentData)
         {
             nuint dataLength;
@@ -462,6 +544,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles an unsequenced data command, deduplicating via the unsequenced window and queueing the payload.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <param name="currentData">Cursor advanced past the command payload.</param>
+        /// <returns>0 on success, -1 on validation failure or out of memory.</returns>
         public static int enet_protocol_handle_send_unsequenced(ENetHost* host, ENetPeer* peer, ENetProtocol* command, byte** currentData)
         {
             uint unsequencedGroup, index;
@@ -506,6 +596,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles an unreliable data command, validating its bounds and queueing the payload.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <param name="currentData">Cursor advanced past the command payload.</param>
+        /// <returns>0 on success, -1 on validation failure or out of memory.</returns>
         public static int enet_protocol_handle_send_unreliable(ENetHost* host, ENetPeer* peer, ENetProtocol* command, byte** currentData)
         {
             nuint dataLength;
@@ -527,6 +625,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a reliable fragment command, assembling the fragmented packet across arrivals.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <param name="currentData">Cursor advanced past the command payload.</param>
+        /// <returns>0 on success or silent discard, -1 on validation failure or out of memory.</returns>
         public static int enet_protocol_handle_send_fragment(ENetHost* host, ENetPeer* peer, ENetProtocol* command, byte** currentData)
         {
             uint fragmentNumber,
@@ -636,6 +742,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles an unreliable fragment command, dropping stale fragments and assembling the rest.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <param name="currentData">Cursor advanced past the command payload.</param>
+        /// <returns>0 on success or silent discard, -1 on validation failure or out of memory.</returns>
         public static int enet_protocol_handle_send_unreliable_fragment(ENetHost* host, ENetPeer* peer, ENetProtocol* command, byte** currentData)
         {
             uint fragmentNumber,
@@ -754,6 +868,13 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a ping command from a peer.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the ping.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_ping(ENetHost* host, ENetPeer* peer, ENetProtocol* command)
         {
             if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER)
@@ -762,6 +883,13 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a bandwidth limit command, updating the peer incoming and outgoing bandwidth.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_bandwidth_limit(ENetHost* host, ENetPeer* peer, ENetProtocol* command)
         {
             if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER)
@@ -793,6 +921,13 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a throttle configure command, updating the peer throttle parameters.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_throttle_configure(ENetHost* host, ENetPeer* peer, ENetProtocol* command)
         {
             if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER)
@@ -805,6 +940,13 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a disconnect command, scheduling the peer for a disconnect notification.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_disconnect(ENetHost* host, ENetPeer* peer, ENetProtocol* command)
         {
             if (peer->state == ENET_PEER_STATE_DISCONNECTED || peer->state == ENET_PEER_STATE_ZOMBIE || peer->state == ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT)
@@ -831,6 +973,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles an acknowledgement command, removing the acknowledged reliable command and measuring RTT.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="event">The event to fill on disconnect, or <see langword="null" />.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_acknowledge(ENetHost* host, ENetEvent* @event, ENetPeer* peer, ENetProtocol* command)
         {
             uint roundTripTime,
@@ -928,6 +1078,14 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Handles a verify connect command, completing the client side of the handshake.
+        /// </summary>
+        /// <param name="host">The host that received the command.</param>
+        /// <param name="event">The event to fill, or <see langword="null" />.</param>
+        /// <param name="peer">The peer that sent the command.</param>
+        /// <param name="command">The received command.</param>
+        /// <returns>0 on success, -1 on error.</returns>
         public static int enet_protocol_handle_verify_connect(ENetHost* host, ENetEvent* @event, ENetPeer* peer, ENetProtocol* command)
         {
             uint mtu, windowSize;
@@ -988,6 +1146,12 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Parses a received packet into protocol commands and dispatches them to the matching peers.
+        /// </summary>
+        /// <param name="host">The host that received the packet.</param>
+        /// <param name="event">The event to fill when a notification is produced.</param>
+        /// <returns>1 when an event was produced, -1 on protocol error, otherwise 0.</returns>
         public static int enet_protocol_handle_incoming_commands(ENetHost* host, ENetEvent* @event)
         {
             ENetProtocolHeader* header;
@@ -1040,8 +1204,8 @@ namespace enet
                     host->receivedData + headerSize,
                     host->receivedDataLength - headerSize,
                     host->packetData[1] + headerSize,
-                    4096 - headerSize);
-                if (originalSize <= 0 || originalSize > 4096 - headerSize)
+                    (nuint)sizeof(ENetPacketDataBuffer) - headerSize);
+                if (originalSize <= 0 || originalSize > (nuint)sizeof(ENetPacketDataBuffer) - headerSize)
                     return 0;
 
                 memcpy(host->packetData[1], header, headerSize);
@@ -1089,7 +1253,7 @@ namespace enet
                 if (commandNumber >= (uint)ENET_PROTOCOL_COMMAND_COUNT)
                     break;
 
-                commandSize = Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), commandNumber);
+                commandSize = commandSizes[commandNumber];
                 if (commandSize == 0 || currentData + commandSize > &host->receivedData[host->receivedDataLength])
                     break;
 
@@ -1206,6 +1370,12 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Receives a datagram from the socket and hands it to the incoming command dispatcher.
+        /// </summary>
+        /// <param name="host">The host whose socket is read.</param>
+        /// <param name="event">The event to fill when a notification is produced.</param>
+        /// <returns>1 when an event was produced, -1 on socket or protocol error, otherwise 0.</returns>
         public static int enet_protocol_receive_incoming_commands(ENetHost* host, ENetEvent* @event)
         {
             int packets;
@@ -1216,7 +1386,7 @@ namespace enet
                 ENetBuffer buffer;
 
                 buffer.data = host->packetData[0];
-                buffer.dataLength = 4096;
+                buffer.dataLength = (nuint)sizeof(ENetPacketDataBuffer);
 
                 receivedLength = enet_socket_receive(host->socket,
                     &host->receivedAddress,
@@ -1272,6 +1442,11 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Sends all acknowledgements queued for a peer.
+        /// </summary>
+        /// <param name="host">The host that will transmit the acknowledgements.</param>
+        /// <param name="peer">The peer whose acknowledgements are sent.</param>
         public static void enet_protocol_send_acknowledgements(ENetHost* host, ENetPeer* peer)
         {
             ENetProtocol* command = &host->commands[host->commandCount];
@@ -1326,6 +1501,13 @@ namespace enet
             host->bufferCount = (nuint)(buffer - host->buffers);
         }
 
+        /// <summary>
+        ///     Detects peer timeouts and disconnects peers that have exceeded their timeout limits.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The peer to check.</param>
+        /// <param name="event">The event to fill with a disconnect notification.</param>
+        /// <returns>0 when the peer remains connected, -1 on error.</returns>
         public static int enet_protocol_check_timeouts(ENetHost* host, ENetPeer* peer, ENetEvent* @event)
         {
             ENetOutgoingCommand* outgoingCommand;
@@ -1383,6 +1565,13 @@ namespace enet
             return 0;
         }
 
+        /// <summary>
+        ///     Checks outgoing commands, retransmitting timed out reliable commands and managing send attempts.
+        /// </summary>
+        /// <param name="host">The host owning the peer.</param>
+        /// <param name="peer">The peer whose commands are checked.</param>
+        /// <param name="sentUnreliableCommands">The queue of sent unreliable commands.</param>
+        /// <returns>1 when the peer has data ready to send immediately, 0 otherwise, -1 on error.</returns>
         public static int enet_protocol_check_outgoing_commands(ENetHost* host, ENetPeer* peer, ENetList* sentUnreliableCommands)
         {
             ENetProtocol* command = &host->commands[host->commandCount];
@@ -1458,7 +1647,7 @@ namespace enet
                     canPing = 0;
                 }
 
-                commandSize = Unsafe.Add(ref MemoryMarshal.GetReference(commandSizes), (int)(outgoingCommand->command.header.command & (uint)ENET_PROTOCOL_COMMAND_MASK));
+                commandSize = commandSizes[(int)(outgoingCommand->command.header.command & (uint)ENET_PROTOCOL_COMMAND_MASK)];
                 if (command >= &host->commands[ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS] ||
                     buffer + 1 >= &host->buffers[ENET_BUFFER_MAXIMUM] ||
                     peer->mtu - host->packetSize < commandSize ||
@@ -1579,6 +1768,13 @@ namespace enet
             return canPing;
         }
 
+        /// <summary>
+        ///     Transmits all queued outgoing commands, acknowledgements and retransmissions for every peer.
+        /// </summary>
+        /// <param name="host">The host whose outgoing data is sent.</param>
+        /// <param name="event">The event to fill with a disconnect notification.</param>
+        /// <param name="checkForTimeouts">When non-zero, peer timeouts are checked before sending.</param>
+        /// <returns>1 when more data remains to send, 0 when the queues are drained, -1 on error.</returns>
         public static int enet_protocol_send_outgoing_commands(ENetHost* host, ENetEvent* @event, int checkForTimeouts)
         {
             byte* headerData = stackalloc byte[sizeof(ENetProtocolHeader) + sizeof(uint)];

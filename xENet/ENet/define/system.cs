@@ -1,11 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-#if !NET7_0_OR_GREATER
 using System.Runtime.CompilerServices;
-#endif
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+using System.Runtime.InteropServices;
 
 // ReSharper disable ALL
 
@@ -67,6 +63,12 @@ namespace enet
         /// <param name="byteCount">The number of bytes to copy.</param>
         public static void memcpy(void* destination, void* source, nuint byteCount)
         {
+            if (!Environment.Is64BitProcess)
+            {
+                Unsafe.CopyBlockUnaligned(destination, source, (uint)byteCount);
+                return;
+            }
+
 #if NET7_0_OR_GREATER
             NativeMemory.Copy(source, destination, byteCount);
 #else
@@ -83,6 +85,12 @@ namespace enet
         /// <param name="value">The value to be set.</param>
         public static void memset(void* startAddress, byte value, nuint byteCount)
         {
+            if (!Environment.Is64BitProcess)
+            {
+                Unsafe.InitBlockUnaligned(startAddress, value, (uint)byteCount);
+                return;
+            }
+
 #if NET7_0_OR_GREATER
             NativeMemory.Fill(startAddress, byteCount, value);
 #else
@@ -94,8 +102,15 @@ namespace enet
 #endif
         }
 
+        /// <summary>
+        ///     Terminates the current process with a failure exit code, mirroring the C <c>abort</c> behavior.
+        /// </summary>
         public static void abort() => Environment.Exit(-1);
 
+        /// <summary>
+        ///     Returns the current time in milliseconds, derived from the high-resolution stopwatch.
+        /// </summary>
+        /// <returns>The current time in milliseconds.</returns>
         public static long timeGetTime() => Stopwatch.GetTimestamp() * 1000L / Stopwatch.Frequency;
     }
 }

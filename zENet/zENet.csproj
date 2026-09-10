@@ -2,14 +2,14 @@
 
     <PropertyGroup>
         <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.1</TargetFrameworks>
-        <RootNamespace>enet</RootNamespace>
+        <RootNamespace>ThreadedEnet</RootNamespace>
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>zENet</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library</Description>
@@ -34,7 +34,7 @@
 
     <ItemGroup>
         <PackageReference Include="NativeCollections" Version="1.7.3" />
-        <PackageReference Include="yENet" Version="1.0.5" />
+        <PackageReference Include="yENet" Version="1.0.6" />
     </ItemGroup>
 
     <ItemGroup>

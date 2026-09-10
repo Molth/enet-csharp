@@ -1,11 +1,12 @@
-﻿#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
 // ReSharper disable ALL
 
 namespace enet
 {
     public static unsafe partial class ENet
     {
+        /// <summary>
+        ///     The global allocation callbacks used by the ENet runtime, initialized to the built-in defaults.
+        /// </summary>
 #pragma warning disable CA2211 // Non-constant fields should not be visible
         public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free, &abort);
 #pragma warning restore CA2211 // Non-constant fields should not be visible
@@ -49,6 +50,12 @@ namespace enet
         /// <returns>the version number</returns>
         public static uint enet_linked_version() => ENET_VERSION;
 
+        /// <summary>
+        ///     Allocates a block of memory through the configured allocation callbacks, notifying the no-memory handler on
+        ///     failure.
+        /// </summary>
+        /// <param name="size">The number of bytes to allocate.</param>
+        /// <returns>A pointer to the allocated block, or <see langword="null" /> if the no-memory handler returns.</returns>
         public static void* enet_malloc(nuint size)
         {
             void* memory = callbacks.malloc(size);
@@ -59,6 +66,10 @@ namespace enet
             return memory;
         }
 
+        /// <summary>
+        ///     Releases a block of memory through the configured deallocation callback.
+        /// </summary>
+        /// <param name="memory">The pointer to the block to free.</param>
         public static void enet_free(void* memory) => callbacks.free(memory);
     }
 }

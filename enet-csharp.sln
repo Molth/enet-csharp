@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zENet", "zENet\zENet.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test3", "Test3\Test3.csproj", "{30D61093-612D-4DF9-9401-1384E16D43E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{4E42D324-111A-443B-9063-7A98394153F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{30D61093-612D-4DF9-9401-1384E16D43E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30D61093-612D-4DF9-9401-1384E16D43E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30D61093-612D-4DF9-9401-1384E16D43E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E42D324-111A-443B-9063-7A98394153F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E42D324-111A-443B-9063-7A98394153F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E42D324-111A-443B-9063-7A98394153F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E42D324-111A-443B-9063-7A98394153F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

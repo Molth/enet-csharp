@@ -1,11 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 using static enet.ENetPacketFlag;
 using static enet.ENetPeerFlag;
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -13,9 +11,19 @@ namespace enet
 {
     public static unsafe partial class ENet
     {
+        /// <summary>
+        ///     A sentinel incoming command returned when a received command is discarded.
+        /// </summary>
 #pragma warning disable CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
         private static ENetIncomingCommand dummyCommand;
 #pragma warning restore CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
+
+        /// <summary>
+        ///     Sets the application private data associated with a peer.
+        /// </summary>
+        /// <param name="peer">peer whose data is being set</param>
+        /// <param name="data">the application private data to associate with the peer</param>
+        public static void enet_peer_data(ENetPeer* peer, void* data) => peer->data = data;
 
         /// <summary>
         ///     Configures throttle parameter for a peer.
@@ -68,6 +76,12 @@ namespace enet
             enet_peer_queue_outgoing_command(peer, &command, null, 0, 0);
         }
 
+        /// <summary>
+        ///     Adjusts the peer packet throttle based on a measured round trip time sample.
+        /// </summary>
+        /// <param name="peer">The peer to adjust.</param>
+        /// <param name="rtt">The measured round trip time in milliseconds.</param>
+        /// <returns>1 when the throttle was increased, -1 when decreased, 0 when unchanged.</returns>
         public static int enet_peer_throttle(ENetPeer* peer, uint rtt)
         {
             if (peer->lastRoundTripTime <= peer->lastRoundTripTimeVariance)
@@ -268,6 +282,11 @@ namespace enet
             return packet;
         }
 
+        /// <summary>
+        ///     Releases every outgoing command in the given queue, dropping packet references and freeing the commands.
+        /// </summary>
+        /// <param name="peer">The peer owning the queue.</param>
+        /// <param name="queue">The queue of outgoing commands to reset.</param>
         public static void enet_peer_reset_outgoing_commands(ENetPeer* peer, ENetList* queue)
         {
             ENetOutgoingCommand* outgoingCommand;
@@ -288,6 +307,14 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Removes a range of incoming commands from a queue, releasing their packet references and fragments.
+        /// </summary>
+        /// <param name="peer">The peer owning the queue.</param>
+        /// <param name="queue">The queue of incoming commands.</param>
+        /// <param name="startCommand">The first command to remove.</param>
+        /// <param name="endCommand">The exclusive end of the range to remove.</param>
+        /// <param name="excludeCommand">An optional command to keep, or <see langword="null" />.</param>
         public static void enet_peer_remove_incoming_commands(ENetPeer* peer, ENetList* queue, ENetListNode* startCommand, ENetListNode* endCommand, ENetIncomingCommand* excludeCommand)
         {
             ENetListNode* currentCommand;
@@ -320,11 +347,20 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Removes every incoming command from a queue, releasing all packet references and fragments.
+        /// </summary>
+        /// <param name="peer">The peer owning the queue.</param>
+        /// <param name="queue">The queue of incoming commands to reset.</param>
         public static void enet_peer_reset_incoming_commands(ENetPeer* peer, ENetList* queue)
         {
             enet_peer_remove_incoming_commands(peer, queue, enet_list_begin(queue), enet_list_end(queue), null);
         }
 
+        /// <summary>
+        ///     Clears all command queues of a peer and frees its channels, returning the peer to a clean state.
+        /// </summary>
+        /// <param name="peer">The peer to reset.</param>
         public static void enet_peer_reset_queues(ENetPeer* peer)
         {
             ENetChannel* channel;
@@ -363,6 +399,10 @@ namespace enet
             peer->channelCount = 0;
         }
 
+        /// <summary>
+        ///     Increments the host connection counters when a peer transitions into the connected state.
+        /// </summary>
+        /// <param name="peer">The peer that connected.</param>
         public static void enet_peer_on_connect(ENetPeer* peer)
         {
             if (peer->state != ENET_PEER_STATE_CONNECTED && peer->state != ENET_PEER_STATE_DISCONNECT_LATER)
@@ -374,6 +414,10 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Decrements the host connection counters when a peer leaves the connected state.
+        /// </summary>
+        /// <param name="peer">The peer that disconnected.</param>
         public static void enet_peer_on_disconnect(ENetPeer* peer)
         {
             if (peer->state == ENET_PEER_STATE_CONNECTED || peer->state == ENET_PEER_STATE_DISCONNECT_LATER)
@@ -594,6 +638,11 @@ namespace enet
             }
         }
 
+        /// <summary>
+        ///     Determines whether a peer has any outgoing commands queued for transmission.
+        /// </summary>
+        /// <param name="peer">The peer to inspect.</param>
+        /// <returns>1 when commands are queued, otherwise 0.</returns>
         public static int enet_peer_has_outgoing_commands(ENetPeer* peer)
         {
             if (enet_list_empty(&peer->outgoingCommands) &&
@@ -625,6 +674,13 @@ namespace enet
                 enet_peer_disconnect(peer, data);
         }
 
+        /// <summary>
+        ///     Queues an acknowledgement for a received reliable command.
+        /// </summary>
+        /// <param name="peer">The peer acknowledging the command.</param>
+        /// <param name="command">The command being acknowledged.</param>
+        /// <param name="sentTime">The sent time reported by the command.</param>
+        /// <returns>A pointer to the queued acknowledgement, or <see langword="null" /> when it is suppressed or allocation fails.</returns>
         public static ENetAcknowledgement* enet_peer_queue_acknowledgement(ENetPeer* peer, ENetProtocol* command, ushort sentTime)
         {
             ENetAcknowledgement* acknowledgement;
@@ -656,6 +712,11 @@ namespace enet
             return acknowledgement;
         }
 
+        /// <summary>
+        ///     Assigns sequence numbers and queue placement to a newly created outgoing command.
+        /// </summary>
+        /// <param name="peer">The peer sending the command.</param>
+        /// <param name="outgoingCommand">The outgoing command to set up.</param>
         public static void enet_peer_setup_outgoing_command(ENetPeer* peer, ENetOutgoingCommand* outgoingCommand)
         {
             peer->outgoingDataTotal += (uint)(enet_protocol_command_size(outgoingCommand->command.header.command) + outgoingCommand->fragmentLength);
@@ -723,6 +784,15 @@ namespace enet
                 enet_list_insert(enet_list_end(&peer->outgoingCommands), outgoingCommand);
         }
 
+        /// <summary>
+        ///     Allocates and queues an outgoing command, taking a reference on the packet when one is supplied.
+        /// </summary>
+        /// <param name="peer">The peer sending the command.</param>
+        /// <param name="command">The protocol command to queue.</param>
+        /// <param name="packet">The packet associated with the command, or <see langword="null" /> for control commands.</param>
+        /// <param name="offset">The fragment offset within the packet.</param>
+        /// <param name="length">The fragment length in bytes.</param>
+        /// <returns>A pointer to the queued command, or <see langword="null" /> on allocation failure.</returns>
         public static ENetOutgoingCommand* enet_peer_queue_outgoing_command(ENetPeer* peer, ENetProtocol* command, ENetPacket* packet, uint offset, ushort length)
         {
             ENetOutgoingCommand* outgoingCommand = (ENetOutgoingCommand*)enet_malloc((nuint)sizeof(ENetOutgoingCommand));
@@ -741,6 +811,12 @@ namespace enet
             return outgoingCommand;
         }
 
+        /// <summary>
+        ///     Moves consecutive deliverable unreliable commands into the peer dispatch queue.
+        /// </summary>
+        /// <param name="peer">The peer receiving the commands.</param>
+        /// <param name="channel">The channel the commands arrived on.</param>
+        /// <param name="queuedCommand">The command that triggered the dispatch.</param>
         public static void enet_peer_dispatch_incoming_unreliable_commands(ENetPeer* peer, ENetChannel* channel, ENetIncomingCommand* queuedCommand)
         {
             ENetListNode* droppedCommand, startCommand, currentCommand;
@@ -828,6 +904,12 @@ namespace enet
             enet_peer_remove_incoming_commands(peer, &channel->incomingUnreliableCommands, enet_list_begin(&channel->incomingUnreliableCommands), droppedCommand, queuedCommand);
         }
 
+        /// <summary>
+        ///     Moves consecutive complete reliable commands into the peer dispatch queue.
+        /// </summary>
+        /// <param name="peer">The peer receiving the commands.</param>
+        /// <param name="channel">The channel the commands arrived on.</param>
+        /// <param name="queuedCommand">The command that triggered the dispatch.</param>
         public static void enet_peer_dispatch_incoming_reliable_commands(ENetPeer* peer, ENetChannel* channel, ENetIncomingCommand* queuedCommand)
         {
             ENetListNode* currentCommand;
@@ -868,6 +950,16 @@ namespace enet
                 enet_peer_dispatch_incoming_unreliable_commands(peer, channel, queuedCommand);
         }
 
+        /// <summary>
+        ///     Queues a received command, assembling its packet and dispatching it when it becomes deliverable.
+        /// </summary>
+        /// <param name="peer">The peer that received the command.</param>
+        /// <param name="command">The received protocol command.</param>
+        /// <param name="data">The payload data of the command.</param>
+        /// <param name="dataLength">The length of the payload in bytes.</param>
+        /// <param name="flags">The flags for the assembled packet.</param>
+        /// <param name="fragmentCount">The total number of fragments expected, or 0 for unfragmented commands.</param>
+        /// <returns>A pointer to the queued command, a sentinel for discarded commands, or <see langword="null" /> on error.</returns>
         public static ENetIncomingCommand* enet_peer_queue_incoming_command(ENetPeer* peer, ENetProtocol* command, void* data, nuint dataLength, uint flags, uint fragmentCount)
         {
             ENetChannel* channel = &peer->channels[command->header.channelID];

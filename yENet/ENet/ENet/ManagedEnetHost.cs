@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Net.Sockets;
 using System.Threading;
 using enet;
 
@@ -88,6 +89,11 @@ namespace Enet
         public delegate* managed<ENetBuffer*, nuint, uint> ChecksumCallback => _handle.ChecksumCallback;
 
         /// <summary>
+        ///     When non-zero, the host ignores incoming connection requests instead of accepting them.
+        /// </summary>
+        public bool IgnoreConnectRequests => _handle.IgnoreConnectRequests;
+
+        /// <summary>
         ///     Gets the compressor used by the host for packet compression.
         /// </summary>
         public ENetCompressor Compressor => _handle.Compressor;
@@ -161,6 +167,12 @@ namespace Enet
         public bool IsCreated => Volatile.Read(ref _disposed) == 0 && _handle.IsCreated;
 
         /// <summary>
+        ///     Performs application-defined tasks associated with freeing,
+        ///     releasing, or resetting unmanaged resources.
+        /// </summary>
+        ~ManagedEnetHost() => Dispose();
+
+        /// <summary>
         ///     Validates that the instance has been properly allocated and initialized.
         /// </summary>
         /// <exception cref="ArgumentNullException">
@@ -175,10 +187,36 @@ namespace Enet
         public EnetHost GetInner() => _handle;
 
         /// <summary>
-        ///     Performs application-defined tasks associated with freeing,
-        ///     releasing, or resetting unmanaged resources.
+        ///     Sends a 1‑byte dummy packet directly to the specified address without queuing.
+        ///     This is typically used for NAT hole‑punching or to elicit a response from a remote host.
         /// </summary>
-        ~ManagedEnetHost() => Dispose();
+        /// <param name="address">The destination address to ping.</param>
+        /// <returns>
+        ///     <see langword="true" /> if the packet was successfully sent;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
+        ///     bypassing the usual ENet queuing and reliability mechanisms.
+        ///     This function does not affect the peer's state or round‑trip time statistics.
+        /// </remarks>
+        public bool TryPing(ENetAddress address) => _handle.TryPing(address);
+
+        /// <summary>
+        ///     Sets whether the host ignores incoming connection requests.
+        /// </summary>
+        /// <param name="ignoreConnectRequests">
+        ///     <see langword="true" /> to ignore incoming connection requests,
+        ///     or <see langword="false" /> to accept them.
+        /// </param>
+        public void SetIgnoreConnectRequests(bool ignoreConnectRequests) => _handle.SetIgnoreConnectRequests(ignoreConnectRequests);
+
+        /// <summary>
+        ///     Sets the MTU of the host.
+        /// </summary>
+        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        public int SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
         /// <summary>
         ///     Attempts to retrieve a peer by its incoming peer identifier.
@@ -207,20 +245,69 @@ namespace Enet
         public bool TryGetPeer(ushort incomingPeerId, out EnetPeer peer) => _handle.TryGetPeer(incomingPeerId, out peer);
 
         /// <summary>
-        ///     Sends a 1‑byte dummy packet directly to the specified address without queuing.
-        ///     This is typically used for NAT hole‑punching or to elicit a response from a remote host.
+        ///     Sets the checksum callback function used by the host to compute packet checksums.
         /// </summary>
-        /// <param name="address">The destination address to ping.</param>
-        /// <returns>
-        ///     <see langword="true" /> if the packet was successfully sent;
-        ///     otherwise, <see langword="false" />.
-        /// </returns>
+        /// <param name="checksum">
+        ///     A function pointer to a custom checksum calculation routine, or <c>null</c> to disable custom checksums
+        ///     and revert to the default checksum behavior.
+        /// </param>
+        public void SetChecksumCallback(delegate* managed<ENetBuffer*, nuint, uint> checksum) => _handle.SetChecksumCallback(checksum);
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        ///     Sets the checksum callback of the host using the static abstract checksum strategy
+        ///     <typeparamref name="T" />.
+        /// </summary>
+        /// <typeparam name="T">The checksum type implementing <see cref="IENetChecksumCallback" />.</typeparam>
+        public void SetChecksumCallback<T>() where T : IENetChecksumCallback => _handle.SetChecksumCallback<T>();
+#endif
+
+        /// <summary>
+        ///     Sets the checksum callback of the host to the default CRC-32 implementation.
+        /// </summary>
+        public void SetChecksumCallbackWithCrc32() => _handle.SetChecksumCallbackWithCrc32();
+
+        /// <summary>
+        ///     Sets the intercept callback function used by the host to intercept incoming events before they are processed.
+        /// </summary>
+        /// <param name="intercept">
+        ///     A function pointer to an intercept routine, or <c>null</c> to disable interception.
+        /// </param>
         /// <remarks>
-        ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
-        ///     bypassing the usual ENet queuing and reliability mechanisms.
-        ///     This function does not affect the peer's state or round‑trip time statistics.
+        ///     The intercept callback receives the host and a pointer to the event structure. It can modify or suppress
+        ///     the event by returning a non‑zero value.
         /// </remarks>
-        public bool TryPing(ENetAddress address) => _handle.TryPing(address);
+        public void SetInterceptCallback(delegate* managed<ENetHost*, ENetEvent*, int> intercept) => _handle.SetInterceptCallback(intercept);
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        ///     Sets the intercept callback of the host using the static abstract intercept strategy
+        ///     <typeparamref name="T" />.
+        /// </summary>
+        /// <typeparam name="T">The intercept type implementing <see cref="IENetInterceptCallback" />.</typeparam>
+        public void SetInterceptCallback<T>() where T : IENetInterceptCallback => _handle.SetInterceptCallback<T>();
+#endif
+
+        /// <summary>
+        ///     Sets the maximum number of duplicate peers that the host will track.
+        /// </summary>
+        /// <param name="duplicatePeers">
+        ///     The maximum number of duplicate peers to maintain. A value of <c>0</c> may indicate no explicit limit,
+        ///     causing the host to use its internal default.
+        /// </param>
+        public void SetMaxDuplicatePeers(nuint duplicatePeers) => _handle.SetMaxDuplicatePeers(duplicatePeers);
+
+        /// <summary>
+        ///     Sets the maximum allowable packet size that may be sent or received on a peer.
+        /// </summary>
+        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        public void SetMaximumPacketSize(nuint maximumPacketSize) => _handle.SetMaximumPacketSize(maximumPacketSize);
+
+        /// <summary>
+        ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
+        /// </summary>
+        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        public void SetMaximumWaitingData(nuint maximumWaitingData) => _handle.SetMaximumWaitingData(maximumWaitingData);
 
         /// <summary>
         ///     Initiates a connection to a foreign host.
@@ -313,10 +400,37 @@ namespace Enet
         public void Broadcast(byte channelId, ref EnetPacket packet) => _handle.Broadcast(channelId, ref packet);
 
         /// <summary>
+        ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
+        /// </summary>
+        /// <param name="channelId">channel on which to broadcast</param>
+        /// <param name="incomingPeerIDs">a bit array selecting the peers to receive the packet</param>
+        /// <param name="packet">packet to broadcast</param>
+        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> incomingPeerIDs, ref EnetPacket packet) => _handle.BroadcastSelected(channelId, incomingPeerIDs, ref packet);
+
+        /// <summary>
         ///     Sets the packet compressor the host should use to compress and decompress packets.
         /// </summary>
         /// <param name="compressor">callbacks for for the packet compressor; if NULL, then compression is disabled</param>
         public void SetCompressor(ENetCompressor compressor) => _handle.SetCompressor(compressor);
+
+#if NET7_0_OR_GREATER
+        /// <summary>
+        ///     Sets the packet compressor the host should use to compress and decompress packets
+        ///     using the static abstract compressor strategy <typeparamref name="T" />.
+        /// </summary>
+        /// <param name="context">The compressor context data.</param>
+        /// <typeparam name="T">The compressor type implementing <see cref="IENetCompressor" />.</typeparam>
+        public void SetCompressor<T>(void* context) where T : IENetCompressor => _handle.SetCompressor<T>(context);
+#endif
+
+        /// <summary>
+        ///     Sets the packet compressor the host should use to the default range coder.
+        /// </summary>
+        /// <returns>
+        ///     <see langword="true" /> if the host compressor was set to the range coder;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        public bool TrySetCompressorWithRangeCoder() => _handle.TrySetCompressorWithRangeCoder();
 
         /// <summary>
         ///     Limits the maximum allowed channels of future incoming connections.
@@ -335,34 +449,13 @@ namespace Enet
         public void SetBandwidthLimit(uint incomingBandwidth, uint outgoingBandwidth) => _handle.SetBandwidthLimit(incomingBandwidth, outgoingBandwidth);
 
         /// <summary>
-        ///     Sets the checksum callback function used by the host to compute packet checksums.
+        ///     Recomputes the packet throttle limits of all connected peers to respect the host bandwidth constraints.
         /// </summary>
-        /// <param name="checksum">
-        ///     A function pointer to a custom checksum calculation routine, or <c>null</c> to disable custom checksums
-        ///     and revert to the default checksum behavior.
-        /// </param>
-        public void SetChecksumCallback(delegate* managed<ENetBuffer*, nuint, uint> checksum) => _handle.SetChecksumCallback(checksum);
-
-        /// <summary>
-        ///     Sets the intercept callback function used by the host to intercept incoming events before they are processed.
-        /// </summary>
-        /// <param name="intercept">
-        ///     A function pointer to an intercept routine, or <c>null</c> to disable interception.
-        /// </param>
         /// <remarks>
-        ///     The intercept callback receives the host and a pointer to the event structure. It can modify or suppress
-        ///     the event by returning a non‑zero value.
+        ///     The library invokes this automatically at regular intervals when bandwidth limits are configured;
+        ///     calling it explicitly forces an immediate recalculation.
         /// </remarks>
-        public void SetInterceptCallback(delegate* managed<ENetHost*, ENetEvent*, int> intercept) => _handle.SetInterceptCallback(intercept);
-
-        /// <summary>
-        ///     Sets the maximum number of duplicate peers that the host will track.
-        /// </summary>
-        /// <param name="duplicatePeers">
-        ///     The maximum number of duplicate peers to maintain. A value of <c>0</c> may indicate no explicit limit,
-        ///     causing the host to use its internal default.
-        /// </param>
-        public void SetMaxDuplicatePeers(nuint duplicatePeers) => _handle.SetMaxDuplicatePeers(duplicatePeers);
+        public void ThrottleBandwidth() => _handle.ThrottleBandwidth();
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ManagedEnetHost" /> class with the specified address, peer count,
@@ -386,11 +479,10 @@ namespace Enet
         ///     The upstream bandwidth limit in bytes per second. Pass <c>0</c> for unlimited bandwidth.
         /// </param>
         /// <param name="option">
-        ///     Specifies the IP addressing mode to use (IPv4, IPv6-only, or IPv6 dual‑stack).
+        ///     Specifies the IP addressing mode to use (Ipv4, Ipv6-only, or Ipv6 dual‑stack).
         /// </param>
-        /// <exception cref="ArgumentException">
-        ///     Thrown when host creation fails.
-        /// </exception>
+        /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
+        /// <exception cref="SocketException">Thrown when host creation fails.</exception>
         public static ManagedEnetHost Create(ENetAddress address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, EnetHostOption option)
         {
             var handle = EnetHost.Create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);

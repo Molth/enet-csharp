@@ -89,7 +89,6 @@ namespace Enet
         ///     Throws a <see cref="SocketException" /> with the specified socket error code.
         /// </summary>
         /// <param name="socketError">The socket error code to include in the exception.</param>
-        /// <exception cref="SocketException">Always thrown with the provided error code.</exception>
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowSocketException(SocketError socketError) => throw new SocketException((int)socketError);

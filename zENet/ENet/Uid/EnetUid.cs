@@ -19,15 +19,15 @@ namespace ThreadedEnet
     {
         /// <summary>
         ///     Internal 64‑bit value:
-        ///     low 16 bits store the peer slot index,
-        ///     high 48 bits store the generation counter.
+        ///     low 12 bits store the peer slot index,
+        ///     high 52 bits store the generation counter.
         /// </summary>
         private readonly ulong _value;
 
         /// <summary>
         ///     The local peer slot index within the host.
         /// </summary>
-        public ushort IncomingPeerId => (ushort)(_value & 0xFFFF);
+        public ushort IncomingPeerId => (ushort)(_value & 0xFFF);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="EnetUid" /> structure with the specified raw value.
@@ -40,7 +40,7 @@ namespace ThreadedEnet
         ///     keeping the same peer slot index.
         /// </summary>
         /// <returns>A new uid with the generation advanced.</returns>
-        internal EnetUid Next() => new(unchecked(_value + 0x10000));
+        internal EnetUid Next() => new(unchecked(_value + 0x1000));
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object.
@@ -119,7 +119,9 @@ namespace ThreadedEnet
         /// <returns>The value of the current instance in the specified format.</returns>
         public string ToString(string? format, IFormatProvider? formatProvider) => _value.ToString(format, formatProvider);
 
-        /// <summary>Tries to format the value of the current instance into the provided span of characters.</summary>
+        /// <summary>
+        ///     Tries to format the value of the current instance into the provided span of characters.
+        /// </summary>
         /// <param name="destination">When this method returns, this instance's value formatted as a span of characters.</param>
         /// <param name="charsWritten">
         ///     When this method returns, the number of characters that were written in

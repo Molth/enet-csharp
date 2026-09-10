@@ -11,27 +11,27 @@ namespace Enet
     public enum EnetPeerState
     {
         /// <summary>
-        ///     The peer is not connected or has been disconnected.
+        ///     The peer has no active connection.
         /// </summary>
         Disconnected = ENetPeerState.ENET_PEER_STATE_DISCONNECTED,
 
         /// <summary>
-        ///     The peer is attempting to establish a connection.
+        ///     A connection request is in progress towards the foreign host.
         /// </summary>
         Connecting = ENetPeerState.ENET_PEER_STATE_CONNECTING,
 
         /// <summary>
-        ///     The peer has received a connect request and is acknowledging it.
+        ///     The connect request has been acknowledged and the peer is awaiting final confirmation.
         /// </summary>
         AcknowledgingConnect = ENetPeerState.ENET_PEER_STATE_ACKNOWLEDGING_CONNECT,
 
         /// <summary>
-        ///     The peer has sent a connect request and is waiting for the acknowledgment.
+        ///     The connection has been established and is pending dispatch of the connect event.
         /// </summary>
         ConnectionPending = ENetPeerState.ENET_PEER_STATE_CONNECTION_PENDING,
 
         /// <summary>
-        ///     The peer has successfully completed the connection handshake.
+        ///     The connection attempt completed successfully.
         /// </summary>
         ConnectionSucceeded = ENetPeerState.ENET_PEER_STATE_CONNECTION_SUCCEEDED,
 
@@ -41,22 +41,22 @@ namespace Enet
         Connected = ENetPeerState.ENET_PEER_STATE_CONNECTED,
 
         /// <summary>
-        ///     The peer has been requested to disconnect, but is still sending queued data.
+        ///     A disconnect is requested after all queued outgoing packets have been sent.
         /// </summary>
         DisconnectLater = ENetPeerState.ENET_PEER_STATE_DISCONNECT_LATER,
 
         /// <summary>
-        ///     The peer is in the process of disconnecting.
+        ///     A disconnect request has been sent and the peer is waiting for it to complete.
         /// </summary>
         Disconnecting = ENetPeerState.ENET_PEER_STATE_DISCONNECTING,
 
         /// <summary>
-        ///     The peer has received a disconnect request and is acknowledging it.
+        ///     The disconnect request has been acknowledged and the peer is awaiting final confirmation.
         /// </summary>
         AcknowledgingDisconnect = ENetPeerState.ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT,
 
         /// <summary>
-        ///     The peer has been fully disconnected but the object is not yet destroyed.
+        ///     The peer has disconnected and is waiting to be reclaimed after the disconnect event is dispatched.
         /// </summary>
         Zombie = ENetPeerState.ENET_PEER_STATE_ZOMBIE
     }

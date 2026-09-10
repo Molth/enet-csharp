@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using enet;
 
@@ -362,13 +362,6 @@ namespace Enet
         public void SetTimeout(uint timeoutLimit, uint timeoutMinimum, uint timeoutMaximum) => ENET_API.enet_peer_timeout(_handle, timeoutLimit, timeoutMinimum, timeoutMaximum);
 
         /// <summary>
-        ///     Sets the application private data pointer associated with this peer.
-        ///     This pointer can be used to store arbitrary user data and may be freely modified.
-        /// </summary>
-        /// <param name="data">The user data pointer to set.</param>
-        public void SetData(void* data) => _handle->data = data;
-
-        /// <summary>
         ///     Forcefully disconnects this peer. The foreign host is not notified and will timeout on its connection.
         /// </summary>
         public void Reset() => ENET_API.enet_peer_reset(_handle);
@@ -407,5 +400,12 @@ namespace Enet
         /// <param name="acceleration">Rate at which to increase the throttle probability as mean RTT declines.</param>
         /// <param name="deceleration">Rate at which to decrease the throttle probability as mean RTT increases.</param>
         public void ConfigureThrottle(uint interval, uint acceleration, uint deceleration) => ENET_API.enet_peer_throttle_configure(_handle, interval, acceleration, deceleration);
+
+        /// <summary>
+        ///     Sets the application private data pointer associated with this peer.
+        ///     This pointer can be used to store arbitrary user data and may be freely modified.
+        /// </summary>
+        /// <param name="data">The user data pointer to set.</param>
+        public void SetData(void* data) => ENET_API.enet_peer_data(_handle, data);
     }
 }

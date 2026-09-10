@@ -1,11 +1,10 @@
-﻿using static enet.ENetSocketOption;
+using System;
+using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
 using static enet.ENetPeerState;
 using static enet.ENetProtocolCommand;
 using static enet.ENetProtocolFlag;
 using static enet.ENetHostOption;
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
@@ -14,10 +13,20 @@ namespace enet
     public static unsafe partial class ENet
     {
         /// <summary>
-        ///     Sends a ping request to an address.
+        ///     Sends a 1‑byte dummy packet directly to the specified address without queuing.
+        ///     This is typically used for NAT hole‑punching or to elicit a response from a remote host.
         /// </summary>
         /// <param name="host">host ping the address</param>
-        /// <param name="address">destination for the ping request</param>
+        /// <param name="address">The destination address to ping.</param>
+        /// <returns>
+        ///     <see langword="0" /> if the packet was successfully sent;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
+        ///     bypassing the usual ENet queuing and reliability mechanisms.
+        ///     This function does not affect the peer's state or round‑trip time statistics.
+        /// </remarks>
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
             ENetBuffer buffer;
@@ -25,6 +34,143 @@ namespace enet
             buffer.data = data;
             buffer.dataLength = 1;
             return enet_socket_send(host->socket, address, &buffer, 1) > 0 ? 0 : -1;
+        }
+
+        /// <summary>
+        ///     Sets whether the host ignores incoming connection requests.
+        /// </summary>
+        /// <param name="host">The host on which to set the ignore-connection-requests behavior.</param>
+        /// <param name="ignoreConnectRequests">Non-zero to ignore incoming connection requests, or zero to accept them.</param>
+        public static void enet_host_ignore_connect_requests(ENetHost* host, int ignoreConnectRequests) => host->ignoreConnectRequests = (ushort)(ignoreConnectRequests != 0 ? 1 : 0);
+
+        /// <summary>
+        ///     Sets the MTU of the host.
+        /// </summary>
+        /// <param name="host">The host whose MTU is being set.</param>
+        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        public static int enet_host_mtu(ENetHost* host, uint mtu)
+        {
+            if (mtu > ENET_PROTOCOL_MAXIMUM_MTU)
+                return -1;
+
+            if (mtu == 0)
+                mtu = ENET_HOST_DEFAULT_MTU;
+
+            host->mtu = mtu;
+            return 0;
+        }
+
+        /// <summary>
+        ///     Gets the peer associated with the specified incoming peer identifier.
+        /// </summary>
+        /// <param name="host">The host whose peer is being retrieved.</param>
+        /// <param name="incomingPeerID">The local identifier of the peer slot to retrieve within the host.</param>
+        /// <returns>
+        ///     A pointer to the peer at the specified slot, or <see langword="null" /> if
+        ///     <paramref name="incomingPeerID" /> is out of range of the host's pre-allocated peers array.
+        /// </returns>
+        /// <remarks>
+        ///     The identifier corresponds to a fixed slot in the host's internal peers array, which is allocated
+        ///     at host creation time based on the <c>peerCount</c> parameter. It is the index into that array and
+        ///     does not verify whether the peer is currently connected.
+        /// </remarks>
+        public static ENetPeer* enet_host_get_peer(ENetHost* host, ushort incomingPeerID)
+        {
+            if (incomingPeerID >= host->peerCount)
+                return null;
+
+            return &host->peers[incomingPeerID];
+        }
+
+        /// <summary>
+        ///     Sets the checksum callback used by the host.
+        /// </summary>
+        /// <param name="host">The host whose checksum callback is being set.</param>
+        /// <param name="checksum">The checksum callback to use, or null to disable checksums.</param>
+        public static void enet_host_checksum(ENetHost* host, delegate* managed<ENetBuffer*, nuint, uint> checksum) => host->checksum = checksum;
+
+        /// <summary>
+        ///     Sets the intercept callback used by the host.
+        /// </summary>
+        /// <param name="host">The host whose intercept callback is being set.</param>
+        /// <param name="intercept">The intercept callback to use, or null to disable interception.</param>
+        public static void enet_host_intercept(ENetHost* host, delegate* managed<ENetHost*, ENetEvent*, int> intercept) => host->intercept = intercept;
+
+        /// <summary>
+        ///     Sets the maximum number of duplicate peers that the host will track.
+        /// </summary>
+        /// <param name="host">The host whose duplicate peer limit is being set.</param>
+        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        public static void enet_host_duplicate_peers(ENetHost* host, nuint duplicatePeers)
+        {
+            if (duplicatePeers == 0)
+                duplicatePeers = (nuint)ENET_PROTOCOL_MAXIMUM_PEER_ID;
+            host->duplicatePeers = duplicatePeers;
+        }
+
+        /// <summary>
+        ///     Sets the maximum allowable packet size that may be sent or received on a peer.
+        /// </summary>
+        /// <param name="host">The host whose maximum packet size is being set.</param>
+        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        public static void enet_host_maximum_packet_size(ENetHost* host, nuint maximumPacketSize)
+        {
+            if (maximumPacketSize == 0)
+                maximumPacketSize = (nuint)ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE;
+            host->maximumPacketSize = maximumPacketSize;
+        }
+
+        /// <summary>
+        ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
+        /// </summary>
+        /// <param name="host">The host whose maximum waiting data is being set.</param>
+        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        public static void enet_host_maximum_waiting_data(ENetHost* host, nuint maximumWaitingData)
+        {
+            if (maximumWaitingData == 0)
+                maximumWaitingData = (nuint)ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA;
+            host->maximumWaitingData = maximumWaitingData;
+        }
+
+        /// <summary>
+        ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
+        /// </summary>
+        /// <param name="host">host on which to broadcast the packet</param>
+        /// <param name="channelID">channel on which to broadcast</param>
+        /// <param name="incomingPeerIDs">
+        ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
+        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        /// </param>
+        /// <param name="packet">packet to broadcast</param>
+        /// <remarks>
+        ///     <para>
+        ///         Only peers that are both selected by <paramref name="incomingPeerIDs" /> and currently in the
+        ///         connected state receive the packet. Bits beyond <c>host->peerCount</c> are ignored.
+        ///     </para>
+        ///     <para>
+        ///         This function always transfers ownership of the packet to the host. If no selected peer is
+        ///         connected (and thus the packet is never queued), the packet is destroyed.
+        ///     </para>
+        /// </remarks>
+        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> incomingPeerIDs, ENetPacket* packet)
+        {
+            nuint peerCount = (nuint)ENET_MIN((uint)incomingPeerIDs.Length * 8, (uint)host->peerCount);
+
+            for (nuint incomingPeerID = 0; incomingPeerID < peerCount; ++incomingPeerID)
+            {
+                if ((incomingPeerIDs[(int)(incomingPeerID >> 3)] & (1 << (int)(incomingPeerID & 7))) != 0)
+                {
+                    ENetPeer* currentPeer = &host->peers[incomingPeerID];
+                    if (currentPeer->state != ENET_PEER_STATE_CONNECTED)
+                        continue;
+
+                    enet_peer_send(currentPeer, channelID, packet);
+                }
+            }
+
+            if (packet->referenceCount == 0)
+                enet_packet_destroy(packet);
         }
 
         /// <summary>
@@ -206,6 +352,11 @@ namespace enet
             enet_free(host);
         }
 
+        /// <summary>
+        ///     Returns a pseudorandom value derived from the host seed, advancing the seed for the next draw.
+        /// </summary>
+        /// <param name="host">The host whose seed is advanced.</param>
+        /// <returns>A pseudorandom value.</returns>
         public static uint enet_host_random(ENetHost* host)
         {
             uint n = (host->randomSeed += 0x6D2B79F5U);
@@ -313,6 +464,10 @@ namespace enet
         /// <param name="host">host on which to broadcast the packet</param>
         /// <param name="channelID">channel on which to broadcast</param>
         /// <param name="packet">packet to broadcast</param>
+        /// <remarks>
+        ///     This function always transfers ownership of the packet to the host. If no peer is
+        ///     connected (and thus the packet is never queued), the packet is destroyed.
+        /// </remarks>
         public static void enet_host_broadcast(ENetHost* host, byte channelID, ENetPacket* packet)
         {
             ENetPeer* currentPeer;
@@ -382,6 +537,10 @@ namespace enet
             host->recalculateBandwidthLimits = 1;
         }
 
+        /// <summary>
+        ///     Recomputes the packet throttle limits of all connected peers to respect the host bandwidth constraints.
+        /// </summary>
+        /// <param name="host">The host to throttle.</param>
         public static void enet_host_bandwidth_throttle(ENetHost* host)
         {
             uint timeCurrent = enet_time_get(),

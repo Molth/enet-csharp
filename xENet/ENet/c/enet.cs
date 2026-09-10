@@ -1,13 +1,14 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Runtime.CompilerServices;
-
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 // ReSharper disable ALL
 
 namespace enet
 {
+    /// <summary>
+    ///     ENet reliable UDP networking library
+    /// </summary>
     public static unsafe class ENET_API
     {
         /// <summary>
@@ -48,6 +49,9 @@ namespace enet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint enet_linked_version() => ENet.enet_linked_version();
 
+        /// <summary>
+        ///     Gets the current wall-time in milliseconds.
+        /// </summary>
         /// <returns>
         ///     the wall-time in milliseconds.  Its initial value is unspecified
         ///     unless otherwise set.
@@ -61,27 +65,79 @@ namespace enet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_time_set(uint newTimeBase) => ENet.enet_time_set(newTimeBase);
 
+        /// <summary>
+        ///     Creates a native socket of the requested type and addressing mode.
+        /// </summary>
+        /// <param name="type">The type of socket to create.</param>
+        /// <param name="option">The addressing mode to use.</param>
+        /// <returns>The created socket, or an invalid socket on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option) => ENet.enet_socket_create(type, option);
 
+        /// <summary>
+        ///     Binds the socket to the specified local address.
+        /// </summary>
+        /// <param name="socket">The socket to bind.</param>
+        /// <param name="address">The local address to bind to.</param>
+        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
 
+        /// <summary>
+        ///     Retrieves the local address the socket is bound to.
+        /// </summary>
+        /// <param name="socket">The socket to query.</param>
+        /// <param name="address">Receives the local address.</param>
+        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
+        /// <summary>
+        ///     Sends a vectored payload to the specified address on the socket.
+        /// </summary>
+        /// <param name="socket">The socket to send on.</param>
+        /// <param name="address">The destination address.</param>
+        /// <param name="buffers">The buffers holding the payload.</param>
+        /// <param name="bufferCount">The number of buffers.</param>
+        /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
 
+        /// <summary>
+        ///     Receives a vectored payload on the socket, reporting the sender address.
+        /// </summary>
+        /// <param name="socket">The socket to receive on.</param>
+        /// <param name="address">Receives the source address.</param>
+        /// <param name="buffers">The buffers receiving the payload.</param>
+        /// <param name="bufferCount">The number of buffers.</param>
+        /// <returns>The number of bytes received, 0 when no data is available, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
+        /// <summary>
+        ///     Waits until the socket becomes ready for the requested conditions or the timeout elapses.
+        /// </summary>
+        /// <param name="socket">The socket to wait on.</param>
+        /// <param name="condition">On input the conditions to wait for; on output the conditions that became ready.</param>
+        /// <param name="milliseconds">The maximum time to wait in milliseconds.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_wait(ENetSocket socket, uint* condition, uint milliseconds) => ENet.enet_socket_wait(socket, condition, milliseconds);
 
+        /// <summary>
+        ///     Applies a socket option to the given socket.
+        /// </summary>
+        /// <param name="socket">The socket to configure.</param>
+        /// <param name="option">The option to apply.</param>
+        /// <param name="value">The option value.</param>
+        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
 
+        /// <summary>
+        ///     Closes and invalidates the given socket.
+        /// </summary>
+        /// <param name="socket">The socket to destroy.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_socket_destroy(ENetSocket* socket) => ENet.enet_socket_destroy(socket);
 
@@ -90,7 +146,7 @@ namespace enet
         ///     and sets the host field in the address parameter if successful.
         /// </summary>
         /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to parse</param>
+        /// <param name="ipEndPoint">IP address to parse</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -102,14 +158,15 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ip) => ENet.enet_address_set_from_ipendpoint(address, ip);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => ENet.enet_address_set_from_ipendpoint(address, ipEndPoint);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
         ///     and sets the host field in the address parameter if successful.
         /// </summary>
         /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to set</param>
+        /// <param name="ipAddress">IP address to set</param>
         /// <param name="port">port number in host byte order</param>
         /// <returns>
         ///     <list type="bullet">
@@ -122,7 +179,8 @@ namespace enet
         ///     </list>
         ///     the address of the given hostName in address on success
         /// </returns>
-        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ip, ushort port) => ENet.enet_address_set_from_ipaddress(address, ip, port);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => ENet.enet_address_set_from_ipaddress(address, ipAddress, port);
 
         /// <summary>
         ///     Attempts to parse the printable form of the IP address in the parameter hostName
@@ -165,7 +223,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId) => ENet.enet_address_set_ip_ipv6(address, ip, port, scopeId);
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => ENet.enet_address_set_ip_ipv6(address, ip, port, scopeId);
 
         /// <summary>
         ///     Attempts to resolve the host named by the parameter hostName and sets
@@ -208,7 +266,7 @@ namespace enet
         ///     the address of the given hostName in address on success
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId) => ENet.enet_address_set_hostname_ipv6(address, hostName, port, scopeId);
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => ENet.enet_address_set_hostname_ipv6(address, hostName, port, scopeId);
 
         /// <summary>
         ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
@@ -275,16 +333,136 @@ namespace enet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_packet_resize(ENetPacket* packet, nuint dataLength) => ENet.enet_packet_resize(packet, dataLength);
 
+        /// <summary>
+        ///     Computes the CRC-32 checksum of the given buffers and returns it in network byte order.
+        /// </summary>
+        /// <param name="buffers">The buffers to checksum.</param>
+        /// <param name="bufferCount">The number of buffers.</param>
+        /// <returns>The CRC-32 checksum in network byte order.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint enet_crc32(ENetBuffer* buffers, nuint bufferCount) => ENet.enet_crc32(buffers, bufferCount);
 
         /// <summary>
-        ///     Sends a ping request to an address.
+        ///     Sends a 1‑byte dummy packet directly to the specified address without queuing.
+        ///     This is typically used for NAT hole‑punching or to elicit a response from a remote host.
         /// </summary>
         /// <param name="host">host ping the address</param>
-        /// <param name="address">destination for the ping request</param>
+        /// <param name="address">The destination address to ping.</param>
+        /// <returns>
+        ///     <see langword="0" /> if the packet was successfully sent;
+        ///     otherwise, <see langword="false" />.
+        /// </returns>
+        /// <remarks>
+        ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
+        ///     bypassing the usual ENet queuing and reliability mechanisms.
+        ///     This function does not affect the peer's state or round‑trip time statistics.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_host_ping(ENetHost* host, ENetAddress* address) => ENet.enet_host_ping(host, address);
+
+        /// <summary>
+        ///     Sets whether the host ignores incoming connection requests.
+        /// </summary>
+        /// <param name="host">The host on which to set the ignore-connection-requests behavior.</param>
+        /// <param name="ignoreConnectRequests">Non-zero to ignore incoming connection requests, or zero to accept them.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_ignore_connect_requests(ENetHost* host, int ignoreConnectRequests) => ENet.enet_host_ignore_connect_requests(host, ignoreConnectRequests);
+
+        /// <summary>
+        ///     Sets the MTU of the host.
+        /// </summary>
+        /// <param name="host">The host whose MTU is being set.</param>
+        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_host_mtu(ENetHost* host, uint mtu) => ENet.enet_host_mtu(host, mtu);
+
+        /// <summary>
+        ///     Gets the peer associated with the specified incoming peer identifier.
+        /// </summary>
+        /// <param name="host">The host whose peer is being retrieved.</param>
+        /// <param name="incomingPeerID">The local identifier of the peer slot to retrieve within the host.</param>
+        /// <returns>
+        ///     A pointer to the peer at the specified slot, or <see langword="null" /> if
+        ///     <paramref name="incomingPeerID" /> is out of range of the host's pre-allocated peers array.
+        /// </returns>
+        /// <remarks>
+        ///     The identifier corresponds to a fixed slot in the host's internal peers array, which is allocated
+        ///     at host creation time based on the <c>peerCount</c> parameter. It is the index into that array and
+        ///     does not verify whether the peer is currently connected.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ENetPeer* enet_host_get_peer(ENetHost* host, ushort incomingPeerID) => ENet.enet_host_get_peer(host, incomingPeerID);
+
+        /// <summary>
+        ///     Sets the checksum callback used by the host.
+        /// </summary>
+        /// <param name="host">The host whose checksum callback is being set.</param>
+        /// <param name="checksum">The checksum callback to use, or null to disable checksums.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_checksum(ENetHost* host, delegate* managed<ENetBuffer*, nuint, uint> checksum) => ENet.enet_host_checksum(host, checksum);
+
+        /// <summary>
+        ///     Enables packet checksums for the host by setting its checksum callback to the built-in CRC-32 implementation.
+        /// </summary>
+        /// <param name="host">The host on which to enable CRC-32 packet checksums.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_checksum_with_crc32(ENetHost* host) => ENet.enet_host_checksum_with_crc32(host);
+
+        /// <summary>
+        ///     Sets the intercept callback used by the host.
+        /// </summary>
+        /// <param name="host">The host whose intercept callback is being set.</param>
+        /// <param name="intercept">The intercept callback to use, or null to disable interception.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_intercept(ENetHost* host, delegate* managed<ENetHost*, ENetEvent*, int> intercept) => ENet.enet_host_intercept(host, intercept);
+
+        /// <summary>
+        ///     Sets the maximum number of duplicate peers that the host will track.
+        /// </summary>
+        /// <param name="host">The host whose duplicate peer limit is being set.</param>
+        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_duplicate_peers(ENetHost* host, nuint duplicatePeers) => ENet.enet_host_duplicate_peers(host, duplicatePeers);
+
+        /// <summary>
+        ///     Sets the maximum allowable packet size that may be sent or received on a peer.
+        /// </summary>
+        /// <param name="host">The host whose maximum packet size is being set.</param>
+        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_maximum_packet_size(ENetHost* host, nuint maximumPacketSize) => ENet.enet_host_maximum_packet_size(host, maximumPacketSize);
+
+        /// <summary>
+        ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
+        /// </summary>
+        /// <param name="host">The host whose maximum waiting data is being set.</param>
+        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_maximum_waiting_data(ENetHost* host, nuint maximumWaitingData) => ENet.enet_host_maximum_waiting_data(host, maximumWaitingData);
+
+        /// <summary>
+        ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
+        /// </summary>
+        /// <param name="host">host on which to broadcast the packet</param>
+        /// <param name="incomingPeerIDs">
+        ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
+        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        /// </param>
+        /// <param name="channelID">channel on which to broadcast</param>
+        /// <param name="packet">packet to broadcast</param>
+        /// <remarks>
+        ///     <para>
+        ///         Only peers that are both selected by <paramref name="incomingPeerIDs" /> and currently in the
+        ///         connected state receive the packet. Bits beyond <c>host->peerCount</c> are ignored.
+        ///     </para>
+        ///     <para>
+        ///         This function always transfers ownership of the packet to the host. If no selected peer is
+        ///         connected (and thus the packet is never queued), the packet is destroyed.
+        ///     </para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> incomingPeerIDs, ENetPacket* packet) => ENet.enet_host_broadcast_selected(host, channelID, incomingPeerIDs, packet);
 
         /// <summary>
         ///     Creates a host for communicating to peers.
@@ -418,6 +596,10 @@ namespace enet
         /// <param name="host">host on which to broadcast the packet</param>
         /// <param name="channelID">channel on which to broadcast</param>
         /// <param name="packet">packet to broadcast</param>
+        /// <remarks>
+        ///     This function always transfers ownership of the packet to the host. If no peer is
+        ///     connected (and thus the packet is never queued), the packet is destroyed.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_broadcast(ENetHost* host, byte channelID, ENetPacket* packet) => ENet.enet_host_broadcast(host, channelID, packet);
 
@@ -428,6 +610,14 @@ namespace enet
         /// <param name="compressor">callbacks for for the packet compressor; if NULL, then compression is disabled</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_compress(ENetHost* host, ENetCompressor* compressor) => ENet.enet_host_compress(host, compressor);
+
+        /// <summary>
+        ///     Sets the packet compressor the host should use to the default range coder.
+        /// </summary>
+        /// <param name="host">host to enable the range coder for</param>
+        /// <returns>0 on success, &lt; 0 on failure</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_host_compress_with_range_coder(ENetHost* host) => ENet.enet_host_compress_with_range_coder(host);
 
         /// <summary>
         ///     Limits the maximum allowed channels of future incoming connections.
@@ -452,6 +642,21 @@ namespace enet
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_bandwidth_limit(ENetHost* host, uint incomingBandwidth, uint outgoingBandwidth) => ENet.enet_host_bandwidth_limit(host, incomingBandwidth, outgoingBandwidth);
+
+        /// <summary>
+        ///     Recomputes the packet throttle limits of all connected peers to respect the host bandwidth constraints.
+        /// </summary>
+        /// <param name="host">The host to throttle.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_host_bandwidth_throttle(ENetHost* host) => ENet.enet_host_bandwidth_throttle(host);
+
+        /// <summary>
+        ///     Sets the application private data associated with a peer.
+        /// </summary>
+        /// <param name="peer">peer whose data is being set</param>
+        /// <param name="data">the application private data to associate with the peer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void enet_peer_data(ENetPeer* peer, void* data) => ENet.enet_peer_data(peer, data);
 
         /// <summary>
         ///     Queues a packet to be sent.

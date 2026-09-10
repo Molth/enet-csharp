@@ -1,6 +1,6 @@
-// ReSharper disable ALL
-
 using Enet;
+
+// ReSharper disable ALL
 
 namespace ThreadedEnet
 {

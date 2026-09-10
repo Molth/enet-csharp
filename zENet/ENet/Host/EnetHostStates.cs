@@ -13,7 +13,9 @@ namespace ThreadedEnet
         /// <summary>
         ///     The underlying managed ENet host driven by the background thread.
         /// </summary>
-        public ManagedEnetHost? Host;
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        public ManagedEnetHost Host;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
         /// <summary>
         ///     The configuration the host was started with.

@@ -1,5 +1,6 @@
 using Enet;
 using NativeCollections;
+using NativeSockets;
 
 // ReSharper disable ALL
 
@@ -72,15 +73,20 @@ namespace ThreadedEnet
             {
                 ref var uid = ref uids[i];
                 uid = new EnetUid((ulong)i);
-                uid = uid.Next();
             }
 
             EnetPeer peer;
 
+            var spinWait = new UnsafeSpinWait();
+
             while (states.Threads.Load(Ordering.Acquire) > 0)
             {
+                SelectModeFlags shouldSpinOnce = 0;
+
                 while (states.OutgoingEvents.TryDequeue(out var outgoing))
                 {
+                    shouldSpinOnce |= SelectModeFlags.SelectWrite;
+
                     switch (outgoing.Type)
                     {
                         case EnetOutgoingEventType.Connect:
@@ -164,50 +170,56 @@ namespace ThreadedEnet
                     }
                 }
 
-                var polled = false;
-                while (!polled)
+                if (host.Service(config.ServiceTimeout, out var @event) > 0)
                 {
-                    if (host.CheckEvents(out var @event) <= 0)
+                    shouldSpinOnce |= SelectModeFlags.SelectRead;
+
+                    while (true)
                     {
-                        if (host.Service(config.ServiceTimeout, out @event) <= 0)
-                            break;
+                        peer = @event.Peer;
+                        ref var uid = ref uids[peer.IncomingPeerId];
+                        var incoming = new EnetIncomingEvent();
+                        incoming.Address = peer.Address;
+                        switch (@event.Type)
+                        {
+                            case EnetEventType.Connect:
+                                uid = uid.Next();
+                                incoming.Type = EnetEventType.Connect;
+                                incoming.Uid = uid;
+                                ref var connect = ref incoming.Command.Connect;
+                                connect.ChannelCount = peer.ChannelCount;
+                                connect.EventData = peer.EventData;
+                                states.IncomingEvents.Enqueue(incoming);
+                                break;
 
-                        polled = true;
-                    }
+                            case EnetEventType.Disconnect:
+                                incoming.Type = EnetEventType.Disconnect;
+                                incoming.Uid = uid;
+                                ref var disconnect = ref incoming.Command.Disconnect;
+                                disconnect.EventData = peer.EventData;
+                                states.IncomingEvents.Enqueue(incoming);
+                                break;
 
-                    peer = @event.Peer;
-                    ref var uid = ref uids[peer.IncomingPeerId];
-                    var incoming = new EnetIncomingEvent();
-                    incoming.Address = peer.Address;
-                    switch (@event.Type)
-                    {
-                        case EnetEventType.Connect:
-                            uid = uid.Next();
-                            incoming.Type = EnetEventType.Connect;
-                            incoming.Uid = uid;
-                            ref var connect = ref incoming.Command.Connect;
-                            connect.ChannelCount = peer.ChannelCount;
-                            connect.EventData = peer.EventData;
-                            states.IncomingEvents.Enqueue(incoming);
-                            break;
+                            case EnetEventType.Receive:
+                                incoming.Type = EnetEventType.Receive;
+                                incoming.Uid = uid;
+                                ref var receive = ref incoming.Command.Receive;
+                                receive.Packet = @event.Packet;
+                                states.IncomingEvents.Enqueue(incoming);
+                                break;
+                        }
 
-                        case EnetEventType.Disconnect:
-                            incoming.Type = EnetEventType.Disconnect;
-                            incoming.Uid = uid;
-                            ref var disconnect = ref incoming.Command.Disconnect;
-                            disconnect.EventData = peer.EventData;
-                            states.IncomingEvents.Enqueue(incoming);
-                            break;
-
-                        case EnetEventType.Receive:
-                            incoming.Type = EnetEventType.Receive;
-                            incoming.Uid = uid;
-                            ref var receive = ref incoming.Command.Receive;
-                            receive.Packet = @event.Packet;
-                            states.IncomingEvents.Enqueue(incoming);
+                        if (host.CheckEvents(out @event) <= 0)
                             break;
                     }
                 }
+
+                if (shouldSpinOnce == 0)
+                    spinWait.SpinOnce();
+                else if ((shouldSpinOnce & SelectModeFlags.SelectRead) != 0)
+                    spinWait.Reset();
+                else if ((shouldSpinOnce & SelectModeFlags.SelectWrite) != 0)
+                    spinWait.SpinOnce(-1);
             }
 
             uids.Dispose();

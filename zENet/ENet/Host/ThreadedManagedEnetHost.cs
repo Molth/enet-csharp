@@ -102,8 +102,7 @@ namespace ThreadedEnet
                 host.SetInterceptCallback(config.InterceptCallback);
             }
 
-            if (config.MaxDuplicatePeers != 0)
-                host.SetMaxDuplicatePeers(config.MaxDuplicatePeers);
+            host.SetMaxDuplicatePeers(config.MaxDuplicatePeers);
 
             states = new EnetHostStates();
             states.Host = host;
@@ -310,6 +309,14 @@ namespace ThreadedEnet
 
             states.OutgoingEvents.Enqueue(outgoing);
             EnetHostRunner.Exit(states);
+        }
+
+        /// <summary>
+        ///     TODO
+        /// </summary>
+        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> incomingPeerIDs, ref EnetPacket packet)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
