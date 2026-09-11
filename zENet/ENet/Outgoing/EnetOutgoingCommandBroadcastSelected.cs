@@ -15,8 +15,11 @@ namespace ThreadedEnet
         /// </summary>
         public byte ChannelId;
 
-        /// TODO
-        public NativeArray<byte> IncomingPeerIds;
+        /// <summary>
+        ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
+        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        /// </summary>
+        public NativeArray<byte> BitArray;
 
         /// <summary>
         ///     packet associated with the event, if appropriate

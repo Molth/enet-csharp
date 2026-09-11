@@ -25,7 +25,7 @@ namespace Enet
         ///     The <see cref="IENetCompressor" /> implementation whose operations are bound as callbacks.
         /// </typeparam>
         /// <param name="compressor">The compressor whose context and callbacks are populated.</param>
-        /// <param name="context">The context data passed to each callback; may be <see langword="null" />.</param>
+        /// <param name="context">The context data passed to each callback; Must be non-NULL.</param>
         public static void From<T>(ref this ENetCompressor compressor, void* context) where T : IENetCompressor
         {
             compressor.context = context;

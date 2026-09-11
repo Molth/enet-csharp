@@ -14,8 +14,15 @@ This project eliminates that dependency while preserving full compatibility with
 
 ---
 
+## xENet
 [![NuGet](https://img.shields.io/nuget/v/xENet.svg?style=flat-square)](https://www.nuget.org/packages/xENet/)
 
 ---
 
+## yENet
 [![NuGet](https://img.shields.io/nuget/v/yENet.svg?style=flat-square)](https://www.nuget.org/packages/yENet/)
+
+---
+
+## zENet
+[![NuGet](https://img.shields.io/nuget/v/zENet.svg?style=flat-square)](https://www.nuget.org/packages/zENet/)

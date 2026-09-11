@@ -31,6 +31,11 @@ namespace ThreadedEnet
         [FieldOffset(0)] public EnetOutgoingCommandBroadcast Broadcast;
 
         /// <summary>
+        ///     The payload of an outgoing broadcast selected command.
+        /// </summary>
+        [FieldOffset(0)] public EnetOutgoingCommandBroadcastSelected BroadcastSelected;
+
+        /// <summary>
         ///     The payload of an outgoing ping command.
         /// </summary>
         [FieldOffset(0)] public EnetOutgoingCommandPing Ping;

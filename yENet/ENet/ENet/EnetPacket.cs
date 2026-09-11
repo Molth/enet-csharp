@@ -82,7 +82,7 @@ namespace Enet
         ///     Thrown if the instance is not created
         ///     (i.e., the underlying native handle is <see langword="null" />).
         /// </exception>
-        public void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
+        public readonly void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
 
         /// <summary>
         ///     internal use only
@@ -140,7 +140,7 @@ namespace Enet
         ///     has a non-null data pointer,
         ///     and that the data fits within the provided buffer.
         /// </remarks>
-        public bool TryCopyTo(void* destination, nuint byteCount)
+        public readonly bool TryCopyTo(void* destination, nuint byteCount)
         {
             var packet = _handle;
             if (packet == null || packet->data == null || packet->dataLength > byteCount)

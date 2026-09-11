@@ -143,9 +143,6 @@ namespace enet
                 case ENET_SOCKOPT_ERROR:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Error, optionValue);
                     break;
-                case ENET_SOCKOPT_NODELAY:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, optionValue);
-                    break;
                 case ENET_SOCKOPT_TTL:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, optionValue);
                     break;
@@ -184,7 +181,7 @@ namespace enet
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown when any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     Thrown when <paramref name="bufferCount" /> or any of the <paramref name="buffers" /> has a <c>dataLength</c>
         ///     greater than <see cref="int.MaxValue" />.
         /// </exception>
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
@@ -230,7 +227,7 @@ namespace enet
         ///     -2 when the receive was interrupted or truncated, -1 on failure.
         /// </returns>
         /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown when any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     Thrown when <paramref name="bufferCount" /> or any of the <paramref name="buffers" /> has a <c>dataLength</c>
         ///     greater than <see cref="int.MaxValue" />.
         /// </exception>
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
@@ -321,7 +318,7 @@ namespace enet
         /// <param name="address">The address to populate.</param>
         /// <param name="ipEndPoint">The endpoint containing the address and port.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => address->GetInner().FromIpEndPoint(ipEndPoint) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => address->FromIpEndPoint(ipEndPoint) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Populates an ENet address from an <see cref="IPAddress" /> and port.
@@ -330,7 +327,7 @@ namespace enet
         /// <param name="ipAddress">The IP address to set.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => address->GetInner().FromIpAddress(ipAddress, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => address->FromIpAddress(ipAddress, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Populates an ENet address by parsing an Ipv4 address string and port.
@@ -339,7 +336,7 @@ namespace enet
         /// <param name="ip">The Ipv4 address string.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->GetInner().SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Populates an ENet address by parsing an Ipv6 address string, port and scope.
@@ -349,7 +346,7 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="scopeId">The Ipv6 scope identifier.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => address->GetInner().SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => address->SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Populates an ENet address by resolving a host name to an Ipv4 address.
@@ -358,7 +355,7 @@ namespace enet
         /// <param name="hostName">The host name to resolve.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->GetInner().SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Populates an ENet address by resolving a host name to an Ipv6 address.
@@ -368,7 +365,7 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="scopeId">The Ipv6 scope identifier.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => address->GetInner().SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => address->SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Retrieves the IP address of an ENet address as a character span.
@@ -376,7 +373,7 @@ namespace enet
         /// <param name="address">The address to query.</param>
         /// <param name="ip">Receives the address characters.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetInner().GetIp(ref ip) == SocketError.Success ? 0 : -1;
+        public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetIp(ref ip) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Retrieves the host name (reverse DNS) of an ENet address.
@@ -384,6 +381,6 @@ namespace enet
         /// <param name="address">The address to query.</param>
         /// <param name="hostName">Receives the host name characters.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetInner().GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
+        public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
     }
 }

@@ -67,7 +67,9 @@ namespace ThreadedEnet
         /// </summary>
         public nuint MaxDuplicatePeers;
 
-        /// TODO
+        /// <summary>
+        ///     When non-zero, the host ignores incoming connection requests instead of accepting them.
+        /// </summary>
         public bool IgnoreConnectRequests;
 
         /// <summary>

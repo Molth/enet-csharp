@@ -28,6 +28,11 @@ namespace ThreadedEnet
         Broadcast,
 
         /// <summary>
+        ///     Requests broadcasting a packet to a selected set of peers.
+        /// </summary>
+        BroadcastSelected,
+
+        /// <summary>
         ///     Requests sending a ping packet to an address.
         /// </summary>
         Ping,

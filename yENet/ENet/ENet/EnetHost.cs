@@ -51,7 +51,7 @@ namespace Enet
         ///     Thrown if the instance is not created
         ///     (i.e., the underlying native handle is <see langword="null" />).
         /// </exception>
-        public void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
+        public readonly void Validate() => ThrowHelpers.ThrowIfNotCreated(IsCreated, ExceptionArgument._dummy);
 
         /// <summary>
         ///     Gets the underlying socket descriptor used by the host.
@@ -452,14 +452,14 @@ namespace Enet
         ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
         /// </summary>
         /// <param name="channelId">channel on which to broadcast</param>
-        /// <param name="incomingPeerIDs">
+        /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
         ///     selects the peer whose incoming peer identifier is <c>i</c>
         /// </param>
         /// <param name="packet">packet to broadcast</param>
         /// <remarks>
         ///     <para>
-        ///         Only peers that are both selected by <paramref name="incomingPeerIDs" /> and currently in the
+        ///         Only peers that are both selected by <paramref name="bitArray" /> and currently in the
         ///         connected state receive the packet. Bits beyond the host peer count are ignored.
         ///     </para>
         ///     <para>
@@ -468,9 +468,9 @@ namespace Enet
         ///     </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void BroadcastSelected(byte channelId, ReadOnlySpan<byte> incomingPeerIDs, ref EnetPacket packet)
+        public readonly void BroadcastSelected(byte channelId, ReadOnlySpan<byte> bitArray, ref EnetPacket packet)
         {
-            ENET_API.enet_host_broadcast_selected(_handle, channelId, incomingPeerIDs, packet.GetInner());
+            ENET_API.enet_host_broadcast_selected(_handle, channelId, bitArray, packet.GetInner());
             packet = default;
         }
 
@@ -486,7 +486,7 @@ namespace Enet
         ///     Sets the packet compressor the host should use to compress and decompress packets
         ///     using the static abstract compressor strategy <typeparamref name="T" />.
         /// </summary>
-        /// <param name="context">The compressor context data.</param>
+        /// <param name="context">The context data passed to each callback; Must be non-NULL.</param>
         /// <typeparam name="T">The compressor type implementing <see cref="IENetCompressor" />.</typeparam>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetCompressor<T>(void* context) where T : IENetCompressor

@@ -138,14 +138,14 @@ namespace enet
         /// </summary>
         /// <param name="host">host on which to broadcast the packet</param>
         /// <param name="channelID">channel on which to broadcast</param>
-        /// <param name="incomingPeerIDs">
+        /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
         ///     selects the peer whose incoming peer identifier is <c>i</c>
         /// </param>
         /// <param name="packet">packet to broadcast</param>
         /// <remarks>
         ///     <para>
-        ///         Only peers that are both selected by <paramref name="incomingPeerIDs" /> and currently in the
+        ///         Only peers that are both selected by <paramref name="bitArray" /> and currently in the
         ///         connected state receive the packet. Bits beyond <c>host->peerCount</c> are ignored.
         ///     </para>
         ///     <para>
@@ -153,13 +153,13 @@ namespace enet
         ///         connected (and thus the packet is never queued), the packet is destroyed.
         ///     </para>
         /// </remarks>
-        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> incomingPeerIDs, ENetPacket* packet)
+        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> bitArray, ENetPacket* packet)
         {
-            nuint peerCount = (nuint)ENET_MIN((uint)incomingPeerIDs.Length * 8, (uint)host->peerCount);
+            nuint peerCount = (nuint)ENET_MIN((uint)bitArray.Length * 8, (uint)host->peerCount);
 
             for (nuint incomingPeerID = 0; incomingPeerID < peerCount; ++incomingPeerID)
             {
-                if ((incomingPeerIDs[(int)(incomingPeerID >> 3)] & (1 << (int)(incomingPeerID & 7))) != 0)
+                if ((bitArray[(int)(incomingPeerID >> 3)] & (1 << (int)(incomingPeerID & 7))) != 0)
                 {
                     ENetPeer* currentPeer = &host->peers[incomingPeerID];
                     if (currentPeer->state != ENET_PEER_STATE_CONNECTED)

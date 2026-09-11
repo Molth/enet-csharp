@@ -133,6 +133,12 @@ namespace ThreadedEnet
                             host.Broadcast(broadcast.ChannelId, ref broadcast.Packet);
                             break;
 
+                        case EnetOutgoingEventType.BroadcastSelected:
+                            ref var broadcastSelected = ref outgoing.Command.BroadcastSelected;
+                            host.BroadcastSelected(broadcastSelected.ChannelId, broadcastSelected.BitArray, ref broadcastSelected.Packet);
+                            broadcastSelected.BitArray.Dispose();
+                            break;
+
                         case EnetOutgoingEventType.Ping:
                             ref var ping = ref outgoing.Command.Ping;
                             host.TryPing(ping.Address);
@@ -236,8 +242,24 @@ namespace ThreadedEnet
 
             while (states.OutgoingEvents.TryDequeue(out var outgoing))
             {
-                if (outgoing.Type == EnetOutgoingEventType.Send)
-                    outgoing.Command.Send.Packet.Dispose();
+                switch (outgoing.Type)
+                {
+                    case EnetOutgoingEventType.Send:
+                        ref var send = ref outgoing.Command.Send;
+                        send.Packet.Dispose();
+                        break;
+
+                    case EnetOutgoingEventType.Broadcast:
+                        ref var broadcast = ref outgoing.Command.Broadcast;
+                        broadcast.Packet.Dispose();
+                        break;
+
+                    case EnetOutgoingEventType.BroadcastSelected:
+                        ref var broadcastSelected = ref outgoing.Command.BroadcastSelected;
+                        broadcastSelected.BitArray.Dispose();
+                        broadcastSelected.Packet.Dispose();
+                        break;
+                }
             }
 
             states.OutgoingEvents.Dispose();
@@ -245,7 +267,10 @@ namespace ThreadedEnet
             while (states.IncomingEvents.TryDequeue(out var incoming))
             {
                 if (incoming.Type == EnetEventType.Receive)
-                    incoming.Command.Receive.Packet.Dispose();
+                {
+                    ref var receive = ref incoming.Command.Receive;
+                    receive.Packet.Dispose();
+                }
             }
 
             states.IncomingEvents.Dispose();

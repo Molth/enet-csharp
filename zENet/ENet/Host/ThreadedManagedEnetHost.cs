@@ -103,6 +103,7 @@ namespace ThreadedEnet
             }
 
             host.SetMaxDuplicatePeers(config.MaxDuplicatePeers);
+            host.SetIgnoreConnectRequests(config.IgnoreConnectRequests);
 
             states = new EnetHostStates();
             states.Host = host;
@@ -312,11 +313,46 @@ namespace ThreadedEnet
         }
 
         /// <summary>
-        ///     TODO
+        ///     Queues a packet to be sent to the selected peers identified by their incoming peer IDs.
+        ///     Ownership of <paramref name="packet" /> is transferred to the host: the reference is reset to the
+        ///     default value, and the caller must not use or dispose of the packet afterwards.
         /// </summary>
-        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> incomingPeerIDs, ref EnetPacket packet)
+        /// <param name="channelId">The channel on which to broadcast the packet.</param>
+        /// <param name="bitArray">
+        ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
+        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        /// </param>
+        /// <param name="packet">The packet to broadcast. The reference is reset to the default value on return.</param>
+        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> bitArray, ref EnetPacket packet)
         {
-            throw new NotImplementedException();
+            var internalPacket = packet;
+            packet = default;
+            var states = _states.Load(Ordering.Acquire);
+            if (states == null)
+            {
+                internalPacket.Dispose();
+                return;
+            }
+
+            var internalBitArray = new NativeArray<byte>(bitArray.Length);
+            bitArray.CopyTo(internalBitArray);
+
+            var outgoing = new EnetOutgoingEvent();
+            outgoing.Type = EnetOutgoingEventType.BroadcastSelected;
+            ref var broadcastSelected = ref outgoing.Command.BroadcastSelected;
+            broadcastSelected.ChannelId = channelId;
+            broadcastSelected.BitArray = internalBitArray;
+            broadcastSelected.Packet = internalPacket;
+
+            if (!EnetHostRunner.TryEnter(states))
+            {
+                internalBitArray.Dispose();
+                internalPacket.Dispose();
+                return;
+            }
+
+            states.OutgoingEvents.Enqueue(outgoing);
+            EnetHostRunner.Exit(states);
         }
 
         /// <summary>

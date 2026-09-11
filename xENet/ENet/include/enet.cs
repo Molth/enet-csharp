@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -170,11 +170,6 @@ namespace enet
         ENET_SOCKOPT_ERROR = 8,
 
         /// <summary>
-        ///     Disables the Nagle algorithm on the socket.
-        /// </summary>
-        ENET_SOCKOPT_NODELAY = 9,
-
-        /// <summary>
         ///     Sets the time to live of packets sent on the socket.
         /// </summary>
         ENET_SOCKOPT_TTL = 10,
@@ -183,27 +178,6 @@ namespace enet
         ///     Restricts the socket to Ipv6 only.
         /// </summary>
         ENET_SOCKOPT_IPV6_ONLY = 11
-    }
-
-    /// <summary>
-    ///     The shutdown directions that can be applied to a socket.
-    /// </summary>
-    public enum ENetSocketShutdown
-    {
-        /// <summary>
-        ///     Shut down reading from the socket.
-        /// </summary>
-        ENET_SOCKET_SHUTDOWN_READ = 0,
-
-        /// <summary>
-        ///     Shut down writing to the socket.
-        /// </summary>
-        ENET_SOCKET_SHUTDOWN_WRITE = 1,
-
-        /// <summary>
-        ///     Shut down both reading and writing to the socket.
-        /// </summary>
-        ENET_SOCKET_SHUTDOWN_READ_WRITE = 2
     }
 
     public static partial class ENet
@@ -218,9 +192,9 @@ namespace enet
         /// </summary>
         static ENet()
         {
-            ENET_HOST_ANY_V4.GetInner().FromIpAddress(IPAddress.Any, ENET_PORT_ANY);
-            ENET_HOST_ANY_V6.GetInner().FromIpAddress(IPAddress.IPv6Any, ENET_PORT_ANY);
-            ENET_HOST_BROADCAST.GetInner().FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
+            ENET_HOST_ANY_V4.FromIpAddress(IPAddress.Any, ENET_PORT_ANY);
+            ENET_HOST_ANY_V6.FromIpAddress(IPAddress.IPv6Any, ENET_PORT_ANY);
+            ENET_HOST_BROADCAST.FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
         }
 
         /// <summary>

@@ -445,7 +445,7 @@ namespace enet
         ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
         /// </summary>
         /// <param name="host">host on which to broadcast the packet</param>
-        /// <param name="incomingPeerIDs">
+        /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
         ///     selects the peer whose incoming peer identifier is <c>i</c>
         /// </param>
@@ -453,7 +453,7 @@ namespace enet
         /// <param name="packet">packet to broadcast</param>
         /// <remarks>
         ///     <para>
-        ///         Only peers that are both selected by <paramref name="incomingPeerIDs" /> and currently in the
+        ///         Only peers that are both selected by <paramref name="bitArray" /> and currently in the
         ///         connected state receive the packet. Bits beyond <c>host->peerCount</c> are ignored.
         ///     </para>
         ///     <para>
@@ -462,7 +462,7 @@ namespace enet
         ///     </para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> incomingPeerIDs, ENetPacket* packet) => ENet.enet_host_broadcast_selected(host, channelID, incomingPeerIDs, packet);
+        public static void enet_host_broadcast_selected(ENetHost* host, byte channelID, ReadOnlySpan<byte> bitArray, ENetPacket* packet) => ENet.enet_host_broadcast_selected(host, channelID, bitArray, packet);
 
         /// <summary>
         ///     Creates a host for communicating to peers.

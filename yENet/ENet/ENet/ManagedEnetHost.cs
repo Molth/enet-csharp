@@ -403,9 +403,9 @@ namespace Enet
         ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
         /// </summary>
         /// <param name="channelId">channel on which to broadcast</param>
-        /// <param name="incomingPeerIDs">a bit array selecting the peers to receive the packet</param>
+        /// <param name="bitArray">a bit array selecting the peers to receive the packet</param>
         /// <param name="packet">packet to broadcast</param>
-        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> incomingPeerIDs, ref EnetPacket packet) => _handle.BroadcastSelected(channelId, incomingPeerIDs, ref packet);
+        public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> bitArray, ref EnetPacket packet) => _handle.BroadcastSelected(channelId, bitArray, ref packet);
 
         /// <summary>
         ///     Sets the packet compressor the host should use to compress and decompress packets.

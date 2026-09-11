@@ -9,10 +9,10 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>yENet</PackageId>
-        <Version>1.0.7</Version>
+        <Version>1.0.8</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
-        <Description>ENet reliable UDP networking library</Description>
+        <Description>ENet reliable UDP networking library with no binary dependencies.</Description>
         <PackageProjectUrl>https://github.com/Molth/enet-csharp</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>enet;udp;performance;networking</PackageTags>
@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="xENet" Version="1.0.9" />
+        <PackageReference Include="xENet" Version="1.1.3" />
     </ItemGroup>
 
     <ItemGroup>

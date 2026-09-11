@@ -12,7 +12,7 @@
         <Version>1.0.2</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
-        <Description>ENet reliable UDP networking library</Description>
+        <Description>ENet reliable UDP networking library with no binary dependencies.</Description>
         <PackageProjectUrl>https://github.com/Molth/enet-csharp</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>enet;udp;performance;networking</PackageTags>
@@ -34,7 +34,7 @@
 
     <ItemGroup>
         <PackageReference Include="NativeCollections" Version="1.7.3" />
-        <PackageReference Include="yENet" Version="1.0.6" />
+        <PackageReference Include="yENet" Version="1.0.7" />
     </ItemGroup>
 
     <ItemGroup>
