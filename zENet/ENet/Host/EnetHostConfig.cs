@@ -73,6 +73,21 @@ namespace ThreadedEnet
         public bool IgnoreConnectRequests;
 
         /// <summary>
+        ///     Gets the maximum transmission unit (MTU) used by the host.
+        /// </summary>
+        public uint Mtu;
+
+        /// <summary>
+        ///     Gets the maximum packet size allowed by the host.
+        /// </summary>
+        public nuint MaximumPacketSize;
+
+        /// <summary>
+        ///     Gets the maximum amount of waiting data allowed by the host.
+        /// </summary>
+        public nuint MaximumWaitingData;
+
+        /// <summary>
         ///     The maximum time in milliseconds the background thread waits for network events during each service pass.
         /// </summary>
         public uint ServiceTimeout;

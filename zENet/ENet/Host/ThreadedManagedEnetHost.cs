@@ -104,6 +104,9 @@ namespace ThreadedEnet
 
             host.SetMaxDuplicatePeers(config.MaxDuplicatePeers);
             host.SetIgnoreConnectRequests(config.IgnoreConnectRequests);
+            host.SetMtu(config.Mtu);
+            host.SetMaximumPacketSize(config.MaximumPacketSize);
+            host.SetMaximumWaitingData(config.MaximumWaitingData);
 
             states = new EnetHostStates();
             states.Host = host;

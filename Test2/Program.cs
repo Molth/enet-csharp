@@ -25,18 +25,23 @@ namespace Test2
 
         private static void StartServer()
         {
+            const int timeout = 15;
+            const int maxClients = 10;
+
             var address = new ENetAddress();
             address.FromIpAddress(IPAddress.IPv6Any, 12345);
 
-            using (var host = ManagedEnetHost.Create(address, 100, 0, 0, 0, EnetHostOption.Ipv6DualMode))
+            using (var host = ManagedEnetHost.Create(address, maxClients, 0, 0, 0, EnetHostOption.Ipv6DualMode))
             {
                 host.TrySetCompressorWithRangeCoder();
                 host.SetChecksumCallbackWithCrc32();
 
                 while (!Console.KeyAvailable)
                 {
-                    if (host.Service(15, out var @event) > 0)
+                    // TODO: service first
+                    if (host.Service(timeout, out var @event) > 0)
                     {
+                        // TODO: use loop
                         while (true)
                         {
                             var peer = @event.Peer;
@@ -45,7 +50,7 @@ namespace Test2
                             {
                                 case EnetEventType.Connect:
                                     peer.Address.ToIpEndPoint(out ipEndPoint);
-                                    Console.WriteLine("[Server] connected - Id: " + peer.IncomingPeerId + ", Address: " + ipEndPoint);
+                                    Console.WriteLine($"[Server] connected - IncomingPeerId: {peer.IncomingPeerId}, Address: {ipEndPoint}");
 
                                     peer.SetTimeout(0, 100_000, 1_000_000);
 
@@ -53,20 +58,19 @@ namespace Test2
 
                                 case EnetEventType.Disconnect:
                                     peer.Address.ToIpEndPoint(out ipEndPoint);
-                                    Console.WriteLine("[Server] disconnected - Id: " + peer.IncomingPeerId + ", Address: " + ipEndPoint);
+                                    Console.WriteLine($"[Server] disconnected - IncomingPeerId: {peer.IncomingPeerId}, Address: {ipEndPoint}");
                                     break;
 
                                 case EnetEventType.Receive:
-                                    peer.Address.ToIpEndPoint(out ipEndPoint);
                                     var packet = @event.Packet;
-                                    Console.WriteLine("[Server] received from - Id: " + peer.IncomingPeerId + ", Address: " + ipEndPoint + ", Channel Id: " + @event.ChannelId + ", Data length: " + packet.DataLength);
+                                    Console.WriteLine($"[Server] received from - IncomingPeerId: {peer.IncomingPeerId}");
                                     var text = Encoding.UTF8.GetString(packet.AsSpan());
-                                    Console.WriteLine($"[Server] {text}");
+                                    Console.WriteLine($"[Server received] {text}");
+                                    Console.WriteLine();
                                     packet.Dispose();
 
-                                    Console.WriteLine();
                                     Thread.Sleep(1000);
-                                    var reply = text + " " + "Hello client!";
+                                    var reply = $"{text} Hello!";
                                     packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
                                     if (!peer.TrySend(0, ref packet))
                                         packet.Dispose();
@@ -84,6 +88,9 @@ namespace Test2
 
         private static void StartClient()
         {
+            const int timeout = 15;
+            const int maxClients = 1;
+
             var address = new ENetAddress();
             address.FromIpAddress(IPAddress.Any, 0);
 
@@ -92,7 +99,7 @@ namespace Test2
 
             var ip = new char[256];
 
-            using (var host = ManagedEnetHost.Create(address, 1, 0, 0, 0, EnetHostOption.Ipv4))
+            using (var host = ManagedEnetHost.Create(address, maxClients, 0, 0, 0, EnetHostOption.Ipv4))
             {
                 host.TrySetCompressorWithRangeCoder();
                 host.SetChecksumCallbackWithCrc32();
@@ -101,9 +108,11 @@ namespace Test2
 
                 while (!Console.KeyAvailable)
                 {
-                    if (host.Service(15, out var @event) > 0)
+                    // TODO: service first
+                    if (host.Service(timeout, out var @event) > 0)
                     {
-                        while (true)
+                        // TODO: use do-while
+                        do
                         {
                             var peer = @event.Peer;
                             EnetPacket packet;
@@ -113,7 +122,7 @@ namespace Test2
                                     var span = ip.AsSpan();
                                     peer.Address.GetIp(ref span);
 
-                                    Console.WriteLine($"[Client] connected. {span}:{peer.Address.Port}");
+                                    Console.WriteLine("[Client] connected.");
 
                                     packet = EnetPacket.Create("Hello server!"u8, EnetPacketFlag.Reliable);
                                     if (!peer.TrySend(0, ref packet))
@@ -127,23 +136,21 @@ namespace Test2
 
                                 case EnetEventType.Receive:
                                     packet = @event.Packet;
-                                    Console.WriteLine("[Client] received - ChannelId: " + @event.ChannelId + ", Data length: " + packet.DataLength);
+
                                     var text = Encoding.UTF8.GetString(packet.AsSpan());
-                                    Console.WriteLine($"[Client] {text}");
+                                    Console.WriteLine($"[Client received] {text}");
+                                    Console.WriteLine();
                                     packet.Dispose();
 
-                                    Console.WriteLine();
                                     Thread.Sleep(1500);
-                                    var reply = text + " " + "Hello server!";
+                                    var reply = $"{text} again!";
                                     packet = EnetPacket.Create(Encoding.UTF8.GetBytes(reply), EnetPacketFlag.Reliable);
                                     if (!peer.TrySend(0, ref packet))
                                         packet.Dispose();
+
                                     break;
                             }
-
-                            if (host.CheckEvents(out @event) <= 0)
-                                break;
-                        }
+                        } while (host.CheckEvents(out @event) > 0);
                     }
                 }
             }

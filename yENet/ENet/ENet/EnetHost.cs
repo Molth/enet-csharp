@@ -201,7 +201,7 @@ namespace Enet
         /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
         /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly int SetMtu(uint mtu) => ENET_API.enet_host_mtu(_handle, mtu);
+        public readonly bool SetMtu(uint mtu) => ENET_API.enet_host_mtu(_handle, mtu) == 0;
 
         /// <summary>
         ///     Attempts to retrieve a peer by its incoming peer identifier.

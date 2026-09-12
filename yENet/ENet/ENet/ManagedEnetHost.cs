@@ -216,7 +216,7 @@ namespace Enet
         /// </summary>
         /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
         /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
-        public int SetMtu(uint mtu) => _handle.SetMtu(mtu);
+        public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
         /// <summary>
         ///     Attempts to retrieve a peer by its incoming peer identifier.
