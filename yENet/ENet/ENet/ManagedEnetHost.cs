@@ -134,9 +134,9 @@ namespace Enet
         public nuint BandwidthLimitedPeers => _handle.BandwidthLimitedPeers;
 
         /// <summary>
-        ///     Gets the number of duplicate peers currently tracked by the host.
+        ///     Number of allowed peers from duplicate IPs.
         /// </summary>
-        public nuint DuplicatePeers => _handle.DuplicatePeers;
+        public nuint MaximumDuplicatePeers => _handle.MaximumDuplicatePeers;
 
         /// <summary>
         ///     Gets the maximum packet size allowed by the host.
@@ -214,7 +214,7 @@ namespace Enet
         /// <summary>
         ///     Sets the MTU of the host.
         /// </summary>
-        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
+        /// <param name="mtu">The MTU to set, in bytes. if 0, the default is used.</param>
         /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
         public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
@@ -289,13 +289,10 @@ namespace Enet
 #endif
 
         /// <summary>
-        ///     Sets the maximum number of duplicate peers that the host will track.
+        ///     Sets the maximum number of allowed peers from duplicate IPs.
         /// </summary>
-        /// <param name="duplicatePeers">
-        ///     The maximum number of duplicate peers to maintain. A value of <c>0</c> may indicate no explicit limit,
-        ///     causing the host to use its internal default.
-        /// </param>
-        public void SetMaxDuplicatePeers(nuint duplicatePeers) => _handle.SetMaxDuplicatePeers(duplicatePeers);
+        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        public void SetMaximumDuplicatePeers(nuint duplicatePeers) => _handle.SetMaximumDuplicatePeers(duplicatePeers);
 
         /// <summary>
         ///     Sets the maximum allowable packet size that may be sent or received on a peer.
