@@ -137,19 +137,12 @@ namespace enet
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
                 case ENET_SOCKOPT_SNDTIMEO:
-                    if (IsLinux())
+                    if (!IsWindows())
                     {
-                        byte* ov = stackalloc byte[2 * sizeof(nint)];
-                        Unsafe.WriteUnaligned(ov, (nint)(value / 1000));
-                        Unsafe.WriteUnaligned(ov + sizeof(nint), (nint)(value % 1000 * 1000));
-                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(ov), 2 * sizeof(nint));
-                    }
-                    else if (!IsWindows())
-                    {
-                        byte* ov = stackalloc byte[sizeof(nint) + sizeof(int)];
-                        Unsafe.WriteUnaligned(ov, (nint)(value / 1000));
-                        Unsafe.WriteUnaligned(ov + sizeof(nint), value % 1000 * 1000);
-                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(ov), sizeof(nint) + sizeof(int));
+                        nint* timeval = stackalloc nint[2];
+                        timeval[0] = value / 1000;
+                        timeval[1] = value % 1000 * 1000;
+                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(timeval), 2 * sizeof(nint));
                     }
 
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, option == ENET_SOCKOPT_RCVTIMEO ? SocketOptionName.ReceiveTimeout : SocketOptionName.SendTimeout, optionValue);
@@ -166,13 +159,6 @@ namespace enet
             }
 
             return result == 0 ? 0 : -1;
-
-            static bool IsLinux() =>
-#if NET5_0_OR_GREATER
-                OperatingSystem.IsLinux();
-#else
-                RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-#endif
 
             static bool IsWindows() =>
 #if NET5_0_OR_GREATER

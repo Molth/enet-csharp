@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>xENet</PackageId>
-        <Version>1.1.4</Version>
+        <Version>1.1.5</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library with no binary dependencies.</Description>

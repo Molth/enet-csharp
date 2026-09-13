@@ -9,6 +9,7 @@ namespace enet
     /// <summary>
     ///     ENet reliable UDP networking library
     /// </summary>
+    /// <remarks>生きていたいと</remarks>
     public static unsafe class ENET_API
     {
         /// <summary>

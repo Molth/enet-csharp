@@ -73,7 +73,7 @@ namespace enet
     /// <summary>
     ///     Represents a native socket handle with its associated address family.
     /// </summary>
-    public readonly struct ENetSocket
+    public readonly struct ENetSocket : IEquatable<ENetSocket>, IComparable<ENetSocket>
     {
         /// <summary>
         ///     Gets the handle to the underlying object.
@@ -114,6 +114,59 @@ namespace enet
         /// <returns>The native socket handle.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator nint(ENetSocket socket) => socket.Handle;
+
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
+        public bool Equals(ENetSocket other) => _handle.Equals(other._handle);
+
+        /// <summary>
+        ///     Compares the current instance with another object of the same type and returns an integer that indicates
+        ///     whether the current instance precedes, follows, or occurs in the same position in the sort order as the other
+        ///     object.
+        /// </summary>
+        /// <param name="other">An object to compare with this instance.</param>
+        /// <returns>
+        ///     A value that indicates the relative order of the objects being compared. The return value has these meanings:
+        ///     <list type="table">
+        ///         <listheader>
+        ///             <term> Value</term><description> Meaning</description>
+        ///         </listheader>
+        ///         <item>
+        ///             <term> Less than zero</term>
+        ///             <description> This instance precedes <paramref name="other" /> in the sort order.</description>
+        ///         </item>
+        ///         <item>
+        ///             <term> Zero</term>
+        ///             <description> This instance occurs in the same position in the sort order as <paramref name="other" />.</description>
+        ///         </item>
+        ///         <item>
+        ///             <term> Greater than zero</term>
+        ///             <description> This instance follows <paramref name="other" /> in the sort order.</description>
+        ///         </item>
+        ///     </list>
+        /// </returns>
+        public int CompareTo(ENetSocket other) => _handle.CompareTo(other._handle);
+
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
+        public override bool Equals(object? obj) => obj is ENetSocket other && other.Equals(this);
+
+        /// <summary>
+        ///     Returns the hash code for this instance.
+        /// </summary>
+        public override int GetHashCode() => _handle.GetHashCode();
+
+        /// <summary>
+        ///     Indicates whether the current object is equal to another object.
+        /// </summary>
+        public static bool operator ==(ENetSocket left, ENetSocket right) => left.Equals(right);
+
+        /// <summary>
+        ///     Indicates whether the current object is not equal to another object.
+        /// </summary>
+        public static bool operator !=(ENetSocket left, ENetSocket right) => !left.Equals(right);
 
         /// <summary>
         ///     Gets the handle to the underlying object.

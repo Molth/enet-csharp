@@ -1780,9 +1780,9 @@ namespace enet
         /// <summary>
         ///     Gets a pointer to the payload buffer at the specified index.
         /// </summary>
-        /// <param name="i">The zero based index of the buffer.</param>
+        /// <param name="index">The zero based index of the buffer.</param>
         /// <returns>A pointer to the start of the payload buffer.</returns>
-        public byte* this[int i] => (byte*)Unsafe.AsPointer(ref Unsafe.Add(ref _element0, i));
+        public byte* this[int index] => (byte*)Unsafe.AsPointer(ref Unsafe.Add(ref _element0, index));
     }
 
     /// <summary>
