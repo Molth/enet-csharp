@@ -93,7 +93,8 @@ namespace enet
                     socket.Dispose();
                     goto error;
                 }
-                else if (option == ENET_HOSTOPT_IPV6_DUALMODE && socket.SetDualMode(true) != SocketError.Success)
+
+                if (option == ENET_HOSTOPT_IPV6_DUALMODE && socket.SetDualMode(true) != SocketError.Success)
                 {
                     socket.Dispose();
                     goto error;
@@ -120,7 +121,7 @@ namespace enet
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
-                    result = enet_socket_set_nonblocking(socket, value);
+                    result = (int)socket.GetInner().SetBlocking(value == 0);
                     break;
                 case ENET_SOCKOPT_BROADCAST:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, optionValue);
@@ -135,10 +136,23 @@ namespace enet
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, optionValue);
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, optionValue);
-                    break;
                 case ENET_SOCKOPT_SNDTIMEO:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, optionValue);
+                    if (IsLinux())
+                    {
+                        byte* ov = stackalloc byte[2 * sizeof(nint)];
+                        Unsafe.WriteUnaligned(ov, (nint)(value / 1000));
+                        Unsafe.WriteUnaligned(ov + sizeof(nint), (nint)(value % 1000 * 1000));
+                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(ov), 2 * sizeof(nint));
+                    }
+                    else if (!IsWindows())
+                    {
+                        byte* ov = stackalloc byte[sizeof(nint) + sizeof(int)];
+                        Unsafe.WriteUnaligned(ov, (nint)(value / 1000));
+                        Unsafe.WriteUnaligned(ov + sizeof(nint), value % 1000 * 1000);
+                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(ov), sizeof(nint) + sizeof(int));
+                    }
+
+                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, option == ENET_SOCKOPT_RCVTIMEO ? SocketOptionName.ReceiveTimeout : SocketOptionName.SendTimeout, optionValue);
                     break;
                 case ENET_SOCKOPT_ERROR:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Error, optionValue);
@@ -152,15 +166,21 @@ namespace enet
             }
 
             return result == 0 ? 0 : -1;
-        }
 
-        /// <summary>
-        ///     Sets the socket to blocking or non-blocking mode.
-        /// </summary>
-        /// <param name="socket">The socket to configure.</param>
-        /// <param name="nonBlocking">Non-zero to enable non-blocking mode.</param>
-        /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
-        public static int enet_socket_set_nonblocking(ENetSocket socket, int nonBlocking) => (int)socket.GetInner().SetBlocking(nonBlocking == 0);
+            static bool IsLinux() =>
+#if NET5_0_OR_GREATER
+                OperatingSystem.IsLinux();
+#else
+                RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+#endif
+
+            static bool IsWindows() =>
+#if NET5_0_OR_GREATER
+                OperatingSystem.IsWindows();
+#else
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+        }
 
         /// <summary>
         ///     Closes and invalidates the given socket.
@@ -196,7 +216,7 @@ namespace enet
                 for (int i = 0; i < (int)bufferCount; ++i)
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
 
-                num = socket.GetInner().SendToVectored(__buffers, address->GetInner());
+                num = address != null ? socket.GetInner().SendToVectored(__buffers, address->GetInner()) : socket.GetInner().SendVectored(__buffers);
             }
             finally
             {
@@ -243,7 +263,7 @@ namespace enet
                 for (int i = 0; i < (int)bufferCount; ++i)
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
 
-                num = socket.GetInner().ReceiveFromVectored(__buffers, ref flags, ref address->GetInner());
+                num = address != null ? socket.GetInner().ReceiveFromVectored(__buffers, ref flags, ref address->GetInner()) : socket.GetInner().ReceiveVectored(__buffers, ref flags);
             }
             finally
             {
