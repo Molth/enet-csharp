@@ -41,9 +41,10 @@ namespace Test3
             const int interval = 15;
 
             var config = new ThreadedEnetHostConfig();
-            config.LocalAddress.FromIpAddress(IPAddress.IPv6Any, 12345);
-            config.PeerCount = 100;
-            config.Option = EnetHostOption.Ipv6DualMode;
+            ref var innerConfig = ref config.InnerConfig;
+            innerConfig.LocalAddress.FromIpAddress(IPAddress.IPv6Any, 12345);
+            innerConfig.PeerCount = 100;
+            innerConfig.Option = EnetHostOption.Ipv6DualMode;
             config.ServiceTimeout = 0;
 
             using (var server = new ThreadedManagedEnetHost())
@@ -92,9 +93,10 @@ namespace Test3
             const int interval = 15;
 
             var config = new ThreadedEnetHostConfig();
-            config.LocalAddress.FromIpAddress(IPAddress.Any, 0);
-            config.PeerCount = 1;
-            config.Option = EnetHostOption.Ipv4;
+            ref var innerConfig = ref config.InnerConfig;
+            innerConfig.LocalAddress.FromIpAddress(IPAddress.Any, 0);
+            innerConfig.PeerCount = 1;
+            innerConfig.Option = EnetHostOption.Ipv4;
             config.ServiceTimeout = 0;
 
             var serverAddress = new ENetAddress();

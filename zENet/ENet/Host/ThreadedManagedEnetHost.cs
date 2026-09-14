@@ -94,19 +94,21 @@ namespace ThreadedEnet
             if (states != null)
                 ThrowHelpers.ThrowHostAlreadyStartedException();
 
-            var host = ManagedEnetHost.Create(config.LocalAddress, config.PeerCount, config.ChannelLimit, config.IncomingBandwidth, config.OutgoingBandwidth, config.Option);
-            host.SetCompressor(config.Compressor);
+            ref readonly var innerConfig = ref config.InnerConfig;
+            ref readonly var additionalConfig = ref config.AdditionalConfig;
+            var host = ManagedEnetHost.Create(innerConfig.LocalAddress, innerConfig.PeerCount, innerConfig.ChannelLimit, innerConfig.IncomingBandwidth, innerConfig.OutgoingBandwidth, innerConfig.Option);
+            host.SetCompressor(additionalConfig.Compressor);
             unsafe
             {
-                host.SetChecksumCallback(config.ChecksumCallback);
-                host.SetInterceptCallback(config.InterceptCallback);
+                host.SetChecksumCallback(additionalConfig.ChecksumCallback);
+                host.SetInterceptCallback(additionalConfig.InterceptCallback);
             }
 
-            host.SetIgnoreConnectRequests(config.IgnoreConnectRequests);
-            host.SetMtu(config.Mtu);
-            host.SetMaximumDuplicatePeers(config.MaximumDuplicatePeers);
-            host.SetMaximumPacketSize(config.MaximumPacketSize);
-            host.SetMaximumWaitingData(config.MaximumWaitingData);
+            host.SetIgnoreConnectRequests(additionalConfig.IgnoreConnectRequests);
+            host.SetMtu(additionalConfig.Mtu);
+            host.SetMaximumDuplicatePeers(additionalConfig.MaximumDuplicatePeers);
+            host.SetMaximumPacketSize(additionalConfig.MaximumPacketSize);
+            host.SetMaximumWaitingData(additionalConfig.MaximumWaitingData);
 
             states = new ThreadedManagedEnetHostStates();
             states.Host = host;

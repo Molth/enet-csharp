@@ -34,7 +34,7 @@
 
     <ItemGroup>
         <PackageReference Include="NativeCollections" Version="1.7.3" />
-        <PackageReference Include="yENet" Version="1.1.3" />
+        <PackageReference Include="yENet" Version="1.1.5" />
     </ItemGroup>
 
     <ItemGroup>

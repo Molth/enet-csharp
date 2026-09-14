@@ -1,4 +1,3 @@
-using enet;
 using Enet;
 
 // ReSharper disable ALL
@@ -11,81 +10,14 @@ namespace ThreadedEnet
     public struct ThreadedEnetHostConfig
     {
         /// <summary>
-        ///     The local address to bind the host socket to.
+        ///     The base configuration used to create the underlying <see cref="EnetHost" />.
         /// </summary>
-        public ENetAddress LocalAddress;
+        public EnetHostConfig InnerConfig;
 
         /// <summary>
-        ///     The maximum number of peers that can be connected to the host simultaneously.
+        ///     The additional configuration applied to the underlying host after it is created.
         /// </summary>
-        public nuint PeerCount;
-
-        /// <summary>
-        ///     The maximum number of channels allowed per peer;
-        ///     zero uses <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />.
-        /// </summary>
-        public nuint ChannelLimit;
-
-        /// <summary>
-        ///     The downstream bandwidth limit in bytes per second;
-        ///     zero means unlimited.
-        /// </summary>
-        public uint IncomingBandwidth;
-
-        /// <summary>
-        ///     The upstream bandwidth limit in bytes per second;
-        ///     zero means unlimited.
-        /// </summary>
-        public uint OutgoingBandwidth;
-
-        /// <summary>
-        ///     The IP addressing mode to use (Ipv4, Ipv6-only, or Ipv6 dual-stack).
-        /// </summary>
-        public EnetHostOption Option;
-
-        /// <summary>
-        ///     The packet compressor callbacks used to compress and decompress packets;
-        ///     the default disables compression.
-        /// </summary>
-        public ENetCompressor Compressor;
-
-        /// <summary>
-        ///     A callback used to compute packet checksums,
-        ///     or <see langword="null" /> to use the default checksum behavior.
-        /// </summary>
-        public unsafe delegate* managed<ENetBuffer*, nuint, uint> ChecksumCallback;
-
-        /// <summary>
-        ///     A callback invoked to intercept incoming events before they are processed,
-        ///     or <see langword="null" /> to disable interception.
-        /// </summary>
-        public unsafe delegate* managed<ENetHost*, ENetEvent*, int> InterceptCallback;
-
-        /// <summary>
-        ///     When non-zero, the host ignores incoming connection requests instead of accepting them.
-        /// </summary>
-        public bool IgnoreConnectRequests;
-
-        /// <summary>
-        ///     Gets the maximum transmission unit (MTU) used by the host.
-        /// </summary>
-        public uint Mtu;
-
-        /// <summary>
-        ///     Number of allowed peers from duplicate IPs.
-        ///     zero uses <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" />.
-        /// </summary>
-        public nuint MaximumDuplicatePeers;
-
-        /// <summary>
-        ///     Gets the maximum packet size allowed by the host.
-        /// </summary>
-        public nuint MaximumPacketSize;
-
-        /// <summary>
-        ///     Gets the maximum amount of waiting data allowed by the host.
-        /// </summary>
-        public nuint MaximumWaitingData;
+        public EnetHostAdditionalConfig AdditionalConfig;
 
         /// <summary>
         ///     The maximum time in milliseconds the background thread waits for network events during each service pass.

@@ -67,9 +67,10 @@ namespace ThreadedEnet
 
             var host = states.Host;
             ref readonly var config = ref states.Config;
+            ref readonly var innerConfig = ref config.InnerConfig;
 
-            var uids = new NativeArray<EnetUid>((int)config.PeerCount);
-            for (var i = 0; i < (int)config.PeerCount; ++i)
+            var uids = new NativeArray<EnetUid>((int)innerConfig.PeerCount);
+            for (var i = 0; i < (int)innerConfig.PeerCount; ++i)
             {
                 ref var uid = ref uids[i];
                 uid = new EnetUid((ulong)i);
@@ -232,7 +233,7 @@ namespace ThreadedEnet
 
             host.Flush();
 
-            for (nuint i = 0; i < config.PeerCount; ++i)
+            for (nuint i = 0; i < innerConfig.PeerCount; ++i)
             {
                 host.TryGetPeer((ushort)i, out peer);
                 peer.DisconnectNow(states.ShutdownEventData);
