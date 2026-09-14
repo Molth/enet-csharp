@@ -5,8 +5,7 @@ using enet;
 namespace Enet
 {
     /// <summary>
-    ///     Represents the possible states of a peer in the ENet library.
-    ///     These states reflect the lifecycle of a connection.
+    ///     The connection states a peer can occupy.
     /// </summary>
     public enum EnetPeerState
     {

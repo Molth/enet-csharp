@@ -4,8 +4,6 @@ using System.Runtime.CompilerServices;
 using enet;
 using NativeSockets;
 
-// ReSharper disable ALL
-
 namespace Enet
 {
     /// <summary>
@@ -154,7 +152,7 @@ namespace Enet
         public readonly nuint BandwidthLimitedPeers => _handle->bandwidthLimitedPeers;
 
         /// <summary>
-        ///     Number of allowed peers from duplicate IPs.
+        ///     Gets the number of allowed peers from duplicate IPs.
         /// </summary>
         public readonly nuint MaximumDuplicatePeers => _handle->duplicatePeers;
 
@@ -192,14 +190,18 @@ namespace Enet
         ///     <see langword="true" /> to ignore incoming connection requests,
         ///     or <see langword="false" /> to accept them.
         /// </param>
+        /// <remarks>
+        ///     Set to <see langword="true" /> when the host should not be connectable, which is typically used on clients.
+        ///     Note that this does not prevent connections whose handshake has already begun.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetIgnoreConnectRequests(bool ignoreConnectRequests) => ENET_API.enet_host_ignore_connect_requests(_handle, ignoreConnectRequests ? 1 : 0);
 
         /// <summary>
         ///     Sets the MTU of the host.
         /// </summary>
-        /// <param name="mtu">The MTU to set, in bytes. if 0, the default is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        /// <param name="mtu">The MTU to set, in bytes. if 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool SetMtu(uint mtu) => ENET_API.enet_host_mtu(_handle, mtu) == 0;
 
@@ -219,7 +221,8 @@ namespace Enet
         ///     <para>
         ///         The <paramref name="incomingPeerId" /> corresponds to a fixed slot in the host's internal peers array,
         ///         which is allocated at host creation time based on the <c>peerCount</c> parameter passed to
-        ///         <see cref="Create" />. The ID is not assigned dynamically during connection; it is the index into
+        ///         <see cref="ENET_API.enet_host_create" />.
+        /// The ID is not assigned dynamically during connection; it is the index into
         ///         that pre-allocated array and remains constant for the lifetime of the host.
         ///     </para>
         ///     <para>
@@ -293,21 +296,30 @@ namespace Enet
         /// <summary>
         ///     Sets the maximum number of allowed peers from duplicate IPs.
         /// </summary>
-        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        /// <param name="duplicatePeers">
+        ///     The maximum number of duplicate peers to maintain. if 0,
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetMaximumDuplicatePeers(nuint duplicatePeers) => ENET_API.enet_host_duplicate_peers(_handle, duplicatePeers);
 
         /// <summary>
         ///     Sets the maximum allowable packet size that may be sent or received on a peer.
         /// </summary>
-        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        /// <param name="maximumPacketSize">
+        ///     The maximum allowable packet size; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetMaximumPacketSize(nuint maximumPacketSize) => ENET_API.enet_host_maximum_packet_size(_handle, maximumPacketSize);
 
         /// <summary>
         ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
         /// </summary>
-        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        /// <param name="maximumWaitingData">
+        ///     The maximum aggregate waiting data; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetMaximumWaitingData(nuint maximumWaitingData) => ENET_API.enet_host_maximum_waiting_data(_handle, maximumWaitingData);
 
@@ -323,8 +335,9 @@ namespace Enet
         ///     otherwise, <see langword="false" />.
         /// </returns>
         /// <remarks>
-        ///     The peer returned will have not completed the connection until enet_host_service()
-        ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
+        ///     The peer returned will have not completed the connection until
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" />
+        ///     notifies of an <see cref="EnetEventType.Connect" /> event for the peer.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool TryConnect(ENetAddress address, nuint channelCount, uint data, out EnetPeer peer)
@@ -395,7 +408,8 @@ namespace Enet
         ///     </list>
         /// </returns>
         /// <remarks>
-        ///     enet_host_service should be called fairly regularly for adequate performance
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" /> should be called fairly regularly for
+        ///     adequate performance
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly int Service(uint timeout, out EnetEvent @event)
@@ -417,7 +431,7 @@ namespace Enet
         /// </summary>
         /// <remarks>
         ///     This function need only be used in circumstances where one wishes to send queued packets earlier than in a call to
-        ///     enet_host_service().
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" />.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void Flush() => ENET_API.enet_host_flush(_handle);
@@ -537,7 +551,7 @@ namespace Enet
         ///     channel
         ///     limit, bandwidth, and IP option.
         /// </summary>
-        /// <param name="address">
+        /// <param name="localAddress">
         ///     The address to bind the host to.
         /// </param>
         /// <param name="peerCount">
@@ -545,7 +559,7 @@ namespace Enet
         /// </param>
         /// <param name="channelLimit">
         ///     The maximum number of channels allowed per peer. Pass <c>0</c> to use the default limit (
-        ///     <c>ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT</c>).
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />).
         /// </param>
         /// <param name="incomingBandwidth">
         ///     The downstream bandwidth limit in bytes per second. Pass <c>0</c> for unlimited bandwidth.
@@ -558,9 +572,9 @@ namespace Enet
         /// </param>
         /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
         /// <exception cref="SocketException">Thrown when host creation fails.</exception>
-        public static EnetHost Create(ENetAddress address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, EnetHostOption option)
+        public static EnetHost Create(ENetAddress localAddress, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, EnetHostOption option)
         {
-            var handle = ENET_API.enet_host_create(&address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, (ENetHostOption)option);
+            var handle = ENET_API.enet_host_create(&localAddress, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, (ENetHostOption)option);
             if (handle == null)
             {
                 if ((int)option < (int)EnetHostOption.Ipv4 || (int)option > (int)EnetHostOption.Ipv6DualMode)
@@ -569,11 +583,29 @@ namespace Enet
                 if (peerCount > ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID)
                     ThrowHelpers.ThrowArgumentExceptionException(ExceptionArgument.peerCount);
 
+                switch (option)
+                {
+                    case EnetHostOption.Ipv4 when !localAddress.IsIpv4:
+                    case EnetHostOption.Ipv6Only or EnetHostOption.Ipv6DualMode when !localAddress.IsIpv6:
+                        ThrowHelpers.ThrowArgumentExceptionException(ExceptionArgument.address);
+                        break;
+                }
+
                 ThrowHelpers.ThrowSocketException(NativeSocketPal.GetLastSocketError());
                 return default;
             }
 
             return new EnetHost(handle);
         }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="EnetHost" /> class from the specified
+        ///     <see cref="EnetHostConfig" />.
+        /// </summary>
+        /// <param name="config">The configuration parameters used to create the host.</param>
+        /// <returns>The created <see cref="EnetHost" />.</returns>
+        /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
+        /// <exception cref="SocketException">Thrown when host creation fails.</exception>
+        public static EnetHost Create(EnetHostConfig config) => Create(config.LocalAddress, config.PeerCount, config.ChannelLimit, config.IncomingBandwidth, config.OutgoingBandwidth, config.Option);
     }
 }

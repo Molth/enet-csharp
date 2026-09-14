@@ -62,7 +62,7 @@ namespace ThreadedEnet
         /// <summary>
         ///     The current host state shared with the background thread, or <see langword="null" /> when the host is not started.
         /// </summary>
-        private UnsafeAtomicRef<EnetHostStates> _states;
+        private UnsafeAtomicRef<ThreadedManagedEnetHostStates> _states;
 
         /// <summary>
         ///     Gets a value indicating whether the host has been started and has not been shut down yet.
@@ -72,9 +72,9 @@ namespace ThreadedEnet
         /// <summary>
         ///     Releases the resources used by the host by shutting it down.
         /// </summary>
-#pragma warning disable CA1816 // Call GC.SuppressFinalize correctly
+#pragma warning disable CA1816 // Call GC.SuppressFinalize correctly.
         public void Dispose() => Shutdown(uint.MaxValue);
-#pragma warning restore CA1816 // Call GC.SuppressFinalize correctly
+#pragma warning restore CA1816 // Call GC.SuppressFinalize correctly.
 
         /// <summary>
         ///     Performs application-defined tasks associated with freeing,
@@ -88,7 +88,7 @@ namespace ThreadedEnet
         /// <param name="config">The configuration used to create and run the host.</param>
         /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
         /// <exception cref="SocketException">Thrown when host creation fails.</exception>
-        public void Start(EnetHostConfig config)
+        public void Start(ThreadedEnetHostConfig config)
         {
             var states = _states.Load(Ordering.Acquire);
             if (states != null)
@@ -102,13 +102,13 @@ namespace ThreadedEnet
                 host.SetInterceptCallback(config.InterceptCallback);
             }
 
-            host.SetMaxDuplicatePeers(config.MaxDuplicatePeers);
             host.SetIgnoreConnectRequests(config.IgnoreConnectRequests);
             host.SetMtu(config.Mtu);
+            host.SetMaximumDuplicatePeers(config.MaximumDuplicatePeers);
             host.SetMaximumPacketSize(config.MaximumPacketSize);
             host.SetMaximumWaitingData(config.MaximumWaitingData);
 
-            states = new EnetHostStates();
+            states = new ThreadedManagedEnetHostStates();
             states.Host = host;
             states.Config = config;
             states.Threads.Store(1, Ordering.Relaxed);
@@ -123,7 +123,7 @@ namespace ThreadedEnet
                 ThrowHelpers.ThrowHostAlreadyStartedException();
             }
 
-            new Thread(EnetHostRunner.ThreadedRunning) { IsBackground = true }.Start(states);
+            new Thread(ThreadedManagedEnetHostRunner.ThreadedRunning) { IsBackground = true }.Start(states);
         }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace ThreadedEnet
                 return;
 
             states.ShutdownEventData = eventData;
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace ThreadedEnet
             if (states == null)
                 return;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             try
@@ -190,7 +190,7 @@ namespace ThreadedEnet
             }
             finally
             {
-                EnetHostRunner.Exit(states);
+                ThreadedManagedEnetHostRunner.Exit(states);
             }
         }
 
@@ -214,11 +214,11 @@ namespace ThreadedEnet
             connect.ChannelCount = channelCount;
             connect.EventData = eventData;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -238,11 +238,11 @@ namespace ThreadedEnet
             disconnect.Uid = uid;
             disconnect.EventData = eventData;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -271,14 +271,14 @@ namespace ThreadedEnet
             send.ChannelId = channelId;
             send.Packet = internalPacket;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
             {
                 internalPacket.Dispose();
                 return;
             }
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -305,14 +305,14 @@ namespace ThreadedEnet
             broadcast.ChannelId = channelId;
             broadcast.Packet = internalPacket;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
             {
                 internalPacket.Dispose();
                 return;
             }
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -347,7 +347,7 @@ namespace ThreadedEnet
             broadcastSelected.BitArray = internalBitArray;
             broadcastSelected.Packet = internalPacket;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
             {
                 internalBitArray.Dispose();
                 internalPacket.Dispose();
@@ -355,7 +355,7 @@ namespace ThreadedEnet
             }
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -374,11 +374,11 @@ namespace ThreadedEnet
             ref var ping = ref outgoing.Command.Ping;
             ping.Address = address;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -388,7 +388,7 @@ namespace ThreadedEnet
         /// <param name="uid">The unique identifier of the target peer.</param>
         /// <param name="pingInterval">
         ///     The desired ping interval in milliseconds. A value of <c>0</c> instructs ENet to use its default interval
-        ///     (<c>ENET_PEER_PING_INTERVAL</c>).
+        ///     (<see cref="ENet.ENET_PEER_PING_INTERVAL" />).
         /// </param>
         public void SetPingInterval(EnetUid uid, uint pingInterval)
         {
@@ -402,11 +402,11 @@ namespace ThreadedEnet
             setPingInterval.Uid = uid;
             setPingInterval.PingInterval = pingInterval;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -416,15 +416,15 @@ namespace ThreadedEnet
         /// <param name="uid">The unique identifier of the target peer.</param>
         /// <param name="timeoutLimit">
         ///     The timeout limit in milliseconds. A value of <c>0</c> uses the ENet default
-        ///     (<c>ENET_PEER_TIMEOUT_LIMIT</c>).
+        ///     (<see cref="ENet.ENET_PEER_TIMEOUT_LIMIT" />).
         /// </param>
         /// <param name="timeoutMinimum">
         ///     The minimum timeout in milliseconds. A value of <c>0</c> uses the ENet default
-        ///     (<c>ENET_PEER_TIMEOUT_MINIMUM</c>).
+        ///     (<see cref="ENet.ENET_PEER_TIMEOUT_MINIMUM" />).
         /// </param>
         /// <param name="timeoutMaximum">
         ///     The maximum timeout in milliseconds. A value of <c>0</c> uses the ENet default
-        ///     (<c>ENET_PEER_TIMEOUT_MAXIMUM</c>).
+        ///     (<see cref="ENet.ENET_PEER_TIMEOUT_MAXIMUM" />).
         /// </param>
         public void SetTimeout(EnetUid uid, uint timeoutLimit, uint timeoutMinimum, uint timeoutMaximum)
         {
@@ -440,11 +440,11 @@ namespace ThreadedEnet
             setTimeout.TimeoutMinimum = timeoutMinimum;
             setTimeout.TimeoutMaximum = timeoutMaximum;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace ThreadedEnet
         /// <param name="uid">The unique identifier of the target peer.</param>
         /// <param name="interval">
         ///     The measurement interval in milliseconds over which the lowest mean RTT is tracked.
-        ///     A value of <c>0</c> uses the ENet default (<c>ENET_PEER_PACKET_THROTTLE_INTERVAL</c>).
+        ///     A value of <c>0</c> uses the ENet default (<see cref="ENet.ENET_PEER_PACKET_THROTTLE_INTERVAL" />).
         /// </param>
         /// <param name="acceleration">
         ///     The rate at which the throttle probability increases as the mean RTT declines.
@@ -476,11 +476,11 @@ namespace ThreadedEnet
             configureThrottle.Acceleration = acceleration;
             configureThrottle.Deceleration = deceleration;
 
-            if (!EnetHostRunner.TryEnter(states))
+            if (!ThreadedManagedEnetHostRunner.TryEnter(states))
                 return;
 
             states.OutgoingEvents.Enqueue(outgoing);
-            EnetHostRunner.Exit(states);
+            ThreadedManagedEnetHostRunner.Exit(states);
         }
     }
 }

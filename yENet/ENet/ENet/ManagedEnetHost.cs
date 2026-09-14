@@ -134,7 +134,7 @@ namespace Enet
         public nuint BandwidthLimitedPeers => _handle.BandwidthLimitedPeers;
 
         /// <summary>
-        ///     Number of allowed peers from duplicate IPs.
+        ///     Gets the number of allowed peers from duplicate IPs.
         /// </summary>
         public nuint MaximumDuplicatePeers => _handle.MaximumDuplicatePeers;
 
@@ -209,13 +209,17 @@ namespace Enet
         ///     <see langword="true" /> to ignore incoming connection requests,
         ///     or <see langword="false" /> to accept them.
         /// </param>
+        /// <remarks>
+        ///     Set to <see langword="true" /> when the host should not be connectable, which is typically used on clients.
+        ///     Note that this does not prevent connections whose handshake has already begun.
+        /// </remarks>
         public void SetIgnoreConnectRequests(bool ignoreConnectRequests) => _handle.SetIgnoreConnectRequests(ignoreConnectRequests);
 
         /// <summary>
         ///     Sets the MTU of the host.
         /// </summary>
-        /// <param name="mtu">The MTU to set, in bytes. if 0, the default is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        /// <param name="mtu">The MTU to set, in bytes. if 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
         public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
         /// <summary>
@@ -234,7 +238,8 @@ namespace Enet
         ///     <para>
         ///         The <paramref name="incomingPeerId" /> corresponds to a fixed slot in the host's internal peers array,
         ///         which is allocated at host creation time based on the <c>peerCount</c> parameter passed to
-        ///         <see cref="Create" />. The ID is not assigned dynamically during connection; it is the index into
+        ///         <see cref="ENET_API.enet_host_create" />.
+        ///         The ID is not assigned dynamically during connection; it is the index into
         ///         that pre-allocated array and remains constant for the lifetime of the host.
         ///     </para>
         ///     <para>
@@ -291,19 +296,28 @@ namespace Enet
         /// <summary>
         ///     Sets the maximum number of allowed peers from duplicate IPs.
         /// </summary>
-        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        /// <param name="duplicatePeers">
+        ///     The maximum number of duplicate peers to maintain. if 0,
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" /> is used.
+        /// </param>
         public void SetMaximumDuplicatePeers(nuint duplicatePeers) => _handle.SetMaximumDuplicatePeers(duplicatePeers);
 
         /// <summary>
         ///     Sets the maximum allowable packet size that may be sent or received on a peer.
         /// </summary>
-        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        /// <param name="maximumPacketSize">
+        ///     The maximum allowable packet size; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE" /> is used.
+        /// </param>
         public void SetMaximumPacketSize(nuint maximumPacketSize) => _handle.SetMaximumPacketSize(maximumPacketSize);
 
         /// <summary>
         ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
         /// </summary>
-        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        /// <param name="maximumWaitingData">
+        ///     The maximum aggregate waiting data; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA" /> is used.
+        /// </param>
         public void SetMaximumWaitingData(nuint maximumWaitingData) => _handle.SetMaximumWaitingData(maximumWaitingData);
 
         /// <summary>
@@ -318,8 +332,9 @@ namespace Enet
         ///     otherwise, <see langword="false" />.
         /// </returns>
         /// <remarks>
-        ///     The peer returned will have not completed the connection until enet_host_service()
-        ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
+        ///     The peer returned will have not completed the connection until
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" />
+        ///     notifies of an <see cref="EnetEventType.Connect" /> event for the peer.
         /// </remarks>
         public bool TryConnect(ENetAddress address, nuint channelCount, uint data, out EnetPeer peer) => _handle.TryConnect(address, channelCount, data, out peer);
 
@@ -365,7 +380,8 @@ namespace Enet
         ///     </list>
         /// </returns>
         /// <remarks>
-        ///     enet_host_service should be called fairly regularly for adequate performance
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" /> should be called fairly regularly for
+        ///     adequate performance
         /// </remarks>
         public int Service(uint timeout, out EnetEvent @event) => _handle.Service(timeout, out @event);
 
@@ -374,7 +390,7 @@ namespace Enet
         /// </summary>
         /// <remarks>
         ///     This function need only be used in circumstances where one wishes to send queued packets earlier than in a call to
-        ///     enet_host_service().
+        ///     <see cref="EnetHost.Service(uint, out EnetEvent)" />.
         /// </remarks>
         public void Flush() => _handle.Flush();
 
@@ -459,7 +475,7 @@ namespace Enet
         ///     channel
         ///     limit, bandwidth, and IP option.
         /// </summary>
-        /// <param name="address">
+        /// <param name="localAddress">
         ///     The address to bind the host to.
         /// </param>
         /// <param name="peerCount">
@@ -467,7 +483,7 @@ namespace Enet
         /// </param>
         /// <param name="channelLimit">
         ///     The maximum number of channels allowed per peer. Pass <c>0</c> to use the default limit (
-        ///     <c>ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT</c>).
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />).
         /// </param>
         /// <param name="incomingBandwidth">
         ///     The downstream bandwidth limit in bytes per second. Pass <c>0</c> for unlimited bandwidth.
@@ -480,9 +496,26 @@ namespace Enet
         /// </param>
         /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
         /// <exception cref="SocketException">Thrown when host creation fails.</exception>
-        public static ManagedEnetHost Create(ENetAddress address, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, EnetHostOption option)
+        public static ManagedEnetHost Create(ENetAddress localAddress, nuint peerCount, nuint channelLimit, uint incomingBandwidth, uint outgoingBandwidth, EnetHostOption option)
         {
-            var handle = EnetHost.Create(address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);
+            var handle = EnetHost.Create(localAddress, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth, option);
+            if (!handle.IsCreated)
+                return default!;
+
+            return new ManagedEnetHost(handle);
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="EnetHost" /> class from the specified
+        ///     <see cref="EnetHostConfig" />.
+        /// </summary>
+        /// <param name="config">The configuration parameters used to create the host.</param>
+        /// <returns>The created <see cref="EnetHost" />.</returns>
+        /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
+        /// <exception cref="SocketException">Thrown when host creation fails.</exception>
+        public static ManagedEnetHost Create(EnetHostConfig config)
+        {
+            var handle = EnetHost.Create(config);
             if (!handle.IsCreated)
                 return default!;
 

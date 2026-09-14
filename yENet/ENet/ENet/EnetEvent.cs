@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using enet;
 
 // ReSharper disable ALL
@@ -6,7 +6,7 @@ using enet;
 namespace Enet
 {
     /// <summary>
-    ///     An ENet event as returned by enet_host_service().
+    ///     An ENet event as returned by <see cref="EnetHost.Service(uint, out EnetEvent)" />.
     /// </summary>
     public readonly unsafe struct EnetEvent
     {

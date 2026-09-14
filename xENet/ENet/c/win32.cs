@@ -19,9 +19,9 @@ namespace enet
         /// <summary>
         ///     The wall-time base used to make <c>enet_time_get</c> values start at zero.
         /// </summary>
-#pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable CA2211 // Non-constant fields should not be visible.
         public static uint timeBase;
-#pragma warning restore CA2211 // Non-constant fields should not be visible
+#pragma warning restore CA2211 // Non-constant fields should not be visible.
 
         /// <summary>
         ///     Initializes ENet globally.
@@ -57,18 +57,18 @@ namespace enet
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
         /// <summary>
-        ///     Binds the socket to the specified local address.
+        ///     Binds a socket to an address.
         /// </summary>
-        /// <param name="socket">The socket to bind.</param>
-        /// <param name="address">The local address to bind to.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The address to bind to.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().Bind(address->GetInner());
 
         /// <summary>
-        ///     Retrieves the local address the socket is bound to.
+        ///     Gets the local name (address) of an Ipv4 socket.
         /// </summary>
-        /// <param name="socket">The socket to query.</param>
-        /// <param name="address">Receives the local address.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The socket address to receive the local name into.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().GetName(ref address->GetInner());
 
@@ -108,9 +108,9 @@ namespace enet
         }
 
         /// <summary>
-        ///     Applies a socket option to the given socket.
+        ///     Sets a socket option.
         /// </summary>
-        /// <param name="socket">The socket to configure.</param>
+        /// <param name="socket">The socket handle.</param>
         /// <param name="option">The option to apply.</param>
         /// <param name="value">The option value.</param>
         /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
@@ -179,11 +179,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Sends a vectored payload to the specified address on the socket.
+        ///     Sends data from multiple buffers to an endpoint.
         /// </summary>
-        /// <param name="socket">The socket to send on.</param>
-        /// <param name="address">The destination address.</param>
-        /// <param name="buffers">The buffers holding the payload.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The destination socket address.</param>
+        /// <param name="buffers">The array of <see cref="NativeIoSlice" /> structures.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -222,11 +222,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Receives a vectored payload on the socket, reporting the sender address.
+        ///     Receives data into multiple buffers from an endpoint.
         /// </summary>
-        /// <param name="socket">The socket to receive on.</param>
-        /// <param name="address">Receives the source address.</param>
-        /// <param name="buffers">The buffers receiving the payload.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The sender's socket address.</param>
+        /// <param name="buffers">The array of <see cref="NativeIoSlice" /> structures.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>
         ///     The number of bytes received, 0 when no data is available,
@@ -279,7 +279,7 @@ namespace enet
         /// <summary>
         ///     Waits until the socket becomes ready for the requested conditions or the timeout elapses.
         /// </summary>
-        /// <param name="socket">The socket to wait on.</param>
+        /// <param name="socket">The socket handle.</param>
         /// <param name="condition">
         ///     On input the conditions to wait for; on output the conditions that became ready.
         /// </param>
@@ -319,73 +319,75 @@ namespace enet
         }
 
         /// <summary>
-        ///     Populates an ENet address from an <see cref="IPEndPoint" />.
+        ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPEndPoint" />.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="ipEndPoint">The endpoint containing the address and port.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
         /// <returns>0 on success, -1 on failure.</returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
         public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => address->FromIpEndPoint(ipEndPoint) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Populates an ENet address from an <see cref="IPAddress" /> and port.
+        ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPAddress" /> and port.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="ipAddress">The IP address to set.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ipAddress">The <see cref="IPAddress" /> to copy from.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipAddress" /> is null.</exception>
         public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => address->FromIpAddress(ipAddress, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Populates an ENet address by parsing an Ipv4 address string and port.
+        ///     Sets the specified Ipv4 address and port on an <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="ip">The Ipv4 address string.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ip">The ip address as a span of characters.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Populates an ENet address by parsing an Ipv6 address string, port and scope.
+        ///     Sets the specified Ipv6 address, port, and scope id on an <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="ip">The Ipv6 address string.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ip">The ip address as a span of characters.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The Ipv6 scope identifier.</param>
+        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => address->SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = default) => address->SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Populates an ENet address by resolving a host name to an Ipv4 address.
+        ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv4 address.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="hostName">The host name to resolve.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Populates an ENet address by resolving a host name to an Ipv6 address.
+        ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv6 address.
         /// </summary>
-        /// <param name="address">The address to populate.</param>
-        /// <param name="hostName">The host name to resolve.</param>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The Ipv6 scope identifier.</param>
+        /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => address->SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = default) => address->SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Retrieves the IP address of an ENet address as a character span.
+        ///     Retrieves the ip address from an <see cref="ENetAddress" /> as text.
         /// </summary>
-        /// <param name="address">The address to query.</param>
-        /// <param name="ip">Receives the address characters.</param>
+        /// <param name="address">The <see cref="ENetAddress" /> to read the ip address from.</param>
+        /// <param name="ip">The character span to receive the ip address; resized to the actual length on success.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetIp(ref ip) == SocketError.Success ? 0 : -1;
 
         /// <summary>
-        ///     Retrieves the host name (reverse DNS) of an ENet address.
+        ///     Gets the host name (reverse DNS) from an <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="address">The address to query.</param>
-        /// <param name="hostName">Receives the host name characters.</param>
+        /// <param name="address">The <see cref="ENetAddress" /> to resolve the host name for.</param>
+        /// <param name="hostName">The character span to receive the host name; resized to the actual length on success.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
     }

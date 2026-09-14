@@ -9,7 +9,6 @@ namespace enet
     /// <summary>
     ///     ENet reliable UDP networking library
     /// </summary>
-    /// <remarks>生きていたいと</remarks>
     public static unsafe class ENET_API
     {
         /// <summary>
@@ -312,7 +311,7 @@ namespace enet
         /// </summary>
         /// <param name="data">initial contents of the packet's data; the packet's data will remain uninitialized if data is NULL.</param>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="ENetPacket" /> structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ENetPacket* enet_packet_create(void* data, nuint dataLength, uint flags) => ENet.enet_packet_create(data, dataLength, flags);
@@ -366,6 +365,10 @@ namespace enet
         /// </summary>
         /// <param name="host">The host on which to set the ignore-connection-requests behavior.</param>
         /// <param name="ignoreConnectRequests">Non-zero to ignore incoming connection requests, or zero to accept them.</param>
+        /// <remarks>
+        ///     Set to non-zero when the host should not be connectable, which is typically used on clients.
+        ///     Note that this does not prevent connections whose handshake has already begun.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_ignore_connect_requests(ENetHost* host, int ignoreConnectRequests) => ENet.enet_host_ignore_connect_requests(host, ignoreConnectRequests);
 
@@ -373,8 +376,8 @@ namespace enet
         ///     Sets the MTU of the host.
         /// </summary>
         /// <param name="host">The host whose MTU is being set.</param>
-        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        /// <param name="mtu">The MTU to set, in bytes. If 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_host_mtu(ENetHost* host, uint mtu) => ENet.enet_host_mtu(host, mtu);
 
@@ -422,7 +425,10 @@ namespace enet
         ///     Sets the maximum number of duplicate peers that the host will track.
         /// </summary>
         /// <param name="host">The host whose duplicate peer limit is being set.</param>
-        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        /// <param name="duplicatePeers">
+        ///     The maximum number of duplicate peers to maintain. if 0,
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_duplicate_peers(ENetHost* host, nuint duplicatePeers) => ENet.enet_host_duplicate_peers(host, duplicatePeers);
 
@@ -430,7 +436,10 @@ namespace enet
         ///     Sets the maximum allowable packet size that may be sent or received on a peer.
         /// </summary>
         /// <param name="host">The host whose maximum packet size is being set.</param>
-        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        /// <param name="maximumPacketSize">
+        ///     The maximum allowable packet size; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_maximum_packet_size(ENetHost* host, nuint maximumPacketSize) => ENet.enet_host_maximum_packet_size(host, maximumPacketSize);
 
@@ -438,7 +447,10 @@ namespace enet
         ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
         /// </summary>
         /// <param name="host">The host whose maximum waiting data is being set.</param>
-        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        /// <param name="maximumWaitingData">
+        ///     The maximum aggregate waiting data; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA" /> is used.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_maximum_waiting_data(ENetHost* host, nuint maximumWaitingData) => ENet.enet_host_maximum_waiting_data(host, maximumWaitingData);
 
@@ -475,7 +487,7 @@ namespace enet
         /// <param name="peerCount">The maximum number of peers that should be allocated for the host.</param>
         /// <param name="channelLimit">
         ///     The maximum number of channels allowed; if 0, then this is equivalent to
-        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />
         /// </param>
         /// <param name="incomingBandwidth">
         ///     Downstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
@@ -488,13 +500,13 @@ namespace enet
         /// <param name="option">
         ///     <list type="bullet">
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV4 (default): Ipv4</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV4" /> (default): Ipv4</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_ONLY: Ipv6-only</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV6_ONLY" />: Ipv6-only</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both Ipv4 and Ipv6</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE" />: both Ipv4 and Ipv6</description>
         ///         </item>
         ///     </list>
         /// </param>
@@ -524,8 +536,9 @@ namespace enet
         /// <param name="data">user data supplied to the receiving host</param>
         /// <returns>a peer representing the foreign host on success, NULL on failure</returns>
         /// <remarks>
-        ///     The peer returned will have not completed the connection until enet_host_service()
-        ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
+        ///     The peer returned will have not completed the connection until
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
+        ///     notifies of an <see cref="ENetEventType.ENET_EVENT_TYPE_CONNECT" /> event for the peer.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ENetPeer* enet_host_connect(ENetHost* host, ENetAddress* address, nuint channelCount, uint data) => ENet.enet_host_connect(host, address, channelCount, data);
@@ -575,7 +588,7 @@ namespace enet
         ///     </list>
         /// </returns>
         /// <remarks>
-        ///     enet_host_service should be called fairly regularly for adequate performance
+        ///     <see cref="enet_host_service" /> should be called fairly regularly for adequate performance
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_host_service(ENetHost* host, ENetEvent* @event, uint timeout) => ENet.enet_host_service(host, @event, timeout);
@@ -586,7 +599,7 @@ namespace enet
         /// <param name="host">host to flush</param>
         /// <remarks>
         ///     This function need only be used in circumstances where one wishes to send queued packets earlier than in a call to
-        ///     enet_host_service().
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_flush(ENetHost* host) => ENet.enet_host_flush(host);
@@ -626,7 +639,7 @@ namespace enet
         /// <param name="host">host to limit</param>
         /// <param name="channelLimit">
         ///     the maximum number of channels allowed; if 0, then this is equivalent to
-        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />
         /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_host_channel_limit(ENetHost* host, nuint channelLimit) => ENet.enet_host_channel_limit(host, channelLimit);
@@ -662,13 +675,6 @@ namespace enet
         /// <summary>
         ///     Queues a packet to be sent.
         /// </summary>
-        /// <remarks>
-        ///     On success, ENet will assume ownership of the packet, and so enet_packet_destroy
-        ///     should not be called on it thereafter. On failure, the caller still must destroy
-        ///     the packet on its own as ENet has not queued the packet. The caller can also
-        ///     check the packet's referenceCount field after sending to check if ENet queued
-        ///     the packet and thus incremented the referenceCount.
-        /// </remarks>
         /// <param name="peer">destination for the packet</param>
         /// <param name="channelID">channel on which to send</param>
         /// <param name="packet">packet to send</param>
@@ -682,6 +688,13 @@ namespace enet
         ///         </item>
         ///     </list>
         /// </returns>
+        /// <remarks>
+        ///     On success, ENet will assume ownership of the packet, and so <see cref="enet_packet_destroy" />
+        ///     should not be called on it thereafter. On failure, the caller still must destroy
+        ///     the packet on its own as ENet has not queued the packet. The caller can also
+        ///     check the packet's referenceCount field after sending to check if ENet queued
+        ///     the packet and thus incremented the referenceCount.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_peer_send(ENetPeer* peer, byte channelID, ENetPacket* packet) => ENet.enet_peer_send(peer, channelID, packet);
 
@@ -700,7 +713,7 @@ namespace enet
         /// <param name="peer">destination for the ping request</param>
         /// <remarks>
         ///     ping requests factor into the mean round trip time as designated by the
-        ///     roundTripTime field in the ENetPeer structure. ENet automatically pings all connected
+        ///     roundTripTime field in the <see cref="ENetPeer" /> structure. ENet automatically pings all connected
         ///     peers at regular intervals, however, this function may be called to ensure more
         ///     frequent ping requests.
         /// </remarks>
@@ -710,19 +723,26 @@ namespace enet
         /// <summary>
         ///     Sets the interval at which pings will be sent to a peer.
         /// </summary>
+        /// <param name="peer">the peer to adjust</param>
+        /// <param name="pingInterval">
+        ///     the interval at which to send pings; defaults to <see cref="ENet.ENET_PEER_PING_INTERVAL" />
+        ///     if 0
+        /// </param>
         /// <remarks>
         ///     Pings are used both to monitor the liveness of the connection and also to dynamically
         ///     adjust the throttle during periods of low traffic so that the throttle has reasonable
         ///     responsiveness during traffic spikes.
         /// </remarks>
-        /// <param name="peer">the peer to adjust</param>
-        /// <param name="pingInterval">the interval at which to send pings; defaults to ENET_PEER_PING_INTERVAL if 0</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_peer_ping_interval(ENetPeer* peer, uint pingInterval) => ENet.enet_peer_ping_interval(peer, pingInterval);
 
         /// <summary>
         ///     Sets the timeout parameters for a peer.
         /// </summary>
+        /// <param name="peer">the peer to adjust</param>
+        /// <param name="timeoutLimit">the timeout limit; defaults to <see cref="ENet.ENET_PEER_TIMEOUT_LIMIT" /> if 0</param>
+        /// <param name="timeoutMinimum">the timeout minimum; defaults to <see cref="ENet.ENET_PEER_TIMEOUT_MINIMUM" /> if 0</param>
+        /// <param name="timeoutMaximum">the timeout maximum; defaults to <see cref="ENet.ENET_PEER_TIMEOUT_MAXIMUM" /> if 0</param>
         /// <remarks>
         ///     The timeout parameter control how and when a peer will timeout from a failure to acknowledge
         ///     reliable traffic. Timeout values use an exponential backoff mechanism, where if a reliable
@@ -733,10 +753,6 @@ namespace enet
         ///     but not acknowledged for a certain maximum time period, the peer will be disconnected regardless
         ///     of the current timeout limit value.
         /// </remarks>
-        /// <param name="peer">the peer to adjust</param>
-        /// <param name="timeoutLimit">the timeout limit; defaults to ENET_PEER_TIMEOUT_LIMIT if 0</param>
-        /// <param name="timeoutMinimum">the timeout minimum; defaults to ENET_PEER_TIMEOUT_MINIMUM if 0</param>
-        /// <param name="timeoutMaximum">the timeout maximum; defaults to ENET_PEER_TIMEOUT_MAXIMUM if 0</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_peer_timeout(ENetPeer* peer, uint timeoutLimit, uint timeoutMinimum, uint timeoutMaximum) => ENet.enet_peer_timeout(peer, timeoutLimit, timeoutMinimum, timeoutMaximum);
 
@@ -757,7 +773,8 @@ namespace enet
         /// <param name="peer">peer to request a disconnection</param>
         /// <param name="data">data describing the disconnection</param>
         /// <remarks>
-        ///     An ENET_EVENT_DISCONNECT event will be generated by enet_host_service()
+        ///     An <see cref="ENetEventType.ENET_EVENT_TYPE_DISCONNECT" /> event will be generated by
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
         ///     once the disconnection is complete.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -769,7 +786,7 @@ namespace enet
         /// <param name="peer">peer to disconnect</param>
         /// <param name="data">data describing the disconnection</param>
         /// <remarks>
-        ///     No ENET_EVENT_DISCONNECT event will be generated. The foreign peer is not
+        ///     No <see cref="ENetEventType.ENET_EVENT_TYPE_DISCONNECT" /> event will be generated. The foreign peer is not
         ///     guaranteed to receive the disconnect notification, and is reset immediately upon
         ///     return from this function.
         /// </remarks>
@@ -782,7 +799,8 @@ namespace enet
         /// <param name="peer">peer to request a disconnection</param>
         /// <param name="data">data describing the disconnection</param>
         /// <remarks>
-        ///     An ENET_EVENT_DISCONNECT event will be generated by enet_host_service()
+        ///     An <see cref="ENetEventType.ENET_EVENT_TYPE_DISCONNECT" /> event will be generated by
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
         ///     once the disconnection is complete.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -791,6 +809,13 @@ namespace enet
         /// <summary>
         ///     Configures throttle parameter for a peer.
         /// </summary>
+        /// <param name="peer">peer to configure</param>
+        /// <param name="interval">
+        ///     interval, in milliseconds, over which to measure lowest mean RTT; the default value is
+        ///     <see cref="ENet.ENET_PEER_PACKET_THROTTLE_INTERVAL" />.
+        /// </param>
+        /// <param name="acceleration">rate at which to increase the throttle probability as mean RTT declines</param>
+        /// <param name="deceleration">rate at which to decrease the throttle probability as mean RTT increases</param>
         /// <remarks>
         ///     Unreliable packets are dropped by ENet in response to the varying conditions
         ///     of the Internet connection to the peer. The throttle represents a probability
@@ -800,12 +825,13 @@ namespace enet
         ///     the interval parameter in milliseconds. If a measured round trip time happens to
         ///     be significantly less than the mean round trip time measured over the interval,
         ///     then the throttle probability is increased to allow more traffic by an amount
-        ///     specified in the acceleration parameter, which is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE
+        ///     specified in the acceleration parameter, which is a ratio to the
+        ///     <see cref="ENet.ENET_PEER_PACKET_THROTTLE_SCALE" />
         ///     constant. If a measured round trip time happens to be significantly greater than
         ///     the mean round trip time measured over the interval, then the throttle probability
         ///     is decreased to limit traffic by an amount specified in the deceleration parameter, which
-        ///     is a ratio to the ENET_PEER_PACKET_THROTTLE_SCALE constant. When the throttle has
-        ///     a value of ENET_PEER_PACKET_THROTTLE_SCALE, no unreliable packets are dropped by
+        ///     is a ratio to the <see cref="ENet.ENET_PEER_PACKET_THROTTLE_SCALE" /> constant. When the throttle has
+        ///     a value of <see cref="ENet.ENET_PEER_PACKET_THROTTLE_SCALE" />, no unreliable packets are dropped by
         ///     ENet, and so 100% of all unreliable packets will be sent. When the throttle has a
         ///     value of 0, all unreliable packets are dropped by ENet, and so 0% of all unreliable
         ///     packets will be sent. Intermediate values for the throttle represent intermediate
@@ -814,13 +840,6 @@ namespace enet
         ///     sensible limit for the throttle probability above which it should not raise even in
         ///     the best of conditions.
         /// </remarks>
-        /// <param name="peer">peer to configure</param>
-        /// <param name="interval">
-        ///     interval, in milliseconds, over which to measure lowest mean RTT; the default value is
-        ///     ENET_PEER_PACKET_THROTTLE_INTERVAL.
-        /// </param>
-        /// <param name="acceleration">rate at which to increase the throttle probability as mean RTT declines</param>
-        /// <param name="deceleration">rate at which to decrease the throttle probability as mean RTT increases</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_peer_throttle_configure(ENetPeer* peer, uint interval, uint acceleration, uint deceleration) => ENet.enet_peer_throttle_configure(peer, interval, acceleration, deceleration);
     }

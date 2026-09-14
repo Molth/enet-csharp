@@ -12,7 +12,7 @@ namespace enet
         /// </summary>
         /// <param name="data">initial contents of the packet's data; the packet's data will remain uninitialized if data is NULL.</param>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="ENetPacket" /> structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         public static ENetPacket* enet_packet_create(void* data, nuint dataLength, uint flags)
         {

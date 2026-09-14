@@ -8,7 +8,7 @@ namespace ThreadedEnet
     /// <summary>
     ///     Shared state that connects the public host API with its dedicated background thread.
     /// </summary>
-    internal sealed class EnetHostStates
+    internal sealed class ThreadedManagedEnetHostStates
     {
         /// <summary>
         ///     The underlying managed ENet host driven by the background thread.
@@ -20,7 +20,7 @@ namespace ThreadedEnet
         /// <summary>
         ///     The configuration the host was started with.
         /// </summary>
-        public EnetHostConfig Config;
+        public ThreadedEnetHostConfig Config;
 
         /// <summary>
         ///     An atomic reference counter tracking the active users of this state;

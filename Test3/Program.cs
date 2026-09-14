@@ -40,7 +40,7 @@ namespace Test3
         {
             const int interval = 15;
 
-            var config = new EnetHostConfig();
+            var config = new ThreadedEnetHostConfig();
             config.LocalAddress.FromIpAddress(IPAddress.IPv6Any, 12345);
             config.PeerCount = 100;
             config.Option = EnetHostOption.Ipv6DualMode;
@@ -91,7 +91,7 @@ namespace Test3
         {
             const int interval = 15;
 
-            var config = new EnetHostConfig();
+            var config = new ThreadedEnetHostConfig();
             config.LocalAddress.FromIpAddress(IPAddress.Any, 0);
             config.PeerCount = 1;
             config.Option = EnetHostOption.Ipv4;

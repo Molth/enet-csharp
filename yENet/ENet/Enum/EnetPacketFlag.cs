@@ -8,6 +8,7 @@ namespace Enet
     /// <summary>
     ///     Packet flag bit constants.
     /// </summary>
+    /// <seealso cref="EnetPacket" />
     [Flags]
     public enum EnetPacketFlag
     {

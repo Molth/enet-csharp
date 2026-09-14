@@ -9,7 +9,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
         <PackageId>yENet</PackageId>
-        <Version>1.1.0</Version>
+        <Version>1.1.5</Version>
         <Authors>Molth Nevin</Authors>
         <Company>Hell</Company>
         <Description>ENet reliable UDP networking library with no binary dependencies.</Description>
@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="xENet" Version="1.1.4" />
+        <PackageReference Include="xENet" Version="1.1.9" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1188,7 +1188,7 @@ namespace enet
                 if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                     peer->state == ENET_PEER_STATE_ZOMBIE ||
                     (host->receivedAddress != peer->address &&
-                     !peer->address.Address.SequenceEqual(ENET_ADDRESS_BROADCAST)) ||
+                     !peer->address.Address.SequenceEqual(ENET_HOST_BROADCAST)) ||
                     (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
                      sessionID != peer->incomingSessionID))
                     return 0;
@@ -1926,7 +1926,7 @@ namespace enet
         /// <param name="host">host to flush</param>
         /// <remarks>
         ///     This function need only be used in circumstances where one wishes to send queued packets earlier than in a call to
-        ///     enet_host_service().
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />.
         /// </remarks>
         public static void enet_host_flush(ENetHost* host)
         {
@@ -1988,7 +1988,7 @@ namespace enet
         ///     </list>
         /// </returns>
         /// <remarks>
-        ///     enet_host_service should be called fairly regularly for adequate performance
+        ///     <see cref="enet_host_service" /> should be called fairly regularly for adequate performance
         /// </remarks>
         public static int enet_host_service(ENetHost* host, ENetEvent* @event, uint timeout)
         {

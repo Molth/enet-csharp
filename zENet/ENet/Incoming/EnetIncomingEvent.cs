@@ -6,7 +6,7 @@ using Enet;
 namespace ThreadedEnet
 {
     /// <summary>
-    ///     An ENet event as returned by enet_host_service().
+    ///     An ENet event as returned by <see cref="ENET_API.enet_host_service(ENetHost*, ENetEvent*, uint)" />.
     /// </summary>
     internal struct EnetIncomingEvent
     {

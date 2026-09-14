@@ -7,9 +7,9 @@ namespace enet
         /// <summary>
         ///     The global allocation callbacks used by the ENet runtime, initialized to the built-in defaults.
         /// </summary>
-#pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable CA2211 // Non-constant fields should not be visible.
         public static ENetCallbacks callbacks = new ENetCallbacks(&malloc, &free, &abort);
-#pragma warning restore CA2211 // Non-constant fields should not be visible
+#pragma warning restore CA2211 // Non-constant fields should not be visible.
 
         /// <summary>
         ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in

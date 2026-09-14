@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -183,52 +183,20 @@ namespace enet
     public static partial class ENet
     {
         /// <summary>
-        ///     A port value indicating that the operating system should choose an available port.
-        /// </summary>
-        public const ushort ENET_PORT_ANY = 0;
-
-        /// <summary>
-        ///     Initializes the well-known addresses used by the ENet runtime.
-        /// </summary>
-        static ENet()
-        {
-            ENET_HOST_ANY_V4.FromIpAddress(IPAddress.Any, ENET_PORT_ANY);
-            ENET_HOST_ANY_V6.FromIpAddress(IPAddress.IPv6Any, ENET_PORT_ANY);
-            ENET_HOST_BROADCAST.FromIpAddress(IPAddress.Broadcast, ENET_PORT_ANY);
-        }
-
-        /// <summary>
-        ///     The well-known address representing any Ipv4 host.
-        /// </summary>
-        public static ENetAddress ENET_HOST_ANY_V4 { get; }
-
-        /// <summary>
-        ///     The well-known address representing any Ipv6 host.
-        /// </summary>
-        public static ENetAddress ENET_HOST_ANY_V6 { get; }
-
-        /// <summary>
-        ///     The well-known broadcast address.
-        /// </summary>
-        public static ENetAddress ENET_HOST_BROADCAST { get; }
-
-        /// <summary>
         ///     The Ipv4 broadcast address bytes.
         /// </summary>
-        private static ReadOnlySpan<byte> ENET_ADDRESS_BROADCAST => new byte[4] { 255, 255, 255, 255 };
+        private static ReadOnlySpan<byte> ENET_HOST_BROADCAST => new byte[4] { 255, 255, 255, 255 };
     }
 
     /// <summary>
-    ///     Portable internet address structure.
+    ///     Represents a native socket address structure that can hold either an Ipv4 or Ipv6 address.
     /// </summary>
     /// <remarks>
-    ///     The port must be host byte-order.
-    ///     <br />
-    ///     The constant <see cref="ENET_HOST_ANY_V4" /> or <see cref="ENET_HOST_ANY_V6" /> may be used to specify the default
-    ///     server host. The constant <see cref="ENET_HOST_BROADCAST" /> may be used to specify the
-    ///     broadcast address (255.255.255.255).  This makes sense for enet_host_connect,
-    ///     but not for enet_host_create.  Once a server responds to a broadcast, the
-    ///     address is updated from <see cref="ENET_HOST_BROADCAST" /> to the server's actual IP address.
+    ///     The structure has a fixed size of 28 bytes, which is sufficient for
+    ///     both Ipv4 (16 bytes) and Ipv6 (28 bytes) addresses.
+    ///     It is layout‑explicit to allow direct interpretation as
+    ///     a byte buffer or as a properly aligned structure for native calls.
+    ///     This type is used for low‑level socket operations that require raw address handling without allocation.
     /// </remarks>
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct ENetAddress : IEquatable<ENetAddress>, IComparable<ENetAddress>
@@ -442,9 +410,12 @@ namespace enet
         public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> _, IFormatProvider? __) => _handle.TryFormat(destination, out charsWritten, _, __);
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="IPEndPoint" /> class with the specified address and port number.
+        ///     Converts this address into an <see cref="IPEndPoint" />.
         /// </summary>
-        /// <param name="result">A new instance of the <see cref="IPEndPoint" /> class.</param>
+        /// <param name="result">
+        ///     When this method returns, contains the converted <see cref="IPEndPoint" />,
+        ///     or null if the address family is not supported.
+        /// </param>
         /// <returns>
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
@@ -452,9 +423,12 @@ namespace enet
         public readonly SocketError ToIpEndPoint(out IPEndPoint? result) => _handle.ToIpEndPoint(out result);
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="IPAddress" /> class with the specified address.
+        ///     Converts this address into an <see cref="IPAddress" />.
         /// </summary>
-        /// <param name="result">A new instance of the <see cref="IPAddress" /> class.</param>
+        /// <param name="result">
+        ///     When this method returns, contains the converted <see cref="IPAddress" />,
+        ///     or null if the address family is not supported.
+        /// </param>
         /// <returns>
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
@@ -462,9 +436,12 @@ namespace enet
         public readonly SocketError ToIpAddress(out IPAddress? result) => _handle.ToIpAddress(out result);
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="SocketAddress" /> class with the specified address.
+        ///     Converts this address into a <see cref="SocketAddress" />.
         /// </summary>
-        /// <param name="result">A new instance of the <see cref="SocketAddress" /> class.</param>
+        /// <param name="result">
+        ///     When this method returns, contains the converted <see cref="SocketAddress" />,
+        ///     or null if the address family is not supported.
+        /// </param>
         /// <returns>
         ///     <see cref="SocketError.Success" /> if successful;
         ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
@@ -485,7 +462,7 @@ namespace enet
         /// <summary>
         ///     Populates this address from the specified <see cref="IPAddress" /> and port.
         /// </summary>
-        /// <param name="source">The <see cref="IPAddress" /> to set.</param>
+        /// <param name="source">The <see cref="IPAddress" /> to copy from.</param>
         /// <param name="port">The port number.</param>
         /// <returns>
         ///     <see cref="SocketError.Success" /> if successful;
@@ -507,7 +484,7 @@ namespace enet
         public SocketError FromSocketAddress(SocketAddress source) => _handle.FromSocketAddress(source);
 
         /// <summary>
-        ///     Converts an Ipv4 address and port into this address.
+        ///     Sets the specified Ipv4 address and port on this address.
         /// </summary>
         /// <param name="ip">The ip address as a span of characters.</param>
         /// <param name="port">The port number.</param>
@@ -515,7 +492,7 @@ namespace enet
         public SocketError SetIpIpv4(ReadOnlySpan<char> ip, ushort port) => _handle.SetIpIpv4(ip, port);
 
         /// <summary>
-        ///     Converts an Ipv6 address, port, and scope id into this address.
+        ///     Sets the specified Ipv6 address, port, and scope id on this address.
         /// </summary>
         /// <param name="ip">The ip address as a span of characters.</param>
         /// <param name="port">The port number.</param>
@@ -541,16 +518,16 @@ namespace enet
         public SocketError SetHostNameIpv6(ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => _handle.SetHostNameIpv6(hostName, port, scopeId);
 
         /// <summary>
-        ///     Retrieves the address from this socket address as a character span.
+        ///     Retrieves the ip address from this address as text.
         /// </summary>
-        /// <param name="ip">A span to receive the address chars. On success, it is resized to the actual character count.</param>
+        /// <param name="ip">The character span to receive the ip address; resized to the actual length on success.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
         public readonly SocketError GetIp(ref Span<char> ip) => _handle.GetIp(ref ip);
 
         /// <summary>
-        ///     Retrieves the host name (reverse DNS) from this address.
+        ///     Gets the host name (reverse DNS) from this address.
         /// </summary>
-        /// <param name="hostName">A span to receive the host name chars. On success, it is resized to the actual character count.</param>
+        /// <param name="hostName">The character span to receive the host name; resized to the actual length on success.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
         public readonly SocketError GetHostName(ref Span<char> hostName) => _handle.GetHostName(ref hostName);
 
@@ -558,9 +535,9 @@ namespace enet
         ///     Gets the handle to the underlying object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#pragma warning disable CS9084 // Struct member returns 'this' or other instance members by reference
+#pragma warning disable CS9084 // Struct member returns 'this' or other instance members by reference.
         internal ref NativeSocketAddress GetInner() => ref _handle;
-#pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference
+#pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference.
     }
 
     /// <summary>
@@ -612,31 +589,35 @@ namespace enet
     ///     <list type="bullet">
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_RELIABLE</c> - packet must be received by the target peer
+    ///                 <see cref="ENetPacketFlag.ENET_PACKET_FLAG_RELIABLE" /> - packet must be received by the target peer
     ///                 and resend attempts should be made until the packet is delivered
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_UNSEQUENCED</c> - packet will not be sequenced with other packets
+    ///                 <see cref="ENetPacketFlag.ENET_PACKET_FLAG_UNSEQUENCED" /> - packet will not be sequenced with other
+    ///                 packets
     ///                 (not supported for reliable packets)
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_NO_ALLOCATE</c> - packet will not allocate data, and user must supply it
+    ///                 <see cref="ENetPacketFlag.ENET_PACKET_FLAG_NO_ALLOCATE" /> - packet will not allocate data, and user
+    ///                 must supply it
     ///                 instead
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT</c> - packet will be fragmented using unreliable
+    ///                 <see cref="ENetPacketFlag.ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT" /> - packet will be fragmented using
+    ///                 unreliable
     ///                 (instead of reliable) sends if it exceeds the MTU
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_SENT</c> - whether the packet has been sent from all queues it has been
+    ///                 <see cref="ENetPacketFlag.ENET_PACKET_FLAG_SENT" /> - whether the packet has been sent from all queues
+    ///                 it has been
     ///                 entered into
     ///             </description>
     ///         </item>
@@ -651,7 +632,7 @@ namespace enet
         public nuint referenceCount;
 
         /// <summary>
-        ///     bitwise-or of ENetPacketFlag constants
+        ///     bitwise-or of <see cref="ENetPacketFlag" /> constants
         /// </summary>
         public uint flags;
 
@@ -1194,7 +1175,8 @@ namespace enet
         public uint packetsLost;
 
         /// <summary>
-        ///     mean packet loss of reliable packets as a ratio with respect to the constant ENET_PEER_PACKET_LOSS_SCALE
+        ///     mean packet loss of reliable packets as a ratio with respect to the constant
+        ///     <see cref="ENET_PEER_PACKET_LOSS_SCALE" />
         /// </summary>
         public uint packetLoss;
 
@@ -1204,7 +1186,7 @@ namespace enet
         public uint packetLossVariance;
 
         /// <summary>
-        ///     The current packet throttle value in the range zero to ENET_PEER_PACKET_THROTTLE_SCALE.
+        ///     The current packet throttle value in the range zero to <see cref="ENet.ENET_PEER_PACKET_THROTTLE_SCALE" />.
         /// </summary>
         public uint packetThrottle;
 
@@ -1602,7 +1584,7 @@ namespace enet
         public nuint bandwidthLimitedPeers;
 
         /// <summary>
-        ///     optional number of allowed peers from duplicate IPs, defaults to ENET_PROTOCOL_MAXIMUM_PEER_ID
+        ///     optional number of allowed peers from duplicate IPs, defaults to <see cref="ENET_PROTOCOL_MAXIMUM_PEER_ID" />
         /// </summary>
         public nuint duplicatePeers;
 
@@ -1808,16 +1790,16 @@ namespace enet
         ENET_EVENT_TYPE_NONE = 0,
 
         /// <summary>
-        ///     a connection request initiated by enet_host_connect has completed.
+        ///     a connection request initiated by <see cref="enet_host_connect" /> has completed.
         ///     The peer field contains the peer which successfully connected.
         /// </summary>
         ENET_EVENT_TYPE_CONNECT = 1,
 
         /// <summary>
         ///     a peer has disconnected. This event is generated on a successful
-        ///     completion of a disconnect initiated by enet_peer_disconnect, if
+        ///     completion of a disconnect initiated by <see cref="enet_peer_disconnect" />, if
         ///     a peer has timed out, or if a connection request intialized by
-        ///     enet_host_connect has timed out. The peer field contains the peer
+        ///     <see cref="enet_host_connect" /> has timed out. The peer field contains the peer
         ///     which disconnected. The data field contains user supplied data
         ///     describing the disconnection, or 0, if none is available.
         /// </summary>
@@ -1828,13 +1810,13 @@ namespace enet
         ///     peer which sent the packet. The channelID field specifies the channel
         ///     number upon which the packet was received. The packet field contains
         ///     the packet that was received; this packet must be destroyed with
-        ///     enet_packet_destroy after use.
+        ///     <see cref="enet_packet_destroy" /> after use.
         /// </summary>
         ENET_EVENT_TYPE_RECEIVE = 3
     }
 
     /// <summary>
-    ///     An ENet event as returned by enet_host_service().
+    ///     An ENet event as returned by <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />.
     /// </summary>
     /// <seealso cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
     public unsafe struct ENetEvent

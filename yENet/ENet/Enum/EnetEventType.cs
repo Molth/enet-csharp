@@ -5,7 +5,7 @@ using enet;
 namespace Enet
 {
     /// <summary>
-    ///     An ENet event type.
+    ///     An ENet event type, as specified in <see cref="EnetEvent" />.
     /// </summary>
     public enum EnetEventType
     {
@@ -15,16 +15,18 @@ namespace Enet
         None = ENetEventType.ENET_EVENT_TYPE_NONE,
 
         /// <summary>
-        ///     a connection request initiated by enet_host_connect has completed.
+        ///     a connection request initiated by <see cref="EnetHost.TryConnect(ENetAddress, nuint, uint, out EnetPeer)" />
+        ///     has completed.
         ///     The peer field contains the peer which successfully connected.
         /// </summary>
         Connect = ENetEventType.ENET_EVENT_TYPE_CONNECT,
 
         /// <summary>
         ///     a peer has disconnected. This event is generated on a successful
-        ///     completion of a disconnect initiated by enet_peer_disconnect, if
+        ///     completion of a disconnect initiated by <see cref="EnetPeer.Disconnect(uint)" />, if
         ///     a peer has timed out, or if a connection request intialized by
-        ///     enet_host_connect has timed out. The peer field contains the peer
+        ///     <see cref="EnetHost.TryConnect(ENetAddress, nuint, uint, out EnetPeer)" /> has timed out. The peer field
+        ///     contains the peer
         ///     which disconnected. The data field contains user supplied data
         ///     describing the disconnection, or 0, if none is available.
         /// </summary>
@@ -35,7 +37,7 @@ namespace Enet
         ///     peer which sent the packet. The channelID field specifies the channel
         ///     number upon which the packet was received. The packet field contains
         ///     the packet that was received; this packet must be destroyed with
-        ///     enet_packet_destroy after use.
+        ///     <see cref="EnetPacket.Dispose()" /> after use.
         /// </summary>
         Receive = ENetEventType.ENET_EVENT_TYPE_RECEIVE
     }

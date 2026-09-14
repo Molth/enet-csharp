@@ -10,7 +10,7 @@ namespace ThreadedEnet
     ///     Implements the background worker loop that services the host, processes queued commands,
     ///     and forwards host events to the incoming event queue.
     /// </summary>
-    internal static class EnetHostRunner
+    internal static class ThreadedManagedEnetHostRunner
     {
         /// <summary>
         ///     Attempts to increment the active thread count for the given host state.
@@ -25,7 +25,7 @@ namespace ThreadedEnet
         ///     If the current count is zero, it returns <see langword="false" /> to indicate that
         ///     no further work should be performed (shutdown in progress).
         /// </remarks>
-        public static bool TryEnter(EnetHostStates states)
+        public static bool TryEnter(ThreadedManagedEnetHostStates states)
         {
             var spinWait = new UnsafeSpinWait();
             while (true)
@@ -49,17 +49,17 @@ namespace ThreadedEnet
         ///     This method should be called when a background thread exits to release its reference
         ///     on the host state. It atomically decreases the thread counter.
         /// </remarks>
-        public static void Exit(EnetHostStates states) => states.Threads.Sub(1);
+        public static void Exit(ThreadedManagedEnetHostStates states) => states.Threads.Sub(1);
 
         /// <summary>
         ///     The entry point of the background thread.
         ///     Services the host until the associated state is shut down, then disconnects all peers
         ///     and releases the host and the event queues.
         /// </summary>
-        /// <param name="obj">The <see cref="EnetHostStates" /> instance that drives this worker.</param>
+        /// <param name="obj">The <see cref="ThreadedManagedEnetHostStates" /> instance that drives this worker.</param>
         public static void ThreadedRunning(object? obj)
         {
-            if (obj is not EnetHostStates states || states.Host == null)
+            if (obj is not ThreadedManagedEnetHostStates states || states.Host == null)
             {
                 ThrowHelpers.ThrowArgumentNullException(ExceptionArgument._dummy);
                 return;

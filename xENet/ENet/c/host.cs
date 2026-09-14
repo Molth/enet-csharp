@@ -41,14 +41,18 @@ namespace enet
         /// </summary>
         /// <param name="host">The host on which to set the ignore-connection-requests behavior.</param>
         /// <param name="ignoreConnectRequests">Non-zero to ignore incoming connection requests, or zero to accept them.</param>
+        /// <remarks>
+        ///     Set to non-zero when the host should not be connectable, which is typically used on clients.
+        ///     Note that this does not prevent connections whose handshake has already begun.
+        /// </remarks>
         public static void enet_host_ignore_connect_requests(ENetHost* host, int ignoreConnectRequests) => host->ignoreConnectRequests = (ushort)(ignoreConnectRequests != 0 ? 1 : 0);
 
         /// <summary>
         ///     Sets the MTU of the host.
         /// </summary>
         /// <param name="host">The host whose MTU is being set.</param>
-        /// <param name="mtu">The MTU to set, in bytes. If 0, the host default MTU is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds ENET_PROTOCOL_MAXIMUM_MTU.</returns>
+        /// <param name="mtu">The MTU to set, in bytes. If 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
+        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
         public static int enet_host_mtu(ENetHost* host, uint mtu)
         {
             if (mtu > ENET_PROTOCOL_MAXIMUM_MTU)
@@ -101,7 +105,10 @@ namespace enet
         ///     Sets the maximum number of duplicate peers that the host will track.
         /// </summary>
         /// <param name="host">The host whose duplicate peer limit is being set.</param>
-        /// <param name="duplicatePeers">The maximum number of duplicate peers to maintain. if 0, the default is used.</param>
+        /// <param name="duplicatePeers">
+        ///     The maximum number of duplicate peers to maintain. if 0,
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" /> is used.
+        /// </param>
         public static void enet_host_duplicate_peers(ENetHost* host, nuint duplicatePeers)
         {
             if (duplicatePeers == 0)
@@ -113,7 +120,10 @@ namespace enet
         ///     Sets the maximum allowable packet size that may be sent or received on a peer.
         /// </summary>
         /// <param name="host">The host whose maximum packet size is being set.</param>
-        /// <param name="maximumPacketSize">The maximum allowable packet size; if 0, the default is used.</param>
+        /// <param name="maximumPacketSize">
+        ///     The maximum allowable packet size; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE" /> is used.
+        /// </param>
         public static void enet_host_maximum_packet_size(ENetHost* host, nuint maximumPacketSize)
         {
             if (maximumPacketSize == 0)
@@ -125,7 +135,10 @@ namespace enet
         ///     Sets the maximum aggregate amount of buffer space a peer may use waiting for packets to be delivered.
         /// </summary>
         /// <param name="host">The host whose maximum waiting data is being set.</param>
-        /// <param name="maximumWaitingData">The maximum aggregate waiting data; if 0, the default is used.</param>
+        /// <param name="maximumWaitingData">
+        ///     The maximum aggregate waiting data; if 0,
+        ///     <see cref="ENet.ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA" /> is used.
+        /// </param>
         public static void enet_host_maximum_waiting_data(ENetHost* host, nuint maximumWaitingData)
         {
             if (maximumWaitingData == 0)
@@ -183,7 +196,7 @@ namespace enet
         /// <param name="peerCount">The maximum number of peers that should be allocated for the host.</param>
         /// <param name="channelLimit">
         ///     The maximum number of channels allowed; if 0, then this is equivalent to
-        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />
         /// </param>
         /// <param name="incomingBandwidth">
         ///     Downstream bandwidth of the host in bytes/second; if 0, ENet will assume unlimited
@@ -196,13 +209,13 @@ namespace enet
         /// <param name="option">
         ///     <list type="bullet">
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV4 (default): Ipv4</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV4" /> (default): Ipv4</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_ONLY: Ipv6-only</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV6_ONLY" />: Ipv6-only</description>
         ///         </item>
         ///         <item>
-        ///             <description>ENET_HOSTOPT_IPV6_DUALMODE: both Ipv4 and Ipv6</description>
+        ///             <description><see cref="ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE" />: both Ipv4 and Ipv6</description>
         ///         </item>
         ///     </list>
         /// </param>
@@ -374,8 +387,9 @@ namespace enet
         /// <param name="data">user data supplied to the receiving host</param>
         /// <returns>a peer representing the foreign host on success, NULL on failure</returns>
         /// <remarks>
-        ///     The peer returned will have not completed the connection until enet_host_service()
-        ///     notifies of an ENET_EVENT_TYPE_CONNECT event for the peer.
+        ///     The peer returned will have not completed the connection until
+        ///     <see cref="enet_host_service(ENetHost*, ENetEvent*, uint)" />
+        ///     notifies of an <see cref="ENetEventType.ENET_EVENT_TYPE_CONNECT" /> event for the peer.
         /// </remarks>
         public static ENetPeer* enet_host_connect(ENetHost* host, ENetAddress* address, nuint channelCount, uint data)
         {
@@ -508,7 +522,7 @@ namespace enet
         /// <param name="host">host to limit</param>
         /// <param name="channelLimit">
         ///     the maximum number of channels allowed; if 0, then this is equivalent to
-        ///     ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT
+        ///     <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />
         /// </param>
         public static void enet_host_channel_limit(ENetHost* host, nuint channelLimit)
         {

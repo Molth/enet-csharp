@@ -5,22 +5,22 @@ using enet;
 namespace Enet
 {
     /// <summary>
-    ///     Specifies the IP addressing options for an ENet host.
+    ///     The addressing mode used when creating a host.
     /// </summary>
     public enum EnetHostOption
     {
         /// <summary>
-        ///     The host listens using IPv4 addressing.
+        ///     Use Ipv4 addressing only.
         /// </summary>
         Ipv4 = ENetHostOption.ENET_HOSTOPT_IPV4,
 
         /// <summary>
-        ///     The host listens using IPv6 addressing only.
+        ///     Use Ipv6 addressing only.
         /// </summary>
         Ipv6Only = ENetHostOption.ENET_HOSTOPT_IPV6_ONLY,
 
         /// <summary>
-        ///     The host listens using IPv6 dual-stack mode, accepting both IPv4 and IPv6.
+        ///     Use Ipv6 dual stack addressing, accepting both Ipv4 and Ipv6.
         /// </summary>
         Ipv6DualMode = ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE
     }

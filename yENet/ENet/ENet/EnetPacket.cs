@@ -21,31 +21,35 @@ namespace Enet
     ///     <list type="bullet">
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_RELIABLE</c> - packet must be received by the target peer
+    ///                 <see cref="EnetPacketFlag.Reliable" /> - packet must be received by the target peer
     ///                 and resend attempts should be made until the packet is delivered
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_UNSEQUENCED</c> - packet will not be sequenced with other packets
+    ///                 <see cref="EnetPacketFlag.Unsequenced" /> - packet will not be sequenced with other
+    ///                 packets
     ///                 (not supported for reliable packets)
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_NO_ALLOCATE</c> - packet will not allocate data, and user must supply it
+    ///                 <see cref="EnetPacketFlag.NoAllocate" /> - packet will not allocate data, and user
+    ///                 must supply it
     ///                 instead
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_UNRELIABLE_FRAGMENT</c> - packet will be fragmented using unreliable
+    ///                 <see cref="EnetPacketFlag.UnreliableFragment" /> - packet will be fragmented using
+    ///                 unreliable
     ///                 (instead of reliable) sends if it exceeds the MTU
     ///             </description>
     ///         </item>
     ///         <item>
     ///             <description>
-    ///                 <c>ENET_PACKET_FLAG_SENT</c> - whether the packet has been sent from all queues it has been
+    ///                 <see cref="EnetPacketFlag.Sent" /> - whether the packet has been sent from all queues
+    ///                 it has been
     ///                 entered into
     ///             </description>
     ///         </item>
@@ -90,9 +94,9 @@ namespace Enet
         public readonly nuint ReferenceCount => _handle->referenceCount;
 
         /// <summary>
-        ///     bitwise-or of ENetPacketFlag constants
+        ///     bitwise-or of <see cref="EnetPacketFlag" /> constants
         /// </summary>
-        public readonly uint Flags => _handle->flags;
+        public readonly EnetPacketFlag Flags => (EnetPacketFlag)_handle->flags;
 
         /// <summary>
         ///     allocated data for packet
@@ -166,7 +170,7 @@ namespace Enet
         ///     has a non-null data pointer,
         ///     and that the data fits within the provided buffer.
         /// </remarks>
-        public bool TryCopyTo(ref byte destination, nuint byteCount)
+        public readonly bool TryCopyTo(ref byte destination, nuint byteCount)
         {
             fixed (byte* pBuffer = &destination)
             {
@@ -184,7 +188,7 @@ namespace Enet
         ///     has a non-null data pointer,
         ///     and that the data fits within the provided buffer.
         /// </remarks>
-        public bool TryCopyTo(Span<byte> destination) => TryCopyTo(ref MemoryMarshal.GetReference(destination), (nuint)destination.Length);
+        public readonly bool TryCopyTo(Span<byte> destination) => TryCopyTo(ref MemoryMarshal.GetReference(destination), (nuint)destination.Length);
 
         /// <summary>
         ///     Attempts to get a <see cref="Span{Byte}" /> that wraps the packet's data buffer.
@@ -247,7 +251,7 @@ namespace Enet
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
@@ -256,6 +260,7 @@ namespace Enet
             var packet = ENET_API.enet_packet_create(data, dataLength, (uint)flags);
             if (packet == null)
                 return default;
+
             packet->freeCallback = freeCallback;
             packet->userData = userData;
             return new EnetPacket(packet);
@@ -269,7 +274,7 @@ namespace Enet
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
@@ -289,7 +294,7 @@ namespace Enet
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         public static EnetPacket Create(ref byte data, nuint dataLength, EnetPacketFlag flags) => Create(ref data, dataLength, flags, null);
 
@@ -300,7 +305,7 @@ namespace Enet
         ///     initial contents of the packet's data;
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
@@ -313,7 +318,7 @@ namespace Enet
         ///     initial contents of the packet's data;
         ///     the packet's data will remain uninitialized if data is NULL.
         /// </param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         public static EnetPacket Create(ReadOnlySpan<byte> data, EnetPacketFlag flags) => Create(data, flags, null);
 
@@ -321,7 +326,7 @@ namespace Enet
         ///     Creates a packet that may be sent to a peer.
         /// </summary>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <param name="freeCallback">function to be called when the packet is no longer in use.</param>
         /// <param name="userData">application private data, may be freely modified</param>
         /// <returns>the packet on success, NULL on failure</returns>
@@ -332,7 +337,7 @@ namespace Enet
         ///     Creates a packet that may be sent to a peer.
         /// </summary>
         /// <param name="dataLength">size of the data allocated for this packet</param>
-        /// <param name="flags">flags for this packet as described for the ENetPacket structure.</param>
+        /// <param name="flags">flags for this packet as described for the <see cref="EnetPacket" /> structure.</param>
         /// <returns>the packet on success, NULL on failure</returns>
         /// <remarks>the packet's data will remain uninitialized because data is NULL.</remarks>
         public static EnetPacket CreateUninitialized(nuint dataLength, EnetPacketFlag flags) => CreateUninitialized(dataLength, flags, null);

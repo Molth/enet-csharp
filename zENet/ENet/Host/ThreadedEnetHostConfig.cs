@@ -8,7 +8,7 @@ namespace ThreadedEnet
     /// <summary>
     ///     Configuration options used to create and run a threaded ENet host.
     /// </summary>
-    public struct EnetHostConfig
+    public struct ThreadedEnetHostConfig
     {
         /// <summary>
         ///     The local address to bind the host socket to.
@@ -22,7 +22,7 @@ namespace ThreadedEnet
 
         /// <summary>
         ///     The maximum number of channels allowed per peer;
-        ///     zero uses the protocol default.
+        ///     zero uses <see cref="ENet.ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT" />.
         /// </summary>
         public nuint ChannelLimit;
 
@@ -62,12 +62,6 @@ namespace ThreadedEnet
         public unsafe delegate* managed<ENetHost*, ENetEvent*, int> InterceptCallback;
 
         /// <summary>
-        ///     The maximum number of duplicate peers the host will track;
-        ///     zero uses the internal default.
-        /// </summary>
-        public nuint MaxDuplicatePeers;
-
-        /// <summary>
         ///     When non-zero, the host ignores incoming connection requests instead of accepting them.
         /// </summary>
         public bool IgnoreConnectRequests;
@@ -76,6 +70,12 @@ namespace ThreadedEnet
         ///     Gets the maximum transmission unit (MTU) used by the host.
         /// </summary>
         public uint Mtu;
+
+        /// <summary>
+        ///     Number of allowed peers from duplicate IPs.
+        ///     zero uses <see cref="ENet.ENET_PROTOCOL_MAXIMUM_PEER_ID" />.
+        /// </summary>
+        public nuint MaximumDuplicatePeers;
 
         /// <summary>
         ///     Gets the maximum packet size allowed by the host.

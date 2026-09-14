@@ -39,8 +39,8 @@ bld/
 
 # JetBrains Rider
 .idea/
-enet-csharp.sln.DotSettings
-enet-csharp.sln.DotSettings.user
+*.DotSettings
+*.DotSettings.user
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
