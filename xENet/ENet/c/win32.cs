@@ -325,7 +325,13 @@ namespace enet
         /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
-        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => address->FromIpEndPoint(ipEndPoint) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint)
+        {
+            SocketError error = ENetAddress.FromIpEndPoint(ipEndPoint, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPAddress" /> and port.
@@ -335,7 +341,13 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipAddress" /> is null.</exception>
-        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => address->FromIpAddress(ipAddress, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port)
+        {
+            SocketError error = ENetAddress.FromIpAddress(ipAddress, port, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Sets the specified Ipv4 address and port on an <see cref="ENetAddress" />.
@@ -344,7 +356,13 @@ namespace enet
         /// <param name="ip">The ip address as a span of characters.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => address->SetIpIpv4(ip, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port)
+        {
+            SocketError error = ENetAddress.FromIpIpv4(ip, port, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Sets the specified Ipv6 address, port, and scope id on an <see cref="ENetAddress" />.
@@ -354,7 +372,13 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="scopeId">The scope id for the Ipv6 address.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = default) => address->SetIpIpv6(ip, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId)
+        {
+            SocketError error = ENetAddress.FromIpIpv6(ip, port, scopeId, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv4 address.
@@ -363,7 +387,13 @@ namespace enet
         /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port) => address->SetHostNameIpv4(hostName, port) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port)
+        {
+            SocketError error = ENetAddress.FromHostNameIpv4(hostName, port, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv6 address.
@@ -373,7 +403,13 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
         /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId = default) => address->SetHostNameIpv6(hostName, port, scopeId) == SocketError.Success ? 0 : -1;
+        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId)
+        {
+            SocketError error = ENetAddress.FromHostNameIpv6(hostName, port, scopeId, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
 
         /// <summary>
         ///     Retrieves the ip address from an <see cref="ENetAddress" /> as text.

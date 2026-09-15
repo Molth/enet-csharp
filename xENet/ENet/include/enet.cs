@@ -238,6 +238,11 @@ namespace enet
         }
 
         /// <summary>
+        ///     Gets the ip address of the endpoint.
+        /// </summary>
+        public Span<byte> Ip => _handle.Ip;
+
+        /// <summary>
         ///     Gets or sets the port number of the socket address.
         /// </summary>
         /// <returns>An unsigned integer value indicating the port number of the socket address.</returns>
@@ -300,11 +305,6 @@ namespace enet
         ///     Gets the underlying memory that can be passed to native OS calls.
         /// </summary>
         public Span<byte> Buffer => _handle.Buffer;
-
-        /// <summary>
-        ///     Gets the ip address of the endpoint.
-        /// </summary>
-        public Span<byte> Address => _handle.Address;
 
         /// <summary>
         ///     Returns a span that represents the raw (28 bytes) buffer of the address.
@@ -449,75 +449,6 @@ namespace enet
         public readonly SocketError ToSocketAddress(out SocketAddress? result) => _handle.ToSocketAddress(out result);
 
         /// <summary>
-        ///     Populates this address from the specified <see cref="IPEndPoint" />.
-        /// </summary>
-        /// <param name="source">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
-        /// <returns>
-        ///     <see cref="SocketError.Success" /> if successful;
-        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
-        /// </returns>
-        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
-        public SocketError FromIpEndPoint(IPEndPoint source) => _handle.FromIpEndPoint(source);
-
-        /// <summary>
-        ///     Populates this address from the specified <see cref="IPAddress" /> and port.
-        /// </summary>
-        /// <param name="source">The <see cref="IPAddress" /> to copy from.</param>
-        /// <param name="port">The port number.</param>
-        /// <returns>
-        ///     <see cref="SocketError.Success" /> if successful;
-        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
-        /// </returns>
-        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
-        public SocketError FromIpAddress(IPAddress source, ushort port) => _handle.FromIpAddress(source, port);
-
-        /// <summary>
-        ///     Populates this address from the specified <see cref="SocketAddress" />.
-        /// </summary>
-        /// <param name="source">The source <see cref="SocketAddress" /> to copy from.</param>
-        /// <returns>
-        ///     <see cref="SocketError.Success" /> if the address is valid and copied successfully;
-        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6,
-        ///     or the buffer size is insufficient.
-        /// </returns>
-        /// <exception cref="NullReferenceException">Thrown if <paramref name="source" /> is null.</exception>
-        public SocketError FromSocketAddress(SocketAddress source) => _handle.FromSocketAddress(source);
-
-        /// <summary>
-        ///     Sets the specified Ipv4 address and port on this address.
-        /// </summary>
-        /// <param name="ip">The ip address as a span of characters.</param>
-        /// <param name="port">The port number.</param>
-        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
-        public SocketError SetIpIpv4(ReadOnlySpan<char> ip, ushort port) => _handle.SetIpIpv4(ip, port);
-
-        /// <summary>
-        ///     Sets the specified Ipv6 address, port, and scope id on this address.
-        /// </summary>
-        /// <param name="ip">The ip address as a span of characters.</param>
-        /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
-        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
-        public SocketError SetIpIpv6(ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => _handle.SetIpIpv6(ip, port, scopeId);
-
-        /// <summary>
-        ///     Populates this address by resolving the specified host name to an Ipv4 address.
-        /// </summary>
-        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
-        /// <param name="port">The port number.</param>
-        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
-        public SocketError SetHostNameIpv4(ReadOnlySpan<char> hostName, ushort port) => _handle.SetHostNameIpv4(hostName, port);
-
-        /// <summary>
-        ///     Populates this address by resolving the specified host name to an Ipv6 address.
-        /// </summary>
-        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
-        /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
-        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
-        public SocketError SetHostNameIpv6(ReadOnlySpan<char> hostName, ushort port, uint scopeId = 0) => _handle.SetHostNameIpv6(hostName, port, scopeId);
-
-        /// <summary>
         ///     Retrieves the ip address from this address as text.
         /// </summary>
         /// <param name="ip">The character span to receive the ip address; resized to the actual length on success.</param>
@@ -538,6 +469,121 @@ namespace enet
 #pragma warning disable CS9084 // Struct member returns 'this' or other instance members by reference.
         internal ref NativeSocketAddress GetInner() => ref _handle;
 #pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference.
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> from the specified <see cref="IPEndPoint" />.
+        /// </summary>
+        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
+        public static SocketError FromIpEndPoint(IPEndPoint ipEndPoint, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromIpEndPoint(ipEndPoint, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> from the specified <see cref="IPAddress" /> and port.
+        /// </summary>
+        /// <param name="ipAddress">The <see cref="IPAddress" /> to copy from.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if successful;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipAddress" /> is null.</exception>
+        public static SocketError FromIpAddress(IPAddress ipAddress, ushort port, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromIpAddress(ipAddress, port, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> from the specified <see cref="SocketAddress" />.
+        /// </summary>
+        /// <param name="socketAddress">The source <see cref="SocketAddress" /> to copy from.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns>
+        ///     <see cref="SocketError.Success" /> if the address is valid and copied successfully;
+        ///     <see cref="SocketError.AddressFamilyNotSupported" /> if the address family is not Ipv4 or Ipv6;
+        ///     <see cref="SocketError.NoBufferSpaceAvailable" /> if the address size is insufficient.
+        /// </returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="socketAddress" /> is null.</exception>
+        public static SocketError FromSocketAddress(SocketAddress socketAddress, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromSocketAddress(socketAddress, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> from the specified Ipv4 address and port.
+        /// </summary>
+        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError FromIpIpv4(ReadOnlySpan<char> ip, ushort port, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromIpIpv4(ip, port, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> from the specified Ipv6 address, port, and scope id.
+        /// </summary>
+        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError FromIpIpv6(ReadOnlySpan<char> ip, ushort port, uint scopeId, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromIpIpv6(ip, port, scopeId, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> by resolving the specified host name to an Ipv4 address.
+        /// </summary>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError FromHostNameIpv4(ReadOnlySpan<char> hostName, ushort port, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromHostNameIpv4(hostName, port, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
+
+        /// <summary>
+        ///     Populates a <see cref="ENetAddress" /> by resolving the specified host name to an Ipv6 address.
+        /// </summary>
+        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
+        /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SocketError FromHostNameIpv6(ReadOnlySpan<char> hostName, ushort port, uint scopeId, out ENetAddress result)
+        {
+            SocketError error = NativeSocketAddress.FromHostNameIpv6(hostName, port, scopeId, out NativeSocketAddress address);
+            result = new ENetAddress(address);
+            return error;
+        }
     }
 
     /// <summary>

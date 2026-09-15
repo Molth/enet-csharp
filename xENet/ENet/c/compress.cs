@@ -822,6 +822,7 @@ namespace enet
             compressor.context = enet_range_coder_create();
             if (compressor.context == null)
                 return -1;
+
             compressor.compress = &enet_range_coder_compress;
             compressor.decompress = &enet_range_coder_decompress;
             compressor.destroy = &enet_range_coder_destroy;

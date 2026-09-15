@@ -28,8 +28,7 @@ namespace Test2
             const int timeout = 15;
             const int maxClients = 10;
 
-            var address = new ENetAddress();
-            address.FromIpAddress(IPAddress.IPv6Any, 12345);
+            ENetAddress.FromIpAddress(IPAddress.IPv6Any, 12345, out var address);
 
             using (var host = ManagedEnetHost.Create(address, maxClients, 0, 0, 0, EnetHostOption.Ipv6DualMode))
             {
@@ -91,11 +90,8 @@ namespace Test2
             const int timeout = 15;
             const int maxClients = 1;
 
-            var address = new ENetAddress();
-            address.FromIpAddress(IPAddress.Any, 0);
-
-            var serverAddress = new ENetAddress();
-            serverAddress.FromIpAddress(IPAddress.Loopback, 12345);
+            ENetAddress.FromIpAddress(IPAddress.Any, 0, out var address);
+            ENetAddress.FromIpAddress(IPAddress.Loopback, 12345, out var serverAddress);
 
             var ip = new char[256];
 

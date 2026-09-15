@@ -1188,7 +1188,7 @@ namespace enet
                 if (peer->state == ENET_PEER_STATE_DISCONNECTED ||
                     peer->state == ENET_PEER_STATE_ZOMBIE ||
                     (host->receivedAddress != peer->address &&
-                     !peer->address.Address.SequenceEqual(ENET_HOST_BROADCAST)) ||
+                     !peer->address.Ip.SequenceEqual(ENET_HOST_BROADCAST)) ||
                     (peer->outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
                      sessionID != peer->incomingSessionID))
                     return 0;
