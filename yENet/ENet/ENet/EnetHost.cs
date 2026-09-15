@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using enet;
 using NativeSockets;
 
+// ReSharper disable ALL
+
 namespace Enet
 {
     /// <summary>
@@ -222,7 +224,7 @@ namespace Enet
         ///         The <paramref name="incomingPeerId" /> corresponds to a fixed slot in the host's internal peers array,
         ///         which is allocated at host creation time based on the <c>peerCount</c> parameter passed to
         ///         <see cref="ENET_API.enet_host_create" />.
-        /// The ID is not assigned dynamically during connection; it is the index into
+        ///         The ID is not assigned dynamically during connection; it is the index into
         ///         that pre-allocated array and remains constant for the lifetime of the host.
         ///     </para>
         ///     <para>

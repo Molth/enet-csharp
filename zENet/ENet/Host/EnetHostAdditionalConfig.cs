@@ -8,10 +8,6 @@ namespace ThreadedEnet
     /// <summary>
     ///     Additional configuration applied to an <see cref="EnetHost" /> after it is created.
     /// </summary>
-    /// <remarks>
-    ///     Each field maps to the corresponding setter invoked by
-    ///     <see cref="ThreadedManagedEnetHost.Start(ThreadedEnetHostConfig)" /> after the underlying host is created.
-    /// </remarks>
     public struct EnetHostAdditionalConfig
     {
         /// <summary>
