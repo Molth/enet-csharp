@@ -42,7 +42,7 @@ namespace Test3
 
             var config = new ThreadedEnetHostConfig();
             ref var innerConfig = ref config.InnerConfig;
-            innerConfig.LocalAddress.FromIpAddress(IPAddress.IPv6Any, 12345);
+            ENetAddress.FromIpAddress(IPAddress.IPv6Any, 12345, out innerConfig.LocalAddress);
             innerConfig.PeerCount = 100;
             innerConfig.Option = EnetHostOption.Ipv6DualMode;
             config.ServiceTimeout = 0;
@@ -94,13 +94,13 @@ namespace Test3
 
             var config = new ThreadedEnetHostConfig();
             ref var innerConfig = ref config.InnerConfig;
-            innerConfig.LocalAddress.FromIpAddress(IPAddress.Any, 0);
+            ENetAddress.FromIpAddress(IPAddress.Any, 0, out innerConfig.LocalAddress);
             innerConfig.PeerCount = 1;
             innerConfig.Option = EnetHostOption.Ipv4;
             config.ServiceTimeout = 0;
 
             var serverAddress = new ENetAddress();
-            serverAddress.FromIpAddress(IPAddress.Loopback, 12345);
+            ENetAddress.FromIpAddress(IPAddress.Loopback, 12345, out serverAddress);
 
             using (var client = new ThreadedManagedEnetHost())
             {
