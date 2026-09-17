@@ -88,6 +88,12 @@ namespace enet
         internal ENetSocket(NativeSocket handle) => _handle = handle;
 
         /// <summary>
+        ///     Gets the handle to the underlying object.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal NativeSocket GetInner() => _handle;
+
+        /// <summary>
         ///     Gets the native socket handle.
         /// </summary>
         public nint Handle => _handle.Handle;
@@ -167,11 +173,5 @@ namespace enet
         ///     Indicates whether the current object is not equal to another object.
         /// </summary>
         public static bool operator !=(ENetSocket left, ENetSocket right) => !left.Equals(right);
-
-        /// <summary>
-        ///     Gets the handle to the underlying object.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal NativeSocket GetInner() => _handle;
     }
 }

@@ -33,11 +33,11 @@ namespace Test1
                 var address = new ENetAddress();
                 enet_address_set_from_ipaddress(&address, IPAddress.IPv6Any, 7777);
 
-                Span<char> hostName = stackalloc char[16];
-                var error = enet_address_get_hostname(&address, ref hostName);
+                Span<char> ip = stackalloc char[16];
+                var error = enet_address_get_ip(&address, ref ip);
 
                 if (error == 0)
-                    Console.WriteLine(hostName.ToString());
+                    Console.WriteLine(ip.ToString());
 
                 host = enet_host_create(&address, 4095, 0, 0, 0, ENetHostOption.ENET_HOSTOPT_IPV6_DUALMODE);
                 enet_host_compress_with_range_coder(host);

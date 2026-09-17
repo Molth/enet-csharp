@@ -350,6 +350,37 @@ namespace enet
         }
 
         /// <summary>
+        ///     Tries to parse an <see cref="IPEndPoint" /> string into a <see cref="ENetAddress" />.
+        /// </summary>
+        /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
+        /// <param name="address">When this method returns, contains the parsed address.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        /// <remarks>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</remarks>
+        public static int enet_address_set_try_parse_ipendpoint(ENetAddress* address, ReadOnlySpan<char> ipEndPointText)
+        {
+            SocketError error = ENetAddress.TryParse(ipEndPointText, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
+
+        /// <summary>
+        ///     Tries to parse an <see cref="IPAddress" /> string into an <see cref="ENetAddress" />,
+        ///     using the specified port.
+        /// </summary>
+        /// <param name="ipAddressText">The <see cref="IPAddress" /> string to parse.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="address">When this method returns, contains the parsed address.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        public static int enet_address_set_try_parse_ipaddress(ENetAddress* address, ReadOnlySpan<char> ipAddressText, ushort port)
+        {
+            SocketError error = ENetAddress.TryParseIpAddress(ipAddressText, port, out ENetAddress result);
+            if (error == SocketError.Success)
+                *address = result;
+            return error == SocketError.Success ? 0 : -1;
+        }
+
+        /// <summary>
         ///     Sets the specified Ipv4 address and port on an <see cref="ENetAddress" />.
         /// </summary>
         /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
@@ -381,50 +412,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv4 address.
-        /// </summary>
-        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
-        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
-        /// <param name="port">The port number.</param>
-        /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv4(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port)
-        {
-            SocketError error = ENetAddress.FromHostNameIpv4(hostName, port, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
-            return error == SocketError.Success ? 0 : -1;
-        }
-
-        /// <summary>
-        ///     Populates an <see cref="ENetAddress" /> by resolving the specified host name to an Ipv6 address.
-        /// </summary>
-        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
-        /// <param name="hostName">The host name to resolve (e.g., "localhost", "example.com").</param>
-        /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The Ipv6 scope identifier (used for link-local or site-local addresses).</param>
-        /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_set_hostname_ipv6(ENetAddress* address, ReadOnlySpan<char> hostName, ushort port, uint scopeId)
-        {
-            SocketError error = ENetAddress.FromHostNameIpv6(hostName, port, scopeId, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
-            return error == SocketError.Success ? 0 : -1;
-        }
-
-        /// <summary>
         ///     Retrieves the ip address from an <see cref="ENetAddress" /> as text.
         /// </summary>
         /// <param name="address">The <see cref="ENetAddress" /> to read the ip address from.</param>
         /// <param name="ip">The character span to receive the ip address; resized to the actual length on success.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetIp(ref ip) == SocketError.Success ? 0 : -1;
-
-        /// <summary>
-        ///     Gets the host name (reverse DNS) from an <see cref="ENetAddress" />.
-        /// </summary>
-        /// <param name="address">The <see cref="ENetAddress" /> to resolve the host name for.</param>
-        /// <param name="hostName">The character span to receive the host name; resized to the actual length on success.</param>
-        /// <returns>0 on success, -1 on failure.</returns>
-        public static int enet_address_get_hostname(ENetAddress* address, ref Span<char> hostName) => address->GetHostName(ref hostName) == SocketError.Success ? 0 : -1;
     }
 }
