@@ -37,10 +37,8 @@ namespace Test2
 
                 while (!Console.KeyAvailable)
                 {
-                    // TODO: service first
                     if (host.Service(timeout, out var @event) > 0)
                     {
-                        // TODO: use loop
                         while (true)
                         {
                             var peer = @event.Peer;
@@ -104,11 +102,9 @@ namespace Test2
 
                 while (!Console.KeyAvailable)
                 {
-                    // TODO: service first
                     if (host.Service(timeout, out var @event) > 0)
                     {
-                        // TODO: use do-while
-                        do
+                        while (true)
                         {
                             var peer = @event.Peer;
                             EnetPacket packet;
@@ -146,7 +142,10 @@ namespace Test2
 
                                     break;
                             }
-                        } while (host.CheckEvents(out @event) > 0);
+
+                            if (host.CheckEvents(out @event) <= 0)
+                                break;
+                        }
                     }
                 }
             }

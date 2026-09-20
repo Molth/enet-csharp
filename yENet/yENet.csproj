@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="xENet" Version="1.2.2" />
+        <PackageReference Include="xENet" Version="1.2.6" />
     </ItemGroup>
 
     <ItemGroup>
