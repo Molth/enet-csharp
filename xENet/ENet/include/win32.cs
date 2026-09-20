@@ -114,7 +114,7 @@ namespace enet
         public bool IsIpv6 => _handle.IsIpv6;
 
         /// <summary>
-        ///     Implicitly converts a <see cref="T:NativeSockets.NativeSocket" /> to its native handle.
+        ///     Implicitly converts a <see cref="ENetSocket" /> to its native handle.
         /// </summary>
         /// <param name="socket">The socket to convert.</param>
         /// <returns>The native socket handle.</returns>

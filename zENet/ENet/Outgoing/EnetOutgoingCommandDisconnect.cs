@@ -8,7 +8,7 @@ namespace ThreadedEnet
     internal struct EnetOutgoingCommandDisconnect
     {
         /// <summary>
-        ///     The unique identifier of the peer to disconnect.
+        ///     The unique id of the peer to disconnect.
         /// </summary>
         public EnetUid Uid;
 

@@ -50,28 +50,28 @@ namespace Enet
         public EnetHost Host => new(_handle->host);
 
         /// <summary>
-        ///     Gets the remote peer identifier used for outgoing communication.
+        ///     Gets the remote peer id used for outgoing communication.
         /// </summary>
         public ushort OutgoingPeerId => _handle->outgoingPeerID;
 
         /// <summary>
-        ///     Gets the local identifier assigned to this peer by the host.
+        ///     Gets the local id assigned to this peer by the host.
         ///     This ID is unique within the host's peer list.
         /// </summary>
         public ushort IncomingPeerId => _handle->incomingPeerID;
 
         /// <summary>
-        ///     Gets the unique connection identifier for this peer.
+        ///     Gets the unique connection id for this peer.
         /// </summary>
         public uint ConnectId => _handle->connectID;
 
         /// <summary>
-        ///     Gets the session identifier used for outgoing communication.
+        ///     Gets the session id used for outgoing communication.
         /// </summary>
         public byte OutgoingSessionId => _handle->outgoingSessionID;
 
         /// <summary>
-        ///     Gets the session identifier used for incoming communication.
+        ///     Gets the session id used for incoming communication.
         /// </summary>
         public byte IncomingSessionId => _handle->incomingSessionID;
 

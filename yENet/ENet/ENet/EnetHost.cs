@@ -208,9 +208,9 @@ namespace Enet
         public readonly bool SetMtu(uint mtu) => ENET_API.enet_host_mtu(_handle, mtu) == 0;
 
         /// <summary>
-        ///     Attempts to retrieve a peer by its incoming peer identifier.
+        ///     Attempts to retrieve a peer by its incoming peer id.
         /// </summary>
-        /// <param name="incomingPeerId">The local identifier assigned to this peer slot within the host.</param>
+        /// <param name="incomingPeerId">The local id assigned to this peer slot within the host.</param>
         /// <param name="peer">
         ///     When this method returns, contains the <see cref="EnetPeer" /> corresponding to the specified ID,
         ///     or a default (invalid) peer if the ID is out of range.
@@ -467,7 +467,7 @@ namespace Enet
         /// <param name="channelId">channel on which to broadcast</param>
         /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
-        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        ///     selects the peer whose incoming peer id is <c>i</c>
         /// </param>
         /// <param name="packet">packet to broadcast</param>
         /// <remarks>

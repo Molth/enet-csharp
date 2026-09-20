@@ -186,7 +186,7 @@ namespace enet
         ///     Tries to parse an <see cref="IPEndPoint" /> string into a <see cref="ENetAddress" />.
         /// </summary>
         /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
-        /// <param name="address">When this method returns, contains the parsed address.</param>
+        /// <param name="address">When this method returns, contains the parsed socket address.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         /// <remarks>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -198,7 +198,7 @@ namespace enet
         /// </summary>
         /// <param name="ipAddressText">The <see cref="IPAddress" /> string to parse.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="address">When this method returns, contains the parsed address.</param>
+        /// <param name="address">When this method returns, contains the parsed socket address.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_try_parse_ipaddress(ENetAddress* address, ReadOnlySpan<char> ipAddressText, ushort port) => ENet.enet_address_set_try_parse_ipaddress(address, ipAddressText, port);
@@ -231,7 +231,7 @@ namespace enet
         /// <param name="address">destination to store the parsed IP address</param>
         /// <param name="ip">IP address to parse</param>
         /// <param name="port">port number in host byte order</param>
-        /// <param name="scopeId">Ipv6 scope identifier for link‑local or site‑local addresses</param>
+        /// <param name="scopeId">Ipv6 scope id for link‑local or site‑local addresses</param>
         /// <returns>
         ///     <list type="bullet">
         ///         <item>
@@ -341,16 +341,16 @@ namespace enet
         public static int enet_host_mtu(ENetHost* host, uint mtu) => ENet.enet_host_mtu(host, mtu);
 
         /// <summary>
-        ///     Gets the peer associated with the specified incoming peer identifier.
+        ///     Gets the peer associated with the specified incoming peer id.
         /// </summary>
         /// <param name="host">The host whose peer is being retrieved.</param>
-        /// <param name="incomingPeerID">The local identifier of the peer slot to retrieve within the host.</param>
+        /// <param name="incomingPeerID">The local id of the peer slot to retrieve within the host.</param>
         /// <returns>
         ///     A pointer to the peer at the specified slot, or <see langword="null" /> if
         ///     <paramref name="incomingPeerID" /> is out of range of the host's pre-allocated peers array.
         /// </returns>
         /// <remarks>
-        ///     The identifier corresponds to a fixed slot in the host's internal peers array, which is allocated
+        ///     The id corresponds to a fixed slot in the host's internal peers array, which is allocated
         ///     at host creation time based on the <c>peerCount</c> parameter. It is the index into that array and
         ///     does not verify whether the peer is currently connected.
         /// </remarks>
@@ -419,7 +419,7 @@ namespace enet
         /// <param name="host">host on which to broadcast the packet</param>
         /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
-        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        ///     selects the peer whose incoming peer id is <c>i</c>
         /// </param>
         /// <param name="channelID">channel on which to broadcast</param>
         /// <param name="packet">packet to broadcast</param>

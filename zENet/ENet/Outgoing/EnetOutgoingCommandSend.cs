@@ -10,7 +10,7 @@ namespace ThreadedEnet
     internal struct EnetOutgoingCommandSend
     {
         /// <summary>
-        ///     The unique identifier of the target peer.
+        ///     The unique id of the target peer.
         /// </summary>
         public EnetUid Uid;
 

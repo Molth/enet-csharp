@@ -189,12 +189,28 @@ namespace enet
     }
 
     /// <summary>
-    ///     Represents an ENet address that can hold either an Ipv4 or Ipv6 address.
+    ///     Represents a native socket address structure that can hold either an <c>Ipv4</c> or <c>Ipv6</c> socket address.
     /// </summary>
     /// <remarks>
-    ///     The structure has a fixed size of 28 bytes, which is sufficient for
-    ///     both Ipv4 (16 bytes) and Ipv6 (28 bytes) addresses.
-    ///     It wraps a NativeSocketAddress for low‑level socket operations.
+    ///     <list type="bullet">
+    ///         <item>
+    ///             <description>
+    ///                 The structure has a fixed size of 28 bytes, which is sufficient for
+    ///                 both <c>Ipv4</c> (16 bytes) and <c>Ipv6</c> (28 bytes) socket addresses.
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 It is layout-explicit to allow direct interpretation as
+    ///                 a byte buffer or as a properly aligned structure for native calls.
+    ///             </description>
+    ///         </item>
+    ///         <item>
+    ///             <description>
+    ///                 This type is used for low-level socket operations that require raw address handling without allocation.
+    ///             </description>
+    ///         </item>
+    ///     </list>
     /// </remarks>
     public unsafe struct ENetAddress : IEquatable<ENetAddress>, IComparable<ENetAddress>
     {
@@ -219,20 +235,20 @@ namespace enet
 #pragma warning restore CS9084 // Struct member returns 'this' or other instance members by reference.
 
         /// <summary>
-        ///     Gets whether the address is an Ipv4 address.
+        ///     Gets whether the socket address is an Ipv4 socket address.
         /// </summary>
         public readonly bool IsIpv4 => _handle.IsIpv4;
 
         /// <summary>
-        ///     Gets whether the address is an Ipv6 address.
+        ///     Gets whether the socket address is an Ipv6 socket address.
         /// </summary>
         public readonly bool IsIpv6 => _handle.IsIpv6;
 
         /// <summary>
-        ///     Gets whether the socket address is an Ipv4-mapped Ipv6 address.
+        ///     Gets whether the socket address is an Ipv4-mapped Ipv6 socket address.
         /// </summary>
         /// <returns>
-        ///     Returns true if the socket address is an Ipv4-mapped Ipv6 address;
+        ///     Returns true if the socket address is an Ipv4-mapped Ipv6 socket address;
         ///     otherwise, false.
         /// </returns>
         public readonly bool IsIpv4MappedToIpv6 => _handle.IsIpv4MappedToIpv6;
@@ -247,7 +263,7 @@ namespace enet
         }
 
         /// <summary>
-        ///     Gets the ip address of the endpoint.
+        ///     Gets the ip of the socket address.
         /// </summary>
         public Span<byte> Ip => _handle.Ip;
 
@@ -262,9 +278,9 @@ namespace enet
         }
 
         /// <summary>
-        ///     Gets or sets the Ipv6 address scope identifier.
+        ///     Gets or sets the Ipv6 ip scope id.
         /// </summary>
-        /// <returns>An unsigned integer that specifies the scope identifier of the address.</returns>
+        /// <returns>An unsigned integer that specifies the scope id of the socket address.</returns>
         public uint ScopeId
         {
             readonly get => _handle.ScopeId;
@@ -290,15 +306,15 @@ namespace enet
         }
 
         /// <summary>
-        ///     Maps the socket address object to an Ipv6 address.
+        ///     Maps the socket address object to an Ipv6 ip.
         /// </summary>
-        /// <returns>Returns socket address. An Ipv6 address.</returns>
+        /// <returns>Returns socket address. An Ipv6 ip.</returns>
         public readonly ENetAddress MapToIpv6() => new(_handle.MapToIpv6());
 
         /// <summary>
-        ///     Maps the socket address object to an Ipv4 address.
+        ///     Maps the socket address object to an Ipv4 ip.
         /// </summary>
-        /// <returns>Returns socket address. An Ipv4 address.</returns>
+        /// <returns>Returns socket address. An Ipv4 ip.</returns>
         public readonly ENetAddress MapToIpv4() => new(_handle.MapToIpv4());
 
         /// <summary>
@@ -307,21 +323,21 @@ namespace enet
         public Span<byte> Buffer => _handle.Buffer;
 
         /// <summary>
-        ///     Returns a span that represents the raw (28 bytes) buffer of the address.
+        ///     Returns a span that represents the raw (28 bytes) buffer of the socket address.
         /// </summary>
         /// <returns>A span of bytes.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<byte> AsSpan() => _handle.AsSpan();
 
         /// <summary>
-        ///     Returns a read-only span that represents the raw (28 bytes) buffer of the address.
+        ///     Returns a read-only span that represents the raw (28 bytes) buffer of the socket address.
         /// </summary>
         /// <returns>A read-only span of bytes.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ReadOnlySpan<byte> AsReadOnlySpan() => _handle.AsReadOnlySpan();
 
         /// <summary>
-        ///     Returns the fully qualified type name of this instance.
+        ///     Returns a debug-friendly representation of the raw socket address bytes.
         /// </summary>
         public string DebugView => _handle.DebugView;
 
@@ -380,37 +396,36 @@ namespace enet
         public static bool operator !=(ENetAddress left, ENetAddress right) => !left.Equals(right);
 
         /// <summary>
-        ///     Returns the string representation of this address.
+        ///     Returns the string representation of this instance in <see cref="IPEndPoint" /> format.
         /// </summary>
         public readonly override string ToString() => _handle.ToString();
 
         /// <summary>
-        ///     Serializes the address into the specified byte span.
+        ///     Serializes the socket address into the specified byte span.
         /// </summary>
         /// <param name="destination">
-        ///     The byte span to receive the serialized address. On return, it is sliced
+        ///     The byte span to receive the serialized socket address. On return, it is sliced
         ///     to the number of bytes actually written.
         /// </param>
         /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
         /// <remarks>
-        ///     An Ipv4 address is serialized as 8 bytes (family, port, address),
-        ///     an Ipv6 address as 28 bytes (the full socket address structure).
+        ///     An Ipv4 socket address is serialized as 8 bytes (family, port, ip),
+        ///     an Ipv6 socket address as 28 bytes (the full socket address).
         ///     The family field is stored as the managed <see cref="AddressFamily" /> value
         ///     so the serialized bytes are independent of the native platform constants.
         /// </remarks>
         public readonly SocketError Serialize(ref Span<byte> destination) => _handle.Serialize(ref destination);
 
         /// <summary>
-        ///     Tries to format the value of the current instance as an <see cref="T:System.Net.IPEndPoint" />,
+        ///     Tries to format the value of the current instance as an <see cref="IPEndPoint" />,
         ///     into the provided span of characters.
         /// </summary>
-        /// <param name="destination">When this method returns, this instance's value formatted as a span of characters.</param>
-        /// <param name="charsWritten">
-        ///     When this method returns, the number of characters that were written in
-        ///     <paramref name="destination" />.
+        /// <param name="destination">
+        ///     The character span to receive the <see cref="IPEndPoint" /> string;
+        ///     resized to the actual length on success.
         /// </param>
-        /// <returns><see cref="F:System.Net.Sockets.SocketError.Success" /> on success; otherwise an error code.</returns>
-        public readonly SocketError TryFormat(Span<char> destination, out int charsWritten) => _handle.TryFormat(destination, out charsWritten);
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        public readonly SocketError TryFormat(ref Span<char> destination) => _handle.TryFormat(ref destination);
 
         /// <summary>
         ///     Converts an <see cref="ENetAddress" /> into an <see cref="IPEndPoint" />.
@@ -443,19 +458,19 @@ namespace enet
         public readonly SocketError ToSocketAddress(out SocketAddress? result) => _handle.ToSocketAddress(out result);
 
         /// <summary>
-        ///     Retrieves the ip address as text.
+        ///     Retrieves the ip as text.
         /// </summary>
-        /// <param name="ip">The character span to receive the ip address; sliced to the actual length on success.</param>
+        /// <param name="destination">The character span to receive the ip; resized to the actual length on success.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
-        public readonly SocketError GetIp(ref Span<char> ip) => _handle.GetIp(ref ip);
+        public readonly SocketError GetIp(ref Span<char> destination) => _handle.GetIp(ref destination);
 
         /// <summary>
-        ///     Deserializes an address from the specified bytes.
+        ///     Deserializes a socket address from the specified bytes.
         /// </summary>
         /// <param name="bytes">
-        ///     An Ipv4 address requires at least 8 bytes; an Ipv6 address requires 28 bytes.
+        ///     An Ipv4 socket address requires at least 8 bytes; an Ipv6 socket address requires 28 bytes.
         /// </param>
-        /// <param name="result">When this method returns, contains the deserialized address.</param>
+        /// <param name="result">When this method returns, contains the deserialized socket address.</param>
         /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
         public static SocketError Deserialize(ReadOnlySpan<byte> bytes, out ENetAddress result)
         {
@@ -468,9 +483,29 @@ namespace enet
         ///     Tries to parse an <see cref="IPEndPoint" /> string into a <see cref="ENetAddress" />.
         /// </summary>
         /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
-        /// <param name="result">When this method returns, contains the parsed address.</param>
+        /// <param name="result">When this method returns, contains the parsed socket address.</param>
         /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
-        /// <remarks>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</remarks>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to 0,
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         public static SocketError TryParse(ReadOnlySpan<char> ipEndPointText, out ENetAddress result)
         {
             SocketError error = NativeSocketAddress.TryParse(ipEndPointText, out NativeSocketAddress handle);
@@ -479,13 +514,34 @@ namespace enet
         }
 
         /// <summary>
-        ///     Tries to parse an <see cref="IPAddress" /> string into an <see cref="ENetAddress" />,
+        ///     Tries to parse an <see cref="IPAddress" /> string into a <see cref="ENetAddress" />,
         ///     using the specified port.
         /// </summary>
         /// <param name="ipAddressText">The <see cref="IPAddress" /> string to parse.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="result">When this method returns, contains the parsed address.</param>
+        /// <param name="result">When this method returns, contains the parsed socket address.</param>
         /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>Only complete, standard <see cref="IPAddress" /> string representations are accepted.</para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to 0,
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         public static SocketError TryParseIpAddress(ReadOnlySpan<char> ipAddressText, ushort port, out ENetAddress result)
         {
             SocketError error = NativeSocketAddress.TryParseIpAddress(ipAddressText, port, out NativeSocketAddress handle);
@@ -496,7 +552,7 @@ namespace enet
         /// <summary>
         ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPEndPoint" />.
         /// </summary>
-        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
+        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip and port.</param>
         /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
         /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
@@ -537,9 +593,9 @@ namespace enet
         }
 
         /// <summary>
-        ///     Populates an <see cref="ENetAddress" /> from the specified Ipv4 address and port.
+        ///     Populates an <see cref="ENetAddress" /> from the specified Ipv4 ip and port.
         /// </summary>
-        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
         /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
@@ -552,11 +608,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Populates an <see cref="ENetAddress" /> from the specified Ipv6 address, port, and scope id.
+        ///     Populates an <see cref="ENetAddress" /> from the specified Ipv6 ip, port, and scope id.
         /// </summary>
-        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
+        /// <param name="scopeId">The scope id for the Ipv6 ip.</param>
         /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1088,12 +1144,12 @@ namespace enet
         public ENetHost* host;
 
         /// <summary>
-        ///     The peer identifier by which the remote side knows this peer.
+        ///     The peer id by which the remote side knows this peer.
         /// </summary>
         public ushort outgoingPeerID;
 
         /// <summary>
-        ///     The peer identifier by which this host knows the remote peer.
+        ///     The peer id by which this host knows the remote peer.
         /// </summary>
         public ushort incomingPeerID;
 
@@ -1103,12 +1159,12 @@ namespace enet
         public uint connectID;
 
         /// <summary>
-        ///     The session identifier of the outgoing connection.
+        ///     The session id of the outgoing connection.
         /// </summary>
         public byte outgoingSessionID;
 
         /// <summary>
-        ///     The session identifier of the incoming connection.
+        ///     The session id of the incoming connection.
         /// </summary>
         public byte incomingSessionID;
 
@@ -1462,7 +1518,7 @@ namespace enet
         public uint mtu;
 
         /// <summary>
-        ///     The random seed used to generate connect identifiers.
+        ///     The random seed used to generate connect ids.
         /// </summary>
         public uint randomSeed;
 

@@ -57,15 +57,15 @@ namespace enet
         public static void enet_time_set(uint newTimeBase) => timeBase = (uint)timeGetTime() - newTimeBase;
 
         /// <summary>
-        ///     Binds a socket to an address.
+        ///     Binds a socket to a socket address.
         /// </summary>
         /// <param name="socket">The socket handle.</param>
-        /// <param name="address">The address to bind to.</param>
+        /// <param name="address">The socket address to bind to.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().Bind(address->GetInner());
 
         /// <summary>
-        ///     Gets the local name (address) of an Ipv4 socket.
+        ///     Gets the local name (socket address) of an Ipv4 socket.
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The socket address to receive the local name into.</param>
@@ -179,11 +179,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Sends data from multiple buffers to an endpoint.
+        ///     Sends data from multiple buffers to a socket address.
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The destination socket address.</param>
-        /// <param name="buffers">The array of <see cref="NativeIoSlice" /> structures.</param>
+        /// <param name="buffers">The array of <see cref="NativeIoSlice" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -222,11 +222,11 @@ namespace enet
         }
 
         /// <summary>
-        ///     Receives data into multiple buffers from an endpoint.
+        ///     Receives data into multiple buffers from a socket address.
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The sender's socket address.</param>
-        /// <param name="buffers">The array of <see cref="NativeIoSlice" /> structures.</param>
+        /// <param name="buffers">The array of <see cref="NativeIoSlice" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>
         ///     The number of bytes received, 0 when no data is available,
@@ -322,7 +322,7 @@ namespace enet
         ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPEndPoint" />.
         /// </summary>
         /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
-        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip address and port.</param>
+        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip and port.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
         public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint)
@@ -352,10 +352,30 @@ namespace enet
         /// <summary>
         ///     Tries to parse an <see cref="IPEndPoint" /> string into a <see cref="ENetAddress" />.
         /// </summary>
+        /// <param name="address">When this method returns, contains the parsed socket address.</param>
         /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
-        /// <param name="address">When this method returns, contains the parsed address.</param>
-        /// <returns>0 on success, -1 on failure.</returns>
-        /// <remarks>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</remarks>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to 0,
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         public static int enet_address_set_try_parse_ipendpoint(ENetAddress* address, ReadOnlySpan<char> ipEndPointText)
         {
             SocketError error = ENetAddress.TryParse(ipEndPointText, out ENetAddress result);
@@ -365,13 +385,34 @@ namespace enet
         }
 
         /// <summary>
-        ///     Tries to parse an <see cref="IPAddress" /> string into an <see cref="ENetAddress" />,
+        ///     Tries to parse an <see cref="IPAddress" /> string into a <see cref="ENetAddress" />,
         ///     using the specified port.
         /// </summary>
+        /// <param name="address">When this method returns, contains the parsed socket address.</param>
         /// <param name="ipAddressText">The <see cref="IPAddress" /> string to parse.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="address">When this method returns, contains the parsed address.</param>
-        /// <returns>0 on success, -1 on failure.</returns>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>Only complete, standard <see cref="IPAddress" /> string representations are accepted.</para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to 0,
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         public static int enet_address_set_try_parse_ipaddress(ENetAddress* address, ReadOnlySpan<char> ipAddressText, ushort port)
         {
             SocketError error = ENetAddress.TryParseIpAddress(ipAddressText, port, out ENetAddress result);
@@ -381,10 +422,10 @@ namespace enet
         }
 
         /// <summary>
-        ///     Sets the specified Ipv4 address and port on an <see cref="ENetAddress" />.
+        ///     Sets the specified Ipv4 ip and port on an <see cref="ENetAddress" />.
         /// </summary>
         /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
-        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port)
@@ -396,12 +437,12 @@ namespace enet
         }
 
         /// <summary>
-        ///     Sets the specified Ipv6 address, port, and scope id on an <see cref="ENetAddress" />.
+        ///     Sets the specified Ipv6 ip, port, and scope id on an <see cref="ENetAddress" />.
         /// </summary>
         /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
-        /// <param name="ip">The ip address as a span of characters.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The scope id for the Ipv6 address.</param>
+        /// <param name="scopeId">The scope id for the Ipv6 ip.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId)
         {
@@ -412,10 +453,10 @@ namespace enet
         }
 
         /// <summary>
-        ///     Retrieves the ip address from an <see cref="ENetAddress" /> as text.
+        ///     Retrieves the ip from an <see cref="ENetAddress" /> as text.
         /// </summary>
-        /// <param name="address">The <see cref="ENetAddress" /> to read the ip address from.</param>
-        /// <param name="ip">The character span to receive the ip address; resized to the actual length on success.</param>
+        /// <param name="address">The <see cref="ENetAddress" /> to read the ip from.</param>
+        /// <param name="ip">The character span to receive the ip; resized to the actual length on success.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => address->GetIp(ref ip) == SocketError.Success ? 0 : -1;
     }

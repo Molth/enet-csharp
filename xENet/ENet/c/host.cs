@@ -66,16 +66,16 @@ namespace enet
         }
 
         /// <summary>
-        ///     Gets the peer associated with the specified incoming peer identifier.
+        ///     Gets the peer associated with the specified incoming peer id.
         /// </summary>
         /// <param name="host">The host whose peer is being retrieved.</param>
-        /// <param name="incomingPeerID">The local identifier of the peer slot to retrieve within the host.</param>
+        /// <param name="incomingPeerID">The local id of the peer slot to retrieve within the host.</param>
         /// <returns>
         ///     A pointer to the peer at the specified slot, or <see langword="null" /> if
         ///     <paramref name="incomingPeerID" /> is out of range of the host's pre-allocated peers array.
         /// </returns>
         /// <remarks>
-        ///     The identifier corresponds to a fixed slot in the host's internal peers array, which is allocated
+        ///     The id corresponds to a fixed slot in the host's internal peers array, which is allocated
         ///     at host creation time based on the <c>peerCount</c> parameter. It is the index into that array and
         ///     does not verify whether the peer is currently connected.
         /// </remarks>
@@ -153,7 +153,7 @@ namespace enet
         /// <param name="channelID">channel on which to broadcast</param>
         /// <param name="bitArray">
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
-        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        ///     selects the peer whose incoming peer id is <c>i</c>
         /// </param>
         /// <param name="packet">packet to broadcast</param>
         /// <remarks>

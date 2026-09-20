@@ -16,7 +16,7 @@ namespace ThreadedEnet
         public EnetEventType Type;
 
         /// <summary>
-        ///     The unique identifier of the peer that generated the event.
+        ///     The unique id of the peer that generated the event.
         /// </summary>
         public EnetUid Uid;
 

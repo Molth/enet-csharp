@@ -8,7 +8,7 @@ namespace ThreadedEnet
     internal struct EnetOutgoingCommandSetPingInterval
     {
         /// <summary>
-        ///     The unique identifier of the target peer.
+        ///     The unique id of the target peer.
         /// </summary>
         public EnetUid Uid;
 

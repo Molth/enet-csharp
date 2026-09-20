@@ -42,7 +42,7 @@ namespace enet
         public const uint ENET_PROTOCOL_MAXIMUM_CHANNEL_COUNT = 255;
 
         /// <summary>
-        ///     The largest peer identifier that can be encoded in the packet header.
+        ///     The largest peer id that can be encoded in the packet header.
         /// </summary>
         public const uint ENET_PROTOCOL_MAXIMUM_PEER_ID = 0xFFF;
 
@@ -180,7 +180,7 @@ namespace enet
     public struct ENetProtocolHeader
     {
         /// <summary>
-        ///     The identifier of the sending peer, with session bits in the high nibble.
+        ///     The id of the sending peer, with session bits in the high nibble.
         /// </summary>
         public ushort peerID;
 
@@ -243,17 +243,17 @@ namespace enet
         public ENetProtocolCommandHeader header;
 
         /// <summary>
-        ///     The peer identifier assigned to the connecting peer by the initiator.
+        ///     The peer id assigned to the connecting peer by the initiator.
         /// </summary>
         public ushort outgoingPeerID;
 
         /// <summary>
-        ///     The session identifier of the incoming connection.
+        ///     The session id of the incoming connection.
         /// </summary>
         public byte incomingSessionID;
 
         /// <summary>
-        ///     The session identifier of the outgoing connection.
+        ///     The session id of the outgoing connection.
         /// </summary>
         public byte outgoingSessionID;
 
@@ -298,7 +298,7 @@ namespace enet
         public uint packetThrottleDeceleration;
 
         /// <summary>
-        ///     A unique identifier used to match the connection with its verification.
+        ///     A unique id used to match the connection with its verification.
         /// </summary>
         public uint connectID;
 
@@ -319,17 +319,17 @@ namespace enet
         public ENetProtocolCommandHeader header;
 
         /// <summary>
-        ///     The peer identifier assigned to the connecting peer by the responder.
+        ///     The peer id assigned to the connecting peer by the responder.
         /// </summary>
         public ushort outgoingPeerID;
 
         /// <summary>
-        ///     The session identifier of the incoming connection.
+        ///     The session id of the incoming connection.
         /// </summary>
         public byte incomingSessionID;
 
         /// <summary>
-        ///     The session identifier of the outgoing connection.
+        ///     The session id of the outgoing connection.
         /// </summary>
         public byte outgoingSessionID;
 
@@ -374,7 +374,7 @@ namespace enet
         public uint packetThrottleDeceleration;
 
         /// <summary>
-        ///     The connection identifier echoed from the connection request.
+        ///     The connection id echoed from the connection request.
         /// </summary>
         public uint connectID;
     }

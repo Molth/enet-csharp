@@ -17,7 +17,7 @@ namespace ThreadedEnet
 
         /// <summary>
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
-        ///     selects the peer whose incoming peer identifier is <c>i</c>
+        ///     selects the peer whose incoming peer id is <c>i</c>
         /// </summary>
         public NativeArray<byte> BitArray;
 

@@ -223,9 +223,9 @@ namespace Enet
         public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
         /// <summary>
-        ///     Attempts to retrieve a peer by its incoming peer identifier.
+        ///     Attempts to retrieve a peer by its incoming peer id.
         /// </summary>
-        /// <param name="incomingPeerId">The local identifier assigned to this peer slot within the host.</param>
+        /// <param name="incomingPeerId">The local id assigned to this peer slot within the host.</param>
         /// <param name="peer">
         ///     When this method returns, contains the <see cref="EnetPeer" /> corresponding to the specified ID,
         ///     or a default (invalid) peer if the ID is out of range.
