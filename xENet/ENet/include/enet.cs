@@ -306,16 +306,80 @@ namespace enet
         }
 
         /// <summary>
-        ///     Maps the socket address object to an Ipv6 ip.
+        ///     Maps this socket address to an Ipv6 socket address.
         /// </summary>
-        /// <returns>Returns socket address. An Ipv6 ip.</returns>
-        public readonly ENetAddress MapToIpv6() => new(_handle.MapToIpv6());
+        /// <param name="scopeId">The Ipv6 scope id.</param>
+        /// <param name="result">When this method returns, contains the mapped socket address.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 If the family is already Ipv6, the socket address is returned as-is.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 If the family is Ipv4, the socket address is converted to an Ipv4-mapped Ipv6
+        ///                 (<c>::ffff:a.b.c.d</c>), and <paramref name="scopeId" /> is set.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 If the family is neither Ipv4 nor Ipv6, returns
+        ///                 <see cref="SocketError.AddressFamilyNotSupported" />.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly SocketError MapToIpv6(uint scopeId, out ENetAddress result)
+        {
+            SocketError error = _handle.MapToIpv6(scopeId, out NativeSocketAddress handle);
+            result = new ENetAddress(handle);
+            return error;
+        }
 
         /// <summary>
-        ///     Maps the socket address object to an Ipv4 ip.
+        ///     Maps this socket address to an Ipv4 socket address.
         /// </summary>
-        /// <returns>Returns socket address. An Ipv4 ip.</returns>
-        public readonly ENetAddress MapToIpv4() => new(_handle.MapToIpv4());
+        /// <param name="result">When this method returns, contains the mapped socket address.</param>
+        /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 If the family is already Ipv4, the socket address is returned as-is.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 If the family is Ipv6 and the socket address is Ipv4-mapped,
+        ///                 the embedded Ipv4 is extracted. <br />
+        ///                 The Ipv6-specific fields (scope id, flow info) are discarded.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 If the family is Ipv6 but the socket address is not Ipv4-mapped, returns
+        ///                 <see cref="SocketError.InvalidArgument" />.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 If the family is neither Ipv4 nor Ipv6, returns
+        ///                 <see cref="SocketError.AddressFamilyNotSupported" />.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly SocketError MapToIpv4(out ENetAddress result)
+        {
+            SocketError error = _handle.MapToIpv4(out NativeSocketAddress handle);
+            result = new ENetAddress(handle);
+            return error;
+        }
 
         /// <summary>
         ///     Gets the underlying memory that can be passed to native OS calls.
@@ -488,18 +552,34 @@ namespace enet
         /// <remarks>
         ///     <list type="bullet">
         ///         <item>
-        ///             <para>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</para>
+        ///             <para>
+        ///                 The format is <c>&lt;ip&gt;:&lt;port&gt;</c>. A port is always required after the ip.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv4, the format is <c>x.x.x.x:port</c> (e.g. <c>127.0.0.1:12345</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, the ip must be enclosed in brackets and followed by <c>:port</c>
+        ///                 (e.g. <c>[::1]:12345</c>). <br />
+        ///                 An unbracketed Ipv6 address such as <c>::1:12345</c> is rejected.
+        ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Supports Ipv6 scope id parsing:
-        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
         ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
-        ///                 with the scope id set to 0,
+        ///                 with the scope id set to <c>0</c>, <br />
         ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
         ///                 when the scope id text is neither a valid number nor a resolvable interface name.
         ///             </para>
@@ -524,18 +604,22 @@ namespace enet
         /// <remarks>
         ///     <list type="bullet">
         ///         <item>
-        ///             <para>Only complete, standard <see cref="IPAddress" /> string representations are accepted.</para>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Supports Ipv6 scope id parsing:
-        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
         ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
-        ///                 with the scope id set to 0,
+        ///                 with the scope id set to <c>0</c>, <br />
         ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
         ///                 when the scope id text is neither a valid number nor a resolvable interface name.
         ///             </para>
@@ -612,9 +696,26 @@ namespace enet
         /// </summary>
         /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The scope id for the Ipv6 ip.</param>
+        /// <param name="scopeId">The Ipv6 scope id.</param>
         /// <param name="result">When this method returns, contains the populated <see cref="ENetAddress" />.</param>
         /// <returns><see cref="SocketError.Success" /> if successful; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Does not accept Ipv4 ips. <br />
+        ///                 To create an Ipv4-mapped Ipv6 socket address,
+        ///                 call <see cref="FromIpIpv4" /> followed by
+        ///                 <see cref="MapToIpv6(uint, out ENetAddress)" />.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SocketError FromIpIpv6(ReadOnlySpan<char> ip, ushort port, uint scopeId, out ENetAddress result)
         {

@@ -12,6 +12,11 @@ which poses challenges for cross-platform distribution and deployment.
 
 This project eliminates that dependency while preserving full compatibility with the original implementation.
 
+## xENet
+
+- The pure C# port of **ENet**.
+- It keeps the original low-level, C-style API and is fully wire-compatible with the original C library.
+
 [![NuGet](https://img.shields.io/nuget/v/xENet.svg?style=flat-square)](https://www.nuget.org/packages/xENet/)
 
 ## Supporters

@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 
 // ReSharper disable ALL
@@ -12,18 +13,18 @@ namespace enet
     public static unsafe class ENET_API
     {
         /// <summary>
-        ///     Initializes ENet globally. Must be called prior to using any functions in
-        ///     ENet.
+        ///     Initializes ENet globally.
+        ///     Must be called prior to using any functions in ENet.
         /// </summary>
         /// <returns>0 on success, &lt; 0 on failure</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_initialize() => ENet.enet_initialize();
 
         /// <summary>
-        ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in
-        ///     ENet.
-        ///     Do not use <see cref="enet_initialize()" /> if you use this variant. Make sure the <see cref="ENetCallbacks" />
-        ///     structure
+        ///     Initializes ENet globally and supplies user-overridden callbacks.
+        ///     Must be called prior to using any functions in ENet.
+        ///     Do not use <see cref="enet_initialize()" /> if you use this variant.
+        ///     Make sure the <see cref="ENetCallbacks" /> structure
         ///     is zeroed out so that any additional callbacks added in future versions will be properly ignored.
         /// </summary>
         /// <param name="version">
@@ -36,8 +37,8 @@ namespace enet
         public static int enet_initialize_with_callbacks(uint version, ENetCallbacks* inits) => ENet.enet_initialize_with_callbacks(version, inits);
 
         /// <summary>
-        ///     Shuts down ENet globally.  Should be called when a program that has
-        ///     initialized ENet exits.
+        ///     Shuts down ENet globally.
+        ///     Should be called when a program that has initialized ENet exits.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void enet_deinitialize() => ENet.enet_deinitialize();
@@ -50,7 +51,7 @@ namespace enet
         public static uint enet_linked_version() => ENet.enet_linked_version();
 
         /// <summary>
-        ///     Gets the current wall-time in milliseconds.
+        ///     Returns the time in milliseconds elapsed since the time base was set.
         /// </summary>
         /// <returns>
         ///     the wall-time in milliseconds.  Its initial value is unspecified
@@ -75,49 +76,60 @@ namespace enet
         public static ENetSocket enet_socket_create(ENetSocketType type, ENetHostOption option) => ENet.enet_socket_create(type, option);
 
         /// <summary>
-        ///     Binds the socket to the specified local address.
+        ///     Binds a socket to a socket address.
         /// </summary>
-        /// <param name="socket">The socket to bind.</param>
-        /// <param name="address">The local address to bind to.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The socket address to bind to.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_bind(socket, address);
 
         /// <summary>
-        ///     Retrieves the local address the socket is bound to.
+        ///     Gets the local name (socket address) of a socket.
         /// </summary>
-        /// <param name="socket">The socket to query.</param>
-        /// <param name="address">Receives the local address.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The socket address to receive the local name into.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
         /// <summary>
-        ///     Sends a vectored payload to the specified address on the socket.
+        ///     Sends data from multiple buffers to a socket address.
         /// </summary>
-        /// <param name="socket">The socket to send on.</param>
-        /// <param name="address">The destination address.</param>
-        /// <param name="buffers">The buffers holding the payload.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The destination socket address.</param>
+        /// <param name="buffers">The array of <see cref="ENetBuffer" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown when <paramref name="bufferCount" /> or any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     greater than <see cref="int.MaxValue" />.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_send(socket, address, buffers, bufferCount);
 
         /// <summary>
-        ///     Receives a vectored payload on the socket, reporting the sender address.
+        ///     Receives data into multiple buffers from a socket address.
         /// </summary>
-        /// <param name="socket">The socket to receive on.</param>
-        /// <param name="address">Receives the source address.</param>
-        /// <param name="buffers">The buffers receiving the payload.</param>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="address">The sender's socket address.</param>
+        /// <param name="buffers">The array of <see cref="ENetBuffer" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
-        /// <returns>The number of bytes received, 0 when no data is available, -1 on failure.</returns>
+        /// <returns>
+        ///     The number of bytes received, 0 when no data is available,
+        ///     -2 when the receive was interrupted or truncated, -1 on failure.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown when <paramref name="bufferCount" /> or any of the <paramref name="buffers" /> has a <c>dataLength</c>
+        ///     greater than <see cref="int.MaxValue" />.
+        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount) => ENet.enet_socket_receive(socket, address, buffers, bufferCount);
 
         /// <summary>
         ///     Waits until the socket becomes ready for the requested conditions or the timeout elapses.
         /// </summary>
-        /// <param name="socket">The socket to wait on.</param>
+        /// <param name="socket">The socket handle.</param>
         /// <param name="condition">On input the conditions to wait for; on output the conditions that became ready.</param>
         /// <param name="milliseconds">The maximum time to wait in milliseconds.</param>
         /// <returns>0 on success, -1 on failure.</returns>
@@ -125,14 +137,24 @@ namespace enet
         public static int enet_socket_wait(ENetSocket socket, uint* condition, uint milliseconds) => ENet.enet_socket_wait(socket, condition, milliseconds);
 
         /// <summary>
-        ///     Applies a socket option to the given socket.
+        ///     Sets a socket option.
         /// </summary>
-        /// <param name="socket">The socket to configure.</param>
+        /// <param name="socket">The socket handle.</param>
         /// <param name="option">The option to apply.</param>
         /// <param name="value">The option value.</param>
         /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
+
+        /// <summary>
+        ///     Gets a socket option.
+        /// </summary>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="option">The option to retrieve.</param>
+        /// <param name="value">Receives the option value.</param>
+        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int enet_socket_get_option(ENetSocket socket, ENetSocketOption option, out int value) => ENet.enet_socket_get_option(socket, option, out value);
 
         /// <summary>
         ///     Closes and invalidates the given socket.
@@ -142,55 +164,71 @@ namespace enet
         public static void enet_socket_destroy(ENetSocket* socket) => ENet.enet_socket_destroy(socket);
 
         /// <summary>
-        ///     Attempts to parse the printable form of the IP address in the parameter hostName
-        ///     and sets the host field in the address parameter if successful.
+        ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPEndPoint" />.
         /// </summary>
-        /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ipEndPoint">IP address to parse</param>
-        /// <returns>
-        ///     <list type="bullet">
-        ///         <item>
-        ///             <description>0 on success</description>
-        ///         </item>
-        ///         <item>
-        ///             <description>&lt; 0 on failure</description>
-        ///         </item>
-        ///     </list>
-        ///     the address of the given hostName in address on success
-        /// </returns>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ipEndPoint">The <see cref="IPEndPoint" /> containing the ip and port.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint) => ENet.enet_address_set_from_ipendpoint(address, ipEndPoint);
 
         /// <summary>
-        ///     Attempts to parse the printable form of the IP address in the parameter hostName
-        ///     and sets the host field in the address parameter if successful.
+        ///     Populates an <see cref="ENetAddress" /> from the specified <see cref="IPAddress" /> and port.
         /// </summary>
-        /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ipAddress">IP address to set</param>
-        /// <param name="port">port number in host byte order</param>
-        /// <returns>
-        ///     <list type="bullet">
-        ///         <item>
-        ///             <description>0 on success</description>
-        ///         </item>
-        ///         <item>
-        ///             <description>&lt; 0 on failure</description>
-        ///         </item>
-        ///     </list>
-        ///     the address of the given hostName in address on success
-        /// </returns>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ipAddress">The <see cref="IPAddress" /> to copy from.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        /// <exception cref="NullReferenceException">Thrown if <paramref name="ipAddress" /> is null.</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port) => ENet.enet_address_set_from_ipaddress(address, ipAddress, port);
 
         /// <summary>
         ///     Tries to parse an <see cref="IPEndPoint" /> string into a <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
         /// <param name="address">When this method returns, contains the parsed socket address.</param>
-        /// <returns>0 on success, -1 on failure.</returns>
-        /// <remarks>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</remarks>
+        /// <param name="ipEndPointText">The <see cref="IPEndPoint" /> string to parse.</param>
+        /// <returns><see cref="SocketError.Success" /> on success; otherwise an error code.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 The format is <c>&lt;ip&gt;:&lt;port&gt;</c>. A port is always required after the ip.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv4, the format is <c>x.x.x.x:port</c> (e.g. <c>127.0.0.1:12345</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, the ip must be enclosed in brackets and followed by <c>:port</c>
+        ///                 (e.g. <c>[::1]:12345</c>). <br />
+        ///                 An unbracketed Ipv6 address such as <c>::1:12345</c> is rejected.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to <c>0</c>, <br />
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_address_set_try_parse_ipendpoint(ENetAddress* address, ReadOnlySpan<char> ipEndPointText) => ENet.enet_address_set_try_parse_ipendpoint(address, ipEndPointText);
+        public static int enet_address_set_try_parse(ENetAddress* address, ReadOnlySpan<char> ipEndPointText) => ENet.enet_address_set_try_parse(address, ipEndPointText);
 
         /// <summary>
         ///     Tries to parse an <see cref="IPAddress" /> string into an <see cref="ENetAddress" />,
@@ -200,68 +238,78 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="address">When this method returns, contains the parsed socket address.</param>
         /// <returns>0 on success, -1 on failure.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Supports Ipv6 scope id parsing:
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
+        ///                 with the scope id set to <c>0</c>, <br />
+        ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
+        ///                 when the scope id text is neither a valid number nor a resolvable interface name.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_try_parse_ipaddress(ENetAddress* address, ReadOnlySpan<char> ipAddressText, ushort port) => ENet.enet_address_set_try_parse_ipaddress(address, ipAddressText, port);
 
         /// <summary>
-        ///     Attempts to parse the printable form of the IP address in the parameter hostName
-        ///     and sets the host field in the address parameter if successful.
+        ///     Sets the specified Ipv4 ip and port on an <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to parse</param>
-        /// <param name="port">port number in host byte order</param>
-        /// <returns>
-        ///     <list type="bullet">
-        ///         <item>
-        ///             <description>0 on success</description>
-        ///         </item>
-        ///         <item>
-        ///             <description>&lt; 0 on failure</description>
-        ///         </item>
-        ///     </list>
-        ///     the address of the given hostName in address on success
-        /// </returns>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port) => ENet.enet_address_set_ip_ipv4(address, ip, port);
 
         /// <summary>
-        ///     Attempts to parse the printable form of the IP address in the parameter hostName
-        ///     and sets the host field in the address parameter if successful.
+        ///     Sets the specified Ipv6 ip, port, and scope id on an <see cref="ENetAddress" />.
         /// </summary>
-        /// <param name="address">destination to store the parsed IP address</param>
-        /// <param name="ip">IP address to parse</param>
-        /// <param name="port">port number in host byte order</param>
-        /// <param name="scopeId">Ipv6 scope id for link‑local or site‑local addresses</param>
-        /// <returns>
+        /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
+        /// <param name="ip">The ip as a span of characters.</param>
+        /// <param name="port">The port number.</param>
+        /// <param name="scopeId">The Ipv6 scope id.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
+        /// <remarks>
         ///     <list type="bullet">
         ///         <item>
-        ///             <description>0 on success</description>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
         ///         </item>
         ///         <item>
-        ///             <description>&lt; 0 on failure</description>
+        ///             <para>
+        ///                 Does not accept Ipv4 ips. <br />
+        ///                 To create an Ipv4-mapped Ipv6 socket address,
+        ///                 call <see cref="enet_address_set_ip_ipv4" /> followed by
+        ///                 <see cref="ENetAddress.MapToIpv6(uint, out ENetAddress)" />.
+        ///             </para>
         ///         </item>
         ///     </list>
-        ///     the address of the given hostName in address on success
-        /// </returns>
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId = 0) => ENet.enet_address_set_ip_ipv6(address, ip, port, scopeId);
 
         /// <summary>
-        ///     Gives the printable form of the IP address specified in the <b>address</b> parameter.
+        ///     Retrieves the ip from an <see cref="ENetAddress" /> as text.
         /// </summary>
-        /// <param name="address">address printed</param>
-        /// <param name="ip">destination for name, must not be NULL</param>
-        /// <returns>
-        ///     <list type="bullet">
-        ///         <item>
-        ///             <description>0 on success</description>
-        ///         </item>
-        ///         <item>
-        ///             <description>&lt; 0 on failure</description>
-        ///         </item>
-        ///     </list>
-        ///     the null-terminated name of the host in hostName on success
-        /// </returns>
+        /// <param name="address">The <see cref="ENetAddress" /> to read the ip from.</param>
+        /// <param name="ip">The character span to receive the ip; resized to the actual length on success.</param>
+        /// <returns>0 on success, -1 on failure.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_address_get_ip(ENetAddress* address, ref Span<char> ip) => ENet.enet_address_get_ip(address, ref ip);
 
@@ -307,10 +355,7 @@ namespace enet
         /// </summary>
         /// <param name="host">host ping the address</param>
         /// <param name="address">The destination address to ping.</param>
-        /// <returns>
-        ///     <see langword="0" /> if the packet was successfully sent;
-        ///     otherwise, <see langword="false" />.
-        /// </returns>
+        /// <returns>0 on success, -1 on failure.</returns>
         /// <remarks>
         ///     The packet contains a single byte of arbitrary data and is sent immediately via the host's socket,
         ///     bypassing the usual ENet queuing and reliability mechanisms.

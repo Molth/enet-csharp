@@ -28,7 +28,7 @@ namespace enet
         ///     Must be called prior to using any functions in ENet.
         /// </summary>
         /// <returns>0 on success, &lt; 0 on failure</returns>
-        public static int enet_initialize() => (int)NativeSocketPal.Startup();
+        public static int enet_initialize() => !NativeSocketPal.IsSupported ? -1 : (int)NativeSocketPal.Startup();
 
         /// <summary>
         ///     Shuts down ENet globally.
@@ -65,7 +65,7 @@ namespace enet
         public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().Bind(address->GetInner());
 
         /// <summary>
-        ///     Gets the local name (socket address) of an Ipv4 socket.
+        ///     Gets the local name (socket address) of a socket.
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The socket address to receive the local name into.</param>
@@ -151,7 +151,7 @@ namespace enet
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Error, optionValue);
                     break;
                 case ENET_SOCKOPT_TTL:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, optionValue);
+                    result = (int)(socket.IsIpv6 ? socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.HopLimit, optionValue) : socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, optionValue));
                     break;
                 case ENET_SOCKOPT_IPV6_ONLY:
                     result = (int)socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, optionValue);
@@ -169,6 +169,35 @@ namespace enet
         }
 
         /// <summary>
+        ///     Gets a socket option.
+        /// </summary>
+        /// <param name="socket">The socket handle.</param>
+        /// <param name="option">The option to retrieve.</param>
+        /// <param name="value">Receives the option value.</param>
+        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
+        public static int enet_socket_get_option(ENetSocket socket, ENetSocketOption option, out int value)
+        {
+            Unsafe.SkipInit(out value);
+
+            int result = SOCKET_ERROR;
+            Span<byte> optionValue = MemoryMarshal.AsBytes(stackalloc int[1]);
+            switch (option)
+            {
+                case ENET_SOCKOPT_ERROR:
+                    result = (int)socket.GetInner().GetOption(SocketOptionLevel.Socket, SocketOptionName.Error, ref optionValue);
+                    break;
+                case ENET_SOCKOPT_TTL:
+                    result = (int)(socket.IsIpv6 ? socket.GetInner().GetOption(SocketOptionLevel.IPv6, SocketOptionName.HopLimit, ref optionValue) : socket.GetInner().GetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, ref optionValue));
+                    break;
+            }
+
+            if (result == 0)
+                value = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(optionValue));
+
+            return result == 0 ? 0 : -1;
+        }
+
+        /// <summary>
         ///     Closes and invalidates the given socket.
         /// </summary>
         /// <param name="socket">The socket to destroy.</param>
@@ -183,7 +212,7 @@ namespace enet
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The destination socket address.</param>
-        /// <param name="buffers">The array of <see cref="NativeIoSlice" />.</param>
+        /// <param name="buffers">The array of <see cref="ENetBuffer" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>The number of bytes sent, 0 when the send would block, -1 on failure.</returns>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -226,7 +255,7 @@ namespace enet
         /// </summary>
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The sender's socket address.</param>
-        /// <param name="buffers">The array of <see cref="NativeIoSlice" />.</param>
+        /// <param name="buffers">The array of <see cref="ENetBuffer" />.</param>
         /// <param name="bufferCount">The number of buffers.</param>
         /// <returns>
         ///     The number of bytes received, 0 when no data is available,
@@ -264,10 +293,12 @@ namespace enet
                     case SocketError.WouldBlock:
                     case SocketError.ConnectionReset:
                         return 0;
+
                     case SocketError.Interrupted:
                     case SocketError.MessageSize:
                     case SocketError.Success when (flags & SocketFlags.Partial) != 0:
                         return -2;
+
                     default:
                         return -1;
                 }
@@ -327,9 +358,7 @@ namespace enet
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipEndPoint" /> is null.</exception>
         public static int enet_address_set_from_ipendpoint(ENetAddress* address, IPEndPoint ipEndPoint)
         {
-            SocketError error = ENetAddress.FromIpEndPoint(ipEndPoint, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.FromIpEndPoint(ipEndPoint, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 
@@ -343,9 +372,7 @@ namespace enet
         /// <exception cref="NullReferenceException">Thrown if <paramref name="ipAddress" /> is null.</exception>
         public static int enet_address_set_from_ipaddress(ENetAddress* address, IPAddress ipAddress, ushort port)
         {
-            SocketError error = ENetAddress.FromIpAddress(ipAddress, port, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.FromIpAddress(ipAddress, port, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 
@@ -358,29 +385,43 @@ namespace enet
         /// <remarks>
         ///     <list type="bullet">
         ///         <item>
-        ///             <para>Only complete, standard <see cref="IPEndPoint" /> string representations are accepted.</para>
+        ///             <para>
+        ///                 The format is <c>&lt;ip&gt;:&lt;port&gt;</c>. A port is always required after the ip.
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv4, the format is <c>x.x.x.x:port</c> (e.g. <c>127.0.0.1:12345</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, the ip must be enclosed in brackets and followed by <c>:port</c>
+        ///                 (e.g. <c>[::1]:12345</c>). <br />
+        ///                 An unbracketed Ipv6 address such as <c>::1:12345</c> is rejected.
+        ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Supports Ipv6 scope id parsing:
-        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
         ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
-        ///                 with the scope id set to 0,
+        ///                 with the scope id set to <c>0</c>, <br />
         ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
         ///                 when the scope id text is neither a valid number nor a resolvable interface name.
         ///             </para>
         ///         </item>
         ///     </list>
         /// </remarks>
-        public static int enet_address_set_try_parse_ipendpoint(ENetAddress* address, ReadOnlySpan<char> ipEndPointText)
+        public static int enet_address_set_try_parse(ENetAddress* address, ReadOnlySpan<char> ipEndPointText)
         {
-            SocketError error = ENetAddress.TryParse(ipEndPointText, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.TryParse(ipEndPointText, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 
@@ -395,18 +436,22 @@ namespace enet
         /// <remarks>
         ///     <list type="bullet">
         ///         <item>
-        ///             <para>Only complete, standard <see cref="IPAddress" /> string representations are accepted.</para>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Supports Ipv6 scope id parsing:
-        ///                 the text after '%' may be either a numeric value or an interface name.
+        ///                 the text after <c>%</c> may be either a numeric value or an interface name
+        ///                 (e.g. <c>[::1%eth0]:12345</c>). <br />
+        ///                 An empty scope id after <c>%</c> is not accepted.
         ///             </para>
         ///         </item>
         ///         <item>
         ///             <para>
         ///                 Unlike the standard library, which silently ignores a malformed scope id and returns success
-        ///                 with the scope id set to 0,
+        ///                 with the scope id set to <c>0</c>, <br />
         ///                 this implementation returns <see cref="SocketError.InvalidArgument" />
         ///                 when the scope id text is neither a valid number nor a resolvable interface name.
         ///             </para>
@@ -415,9 +460,7 @@ namespace enet
         /// </remarks>
         public static int enet_address_set_try_parse_ipaddress(ENetAddress* address, ReadOnlySpan<char> ipAddressText, ushort port)
         {
-            SocketError error = ENetAddress.TryParseIpAddress(ipAddressText, port, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.TryParseIpAddress(ipAddressText, port, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 
@@ -430,9 +473,7 @@ namespace enet
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv4(ENetAddress* address, ReadOnlySpan<char> ip, ushort port)
         {
-            SocketError error = ENetAddress.FromIpIpv4(ip, port, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.FromIpIpv4(ip, port, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 
@@ -442,13 +483,11 @@ namespace enet
         /// <param name="address">The destination <see cref="ENetAddress" /> to fill.</param>
         /// <param name="ip">The ip as a span of characters.</param>
         /// <param name="port">The port number.</param>
-        /// <param name="scopeId">The scope id for the Ipv6 ip.</param>
+        /// <param name="scopeId">The Ipv6 scope id.</param>
         /// <returns>0 on success, -1 on failure.</returns>
         public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId)
         {
-            SocketError error = ENetAddress.FromIpIpv6(ip, port, scopeId, out ENetAddress result);
-            if (error == SocketError.Success)
-                *address = result;
+            SocketError error = ENetAddress.FromIpIpv6(ip, port, scopeId, out *address);
             return error == SocketError.Success ? 0 : -1;
         }
 

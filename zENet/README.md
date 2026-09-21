@@ -12,6 +12,11 @@ which poses challenges for cross-platform distribution and deployment.
 
 This project eliminates that dependency while preserving full compatibility with the original implementation.
 
+## zENet
+
+- A multithreaded wrapper around **yENet**.
+- It adds multithreading support on top of **yENet**.
+
 [![NuGet](https://img.shields.io/nuget/v/zENet.svg?style=flat-square)](https://www.nuget.org/packages/zENet/)
 
 ## Supporters

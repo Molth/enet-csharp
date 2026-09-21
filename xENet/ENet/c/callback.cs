@@ -12,10 +12,10 @@ namespace enet
 #pragma warning restore CA2211 // Non-constant fields should not be visible.
 
         /// <summary>
-        ///     Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in
-        ///     ENet.
-        ///     Do not use <see cref="enet_initialize()" /> if you use this variant. Make sure the <see cref="ENetCallbacks" />
-        ///     structure
+        ///     Initializes ENet globally and supplies user-overridden callbacks.
+        ///     Must be called prior to using any functions in ENet.
+        ///     Do not use <see cref="enet_initialize()" /> if you use this variant.
+        ///     Make sure the <see cref="ENetCallbacks" /> structure
         ///     is zeroed out so that any additional callbacks added in future versions will be properly ignored.
         /// </summary>
         /// <param name="version">

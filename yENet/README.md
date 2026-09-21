@@ -12,6 +12,11 @@ which poses challenges for cross-platform distribution and deployment.
 
 This project eliminates that dependency while preserving full compatibility with the original implementation.
 
+## yENet
+
+- A managed wrapper around **xENet**.
+- It provides a modern C# API instead of the original C-style API.
+
 [![NuGet](https://img.shields.io/nuget/v/yENet.svg?style=flat-square)](https://www.nuget.org/packages/yENet/)
 
 ## Supporters
