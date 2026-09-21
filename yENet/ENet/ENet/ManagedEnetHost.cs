@@ -219,7 +219,7 @@ namespace Enet
         ///     Sets the MTU of the host.
         /// </summary>
         /// <param name="mtu">The MTU to set, in bytes. if 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
+        /// <returns><see langword="true" /> if the MTU was set; otherwise, <see langword="false" />.</returns>
         public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 
         /// <summary>
@@ -416,8 +416,21 @@ namespace Enet
         ///     Queues a packet to be sent to the connected peers selected by the supplied bit array.
         /// </summary>
         /// <param name="channelId">channel on which to broadcast</param>
-        /// <param name="bitArray">a bit array selecting the peers to receive the packet</param>
+        /// <param name="bitArray">
+        ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
+        ///     selects the peer whose incoming peer id is <c>i</c>
+        /// </param>
         /// <param name="packet">packet to broadcast</param>
+        /// <remarks>
+        ///     <para>
+        ///         Only peers that are both selected by <paramref name="bitArray" /> and currently in the
+        ///         connected state receive the packet. Bits beyond the host peer count are ignored.
+        ///     </para>
+        ///     <para>
+        ///         This method always transfers ownership of the packet to the host. If no selected peer is
+        ///         connected, the packet is destroyed.
+        ///     </para>
+        /// </remarks>
         public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> bitArray, ref EnetPacket packet) => _handle.BroadcastSelected(channelId, bitArray, ref packet);
 
         /// <summary>
@@ -506,11 +519,11 @@ namespace Enet
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="EnetHost" /> class from the specified
+        ///     Initializes a new instance of the <see cref="ManagedEnetHost" /> class from the specified
         ///     <see cref="EnetHostConfig" />.
         /// </summary>
         /// <param name="config">The configuration parameters used to create the host.</param>
-        /// <returns>The created <see cref="EnetHost" />.</returns>
+        /// <returns>The created <see cref="ManagedEnetHost" />.</returns>
         /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
         /// <exception cref="SocketException">Thrown when host creation fails.</exception>
         public static ManagedEnetHost Create(EnetHostConfig config)

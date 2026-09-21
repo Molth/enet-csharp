@@ -40,6 +40,11 @@ namespace ThreadedEnet
         ///     keeping the same peer slot index.
         /// </summary>
         /// <returns>A new uid with the generation advanced.</returns>
+        /// <remarks>
+        ///     The 52-bit generation counter would require an extremely long running time to overflow.
+        ///     The addition is therefore performed in an unchecked context to
+        ///     avoid the performance overhead of overflow checking.
+        /// </remarks>
         internal EnetUid Next() => new(unchecked(_value + 0x1000));
 
         /// <summary>

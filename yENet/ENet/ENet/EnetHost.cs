@@ -203,7 +203,7 @@ namespace Enet
         ///     Sets the MTU of the host.
         /// </summary>
         /// <param name="mtu">The MTU to set, in bytes. if 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
+        /// <returns><see langword="true" /> if the MTU was set; otherwise, <see langword="false" />.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool SetMtu(uint mtu) => ENET_API.enet_host_mtu(_handle, mtu) == 0;
 

@@ -254,7 +254,15 @@ namespace ThreadedEnet
         /// </summary>
         /// <param name="uid">The unique id of the destination peer.</param>
         /// <param name="channelId">The channel on which to send the packet.</param>
-        /// <param name="packet">The packet to send. The reference is reset to the default value on return.</param>
+        /// <param name="packet">
+        ///     The packet to send.
+        ///     <para>
+        ///         <b>Ownership transfer</b>: The caller loses ownership immediately. The reference is reset to a
+        ///         default (invalid) state, and the caller must not use or destroy it afterwards. If the host is not
+        ///         started or the outgoing queue is unavailable, the packet is disposed; otherwise it is queued for
+        ///         the background thread to send.
+        ///     </para>
+        /// </param>
         public void Send(EnetUid uid, byte channelId, ref EnetPacket packet)
         {
             var internalPacket = packet;
@@ -289,7 +297,15 @@ namespace ThreadedEnet
         ///     default value, and the caller must not use or dispose of the packet afterwards.
         /// </summary>
         /// <param name="channelId">The channel on which to broadcast the packet.</param>
-        /// <param name="packet">The packet to broadcast. The reference is reset to the default value on return.</param>
+        /// <param name="packet">
+        ///     The packet to broadcast.
+        ///     <para>
+        ///         <b>Ownership transfer</b>: The caller loses ownership immediately. The reference is reset to a
+        ///         default (invalid) state, and the caller must not use or destroy it afterwards. If the host is not
+        ///         started or the outgoing queue is unavailable, the packet is disposed; otherwise it is queued for
+        ///         the background thread to broadcast.
+        ///     </para>
+        /// </param>
         public void Broadcast(byte channelId, ref EnetPacket packet)
         {
             var internalPacket = packet;
@@ -327,7 +343,15 @@ namespace ThreadedEnet
         ///     a bit array in which bit <c>i</c> (i.e. the bit at byte <c>i / 8</c>, bit offset <c>i % 8</c>)
         ///     selects the peer whose incoming peer id is <c>i</c>
         /// </param>
-        /// <param name="packet">The packet to broadcast. The reference is reset to the default value on return.</param>
+        /// <param name="packet">
+        ///     The packet to broadcast.
+        ///     <para>
+        ///         <b>Ownership transfer</b>: The caller loses ownership immediately. The reference is reset to a
+        ///         default (invalid) state, and the caller must not use or destroy it afterwards. If the host is not
+        ///         started or the outgoing queue is unavailable, the packet is disposed; otherwise it is queued for
+        ///         the background thread to broadcast.
+        ///     </para>
+        /// </param>
         public void BroadcastSelected(byte channelId, ReadOnlySpan<byte> bitArray, ref EnetPacket packet)
         {
             var internalPacket = packet;
