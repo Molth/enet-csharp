@@ -1,6 +1,7 @@
 using System;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using enet;
 using Enet;
 using NativeCollections;
@@ -86,8 +87,16 @@ namespace ThreadedEnet
         ///     Starts the host on a new background thread using the specified configuration.
         /// </summary>
         /// <param name="config">The configuration used to create and run the host.</param>
+        /// <exception cref="ArgumentException">Thrown when host has already been started.</exception>
         /// <exception cref="ArgumentException">Thrown when host creation fails.</exception>
         /// <exception cref="SocketException">Thrown when host creation fails.</exception>
+        /// <remarks>
+        ///     After <see cref="Shutdown(uint)" /> has been called,
+        ///     avoid starting another host bound to the same port
+        ///     until the previous host has been fully destroyed.
+        ///     <see cref="Shutdown(uint)" /> performs deferred destruction of the host,
+        ///     so the port may still be held by the previous host after shutdown is requested.
+        /// </remarks>
         public void Start(ThreadedEnetHostConfig config)
         {
             var states = _states.Load(Ordering.Acquire);
@@ -116,6 +125,7 @@ namespace ThreadedEnet
             states.Threads.Store(1, Ordering.Relaxed);
             states.IncomingEvents = NativeSegQueue<EnetIncomingEvent>.Create();
             states.OutgoingEvents = NativeSegQueue<EnetOutgoingEvent>.Create();
+            states.ShutdownComplete = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             if (_states.CompareExchange(states, null) != null)
             {
@@ -137,6 +147,11 @@ namespace ThreadedEnet
         ///     The user data attached to the disconnect requests
         ///     sent to all peers when the host shuts down.
         /// </param>
+        /// <remarks>
+        ///     This method is non-blocking and asynchronous.
+        ///     It only requests shutdown and returns immediately.
+        ///     The host is actually destroyed later, when the internal reference count reaches zero.
+        /// </remarks>
         public void Shutdown(uint eventData)
         {
             var states = _states.Exchange(null);
@@ -145,6 +160,31 @@ namespace ThreadedEnet
 
             states.ShutdownEventData = eventData;
             ThreadedManagedEnetHostRunner.Exit(states);
+        }
+
+        /// <summary>
+        ///     Stops the host and releases its resources,
+        ///     asynchronously waiting until the background thread
+        ///     has completely finished shutdown.
+        /// </summary>
+        /// <param name="eventData">
+        ///     The user data attached to the disconnect requests
+        ///     sent to all peers when the host shuts down.
+        /// </param>
+        /// <returns>A task that completes when the background thread has fully terminated.</returns>
+        /// <remarks>
+        ///     This method signals shutdown and waits asynchronously for the background thread to finish.
+        ///     If the host is already shutdown, a completed task is returned immediately.
+        /// </remarks>
+        public Task ShutdownAsync(uint eventData)
+        {
+            var states = _states.Exchange(null);
+            if (states == null)
+                return Task.CompletedTask;
+
+            states.ShutdownEventData = eventData;
+            ThreadedManagedEnetHostRunner.Exit(states);
+            return states.ShutdownComplete.Task;
         }
 
         /// <summary>

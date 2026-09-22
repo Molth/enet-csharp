@@ -7,6 +7,8 @@ namespace ThreadedEnet
     /// </summary>
     internal enum ExceptionArgument
     {
+        obj,
+
         _dummy
     }
 }

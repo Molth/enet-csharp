@@ -61,7 +61,7 @@ namespace ThreadedEnet
         {
             if (obj is not ThreadedManagedEnetHostStates states || states.Host == null)
             {
-                ThrowHelpers.ThrowArgumentNullException(ExceptionArgument._dummy);
+                ThrowHelpers.ThrowArgumentNullException(ExceptionArgument.obj);
                 return;
             }
 
@@ -275,6 +275,8 @@ namespace ThreadedEnet
             }
 
             states.IncomingEvents.Dispose();
+
+            states.ShutdownComplete.SetResult(null);
         }
     }
 }

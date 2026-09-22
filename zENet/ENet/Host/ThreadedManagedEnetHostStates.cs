@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Enet;
 using NativeCollections;
 
@@ -42,5 +43,12 @@ namespace ThreadedEnet
         ///     The user data attached to the disconnect requests sent to all peers when the host shuts down.
         /// </summary>
         public uint ShutdownEventData;
+
+        /// <summary>
+        ///     Completes when the background thread has completely finished shutdown and released all resources.
+        /// </summary>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        public TaskCompletionSource<object?> ShutdownComplete;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     }
 }

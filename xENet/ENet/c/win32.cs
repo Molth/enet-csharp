@@ -326,13 +326,12 @@ namespace enet
             if ((*condition & (uint)ENET_SOCKET_WAIT_RECEIVE) != 0)
                 inFlags |= SelectModeFlags.SelectRead;
 
-            if ((*condition & (uint)ENET_SOCKET_WAIT_INTERRUPT) != 0)
-                inFlags |= SelectModeFlags.SelectError;
+            bool waitInterrupt = (*condition & (uint)ENET_SOCKET_WAIT_INTERRUPT) != 0;
 
             *condition = 0;
 
-            int error = (int)socket.GetInner().PollFlags((int)(milliseconds * 1000), inFlags, out SelectModeFlags outFlags);
-            if (error == 0)
+            SocketError error = socket.GetInner().PollFlags((int)(milliseconds * 1000), inFlags, out SelectModeFlags outFlags);
+            if (error == SocketError.Success)
             {
                 if ((outFlags & SelectModeFlags.SelectWrite) != 0)
                     *condition |= (uint)ENET_SOCKET_WAIT_SEND;
@@ -340,9 +339,12 @@ namespace enet
                 if ((outFlags & SelectModeFlags.SelectRead) != 0)
                     *condition |= (uint)ENET_SOCKET_WAIT_RECEIVE;
 
-                if ((outFlags & SelectModeFlags.SelectError) != 0)
-                    *condition |= (uint)ENET_SOCKET_WAIT_INTERRUPT;
+                return 0;
+            }
 
+            if (waitInterrupt && error == SocketError.Interrupted)
+            {
+                *condition = (uint)ENET_SOCKET_WAIT_INTERRUPT;
                 return 0;
             }
 

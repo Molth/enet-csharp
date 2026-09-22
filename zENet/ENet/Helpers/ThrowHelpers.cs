@@ -34,6 +34,7 @@ namespace ThreadedEnet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string? GetArgumentName(ExceptionArgument argument) => argument switch
         {
+            ExceptionArgument.obj => "obj",
             _ => null
         };
     }
