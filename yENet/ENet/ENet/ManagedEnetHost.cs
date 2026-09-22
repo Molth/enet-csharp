@@ -439,16 +439,6 @@ namespace Enet
         /// <param name="compressor">callbacks for for the packet compressor; if NULL, then compression is disabled</param>
         public void SetCompressor(ENetCompressor compressor) => _handle.SetCompressor(compressor);
 
-#if NET7_0_OR_GREATER
-        /// <summary>
-        ///     Sets the packet compressor the host should use to compress and decompress packets
-        ///     using the static abstract compressor strategy <typeparamref name="T" />.
-        /// </summary>
-        /// <param name="context">The compressor context data.</param>
-        /// <typeparam name="T">The compressor type implementing <see cref="IENetCompressor" />.</typeparam>
-        public void SetCompressor<T>(void* context) where T : IENetCompressor => _handle.SetCompressor<T>(context);
-#endif
-
         /// <summary>
         ///     Sets the packet compressor the host should use to the default range coder.
         /// </summary>

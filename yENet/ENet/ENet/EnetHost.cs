@@ -494,22 +494,6 @@ namespace Enet
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly void SetCompressor(ENetCompressor compressor) => ENET_API.enet_host_compress(_handle, &compressor);
 
-#if NET7_0_OR_GREATER
-        /// <summary>
-        ///     Sets the packet compressor the host should use to compress and decompress packets
-        ///     using the static abstract compressor strategy <typeparamref name="T" />.
-        /// </summary>
-        /// <param name="context">The context data passed to each callback; Must be non-NULL.</param>
-        /// <typeparam name="T">The compressor type implementing <see cref="IENetCompressor" />.</typeparam>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void SetCompressor<T>(void* context) where T : IENetCompressor
-        {
-            Unsafe.SkipInit(out ENetCompressor compressor);
-            compressor.From<T>(context);
-            SetCompressor(compressor);
-        }
-#endif
-
         /// <summary>
         ///     Sets the packet compressor the host should use to the default range coder.
         /// </summary>
