@@ -395,9 +395,10 @@ namespace enet
                         peer = currentPeer;
                 }
                 else if (currentPeer->state != ENET_PEER_STATE_CONNECTING &&
-                         currentPeer->address == host->receivedAddress)
+                         currentPeer->address.Ip.SequenceEqual(host->receivedAddress.Ip))
                 {
-                    if (currentPeer->connectID == command->connect.connectID)
+                    if (currentPeer->address.Port == host->receivedAddress.Port &&
+                        currentPeer->connectID == command->connect.connectID)
                         return null;
 
                     ++duplicatePeers;

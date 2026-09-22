@@ -28,7 +28,7 @@ namespace enet
         ///     Must be called prior to using any functions in ENet.
         /// </summary>
         /// <returns>0 on success, &lt; 0 on failure</returns>
-        public static int enet_initialize() => !NativeSocketPal.IsSupported ? -1 : (int)NativeSocketPal.Startup();
+        public static int enet_initialize() => !NativeSocketPal.IsSupported ? -1 : NativeSocketPal.Startup() == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Shuts down ENet globally.
@@ -140,8 +140,9 @@ namespace enet
                     if (!IsWindows())
                     {
                         nint* timeval = stackalloc nint[2];
-                        timeval[0] = value / 1000;
-                        timeval[1] = value % 1000 * 1000;
+                        int seconds = Math.DivRem(value, 1000, out int milliseconds);
+                        timeval[0] = seconds;
+                        timeval[1] = milliseconds * 1000;
                         optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(timeval), 2 * sizeof(nint));
                     }
 
@@ -487,6 +488,23 @@ namespace enet
         /// <param name="port">The port number.</param>
         /// <param name="scopeId">The Ipv6 scope id.</param>
         /// <returns>0 on success, -1 on failure.</returns>
+        /// <remarks>
+        ///     <list type="bullet">
+        ///         <item>
+        ///             <para>
+        ///                 For Ipv6, brackets around the ip are optional (e.g. <c>::1</c> or <c>[::1]</c>).
+        ///             </para>
+        ///         </item>
+        ///         <item>
+        ///             <para>
+        ///                 Does not accept Ipv4 ips. <br />
+        ///                 To create an Ipv4-mapped Ipv6 socket address,
+        ///                 call <see cref="ENetAddress.FromIpIpv4(ReadOnlySpan{char}, ushort, out ENetAddress)" /> followed by
+        ///                 <see cref="ENetAddress.MapToIpv6(uint, out ENetAddress)" />.
+        ///             </para>
+        ///         </item>
+        ///     </list>
+        /// </remarks>
         public static int enet_address_set_ip_ipv6(ENetAddress* address, ReadOnlySpan<char> ip, ushort port, uint scopeId)
         {
             SocketError error = ENetAddress.FromIpIpv6(ip, port, scopeId, out *address);
