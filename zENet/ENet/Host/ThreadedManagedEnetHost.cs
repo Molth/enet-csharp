@@ -28,7 +28,7 @@ namespace ThreadedEnet
         ///     <see langword="true" /> to continue dispatching the remaining events;
         ///     otherwise, <see langword="false" /> to stop polling.
         /// </returns>
-        public delegate bool OnConnected(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandConnect command, nuint events);
+        public delegate bool OnConnected(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandConnect command, ulong events);
 
         /// <summary>
         ///     Represents the callback invoked when a peer disconnects from the host.
@@ -42,7 +42,7 @@ namespace ThreadedEnet
         ///     <see langword="true" /> to continue dispatching the remaining events;
         ///     otherwise, <see langword="false" /> to stop polling.
         /// </returns>
-        public delegate bool OnDisconnected(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandDisconnect command, nuint events);
+        public delegate bool OnDisconnected(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandDisconnect command, ulong events);
 
         /// <summary>
         ///     Represents the callback invoked when a packet is received from a peer.
@@ -58,7 +58,7 @@ namespace ThreadedEnet
         ///     <see langword="true" /> to continue dispatching the remaining events;
         ///     otherwise, <see langword="false" /> to stop polling.
         /// </returns>
-        public delegate bool OnReceived(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandReceive command, nuint events);
+        public delegate bool OnReceived(ThreadedManagedEnetHost host, EnetUid uid, ENetAddress address, EnetIncomingCommandReceive command, ulong events);
 
         /// <summary>
         ///     The current host state shared with the background thread, or <see langword="null" /> when the host is not started.
@@ -76,6 +76,11 @@ namespace ThreadedEnet
 #pragma warning disable CA1816 // Call GC.SuppressFinalize correctly.
         public void Dispose() => Shutdown(uint.MaxValue);
 #pragma warning restore CA1816 // Call GC.SuppressFinalize correctly.
+
+        /// <summary>
+        ///     Releases the resources used by the host by shutting it down.
+        /// </summary>
+        public Task DisposeAsync() => ShutdownAsync(uint.MaxValue);
 
         /// <summary>
         ///     Performs application-defined tasks associated with freeing,
@@ -152,15 +157,7 @@ namespace ThreadedEnet
         ///     It only requests shutdown and returns immediately.
         ///     The host is actually destroyed later, when the internal reference count reaches zero.
         /// </remarks>
-        public void Shutdown(uint eventData)
-        {
-            var states = _states.Exchange(null);
-            if (states == null)
-                return;
-
-            states.ShutdownEventData = eventData;
-            ThreadedManagedEnetHostRunner.Exit(states);
-        }
+        public void Shutdown(uint eventData) => ShutdownAsync(eventData);
 
         /// <summary>
         ///     Stops the host and releases its resources,
@@ -194,7 +191,7 @@ namespace ThreadedEnet
         /// <param name="onDisconnected">The callback invoked for disconnect events.</param>
         /// <param name="onReceived">The callback invoked for receive events.</param>
         /// <param name="maxEvents">The maximum number of events to dispatch in this call, or zero for no limit.</param>
-        public void PollEvents(OnConnected onConnected, OnDisconnected onDisconnected, OnReceived onReceived, nuint maxEvents)
+        public void PollEvents(OnConnected onConnected, OnDisconnected onDisconnected, OnReceived onReceived, ulong maxEvents)
         {
             var states = _states.Load(Ordering.Acquire);
             if (states == null)
@@ -205,7 +202,7 @@ namespace ThreadedEnet
 
             try
             {
-                nuint events = 0;
+                ulong events = 0;
                 var moveNext = true;
                 while (moveNext && (maxEvents == 0 || events < maxEvents) && states.IncomingEvents.TryDequeue(out var @event))
                 {

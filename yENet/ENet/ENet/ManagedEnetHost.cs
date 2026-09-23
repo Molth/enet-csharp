@@ -218,7 +218,11 @@ namespace Enet
         /// <summary>
         ///     Sets the MTU of the host.
         /// </summary>
-        /// <param name="mtu">The MTU to set, in bytes. if 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
+        /// <param name="mtu">
+        ///     The MTU to set, in bytes. If 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.
+        ///     Otherwise it must be within the range
+        ///     [<see cref="ENet.ENET_PROTOCOL_MINIMUM_MTU" />, <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />].
+        /// </param>
         /// <returns><see langword="true" /> if the MTU was set; otherwise, <see langword="false" />.</returns>
         public bool SetMtu(uint mtu) => _handle.SetMtu(mtu);
 

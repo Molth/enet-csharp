@@ -381,7 +381,10 @@ namespace enet
         /// </summary>
         /// <param name="host">The host whose MTU is being set.</param>
         /// <param name="mtu">The MTU to set, in bytes. If 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
+        /// <returns>
+        ///     0 on success, or -1 if the MTU is outside the range
+        ///     [<see cref="ENet.ENET_PROTOCOL_MINIMUM_MTU" />, <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />].
+        /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_host_mtu(ENetHost* host, uint mtu) => ENet.enet_host_mtu(host, mtu);
 

@@ -42,20 +42,17 @@ namespace Test2
                         while (true)
                         {
                             var peer = @event.Peer;
-                            IPEndPoint? ipEndPoint;
                             switch (@event.Type)
                             {
                                 case EnetEventType.Connect:
-                                    peer.Address.ToIpEndPoint(out ipEndPoint);
-                                    Console.WriteLine($"[Server] connected - IncomingPeerId: {peer.IncomingPeerId}, Address: {ipEndPoint}");
+                                    Console.WriteLine($"[Server] connected - IncomingPeerId: {peer.IncomingPeerId}, Address: {peer.Address}");
 
                                     peer.SetTimeout(0, 100_000, 1_000_000);
 
                                     break;
 
                                 case EnetEventType.Disconnect:
-                                    peer.Address.ToIpEndPoint(out ipEndPoint);
-                                    Console.WriteLine($"[Server] disconnected - IncomingPeerId: {peer.IncomingPeerId}, Address: {ipEndPoint}");
+                                    Console.WriteLine($"[Server] disconnected - IncomingPeerId: {peer.IncomingPeerId}, Address: {peer.Address}");
                                     break;
 
                                 case EnetEventType.Receive:

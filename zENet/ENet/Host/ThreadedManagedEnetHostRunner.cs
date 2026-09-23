@@ -34,6 +34,12 @@ namespace ThreadedEnet
                 if (threads == 0)
                     return false;
 
+                if (threads == uint.MaxValue)
+                {
+                    spinWait.SpinOnce();
+                    continue;
+                }
+
                 if (states.Threads.CompareExchange(threads + 1, threads) == threads)
                     return true;
 

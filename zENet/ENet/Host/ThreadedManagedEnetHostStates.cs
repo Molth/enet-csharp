@@ -27,7 +27,7 @@ namespace ThreadedEnet
         ///     An atomic reference counter tracking the active users of this state;
         ///     reaching zero signals the background thread to stop and release all resources.
         /// </summary>
-        public UnsafeAtomicUsize Threads;
+        public UnsafeAtomicU32 Threads;
 
         /// <summary>
         ///     The lock-free queue carrying events from the background thread to <c>PollEvents</c>.

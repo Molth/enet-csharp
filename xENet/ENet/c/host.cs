@@ -30,8 +30,8 @@ namespace enet
         public static int enet_host_ping(ENetHost* host, ENetAddress* address)
         {
             ENetBuffer buffer;
-            byte* data = stackalloc byte[1] { 0 };
-            buffer.data = data;
+            byte data = 0;
+            buffer.data = &data;
             buffer.dataLength = 1;
             return enet_socket_send(host->socket, address, &buffer, 1) > 0 ? 0 : -1;
         }
@@ -52,14 +52,16 @@ namespace enet
         /// </summary>
         /// <param name="host">The host whose MTU is being set.</param>
         /// <param name="mtu">The MTU to set, in bytes. If 0, <see cref="ENet.ENET_HOST_DEFAULT_MTU" /> is used.</param>
-        /// <returns>0 on success, or -1 if the MTU exceeds <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />.</returns>
+        /// <returns>
+        ///     0 on success, or -1 if the MTU is outside the range
+        ///     [<see cref="ENet.ENET_PROTOCOL_MINIMUM_MTU" />, <see cref="ENet.ENET_PROTOCOL_MAXIMUM_MTU" />].
+        /// </returns>
         public static int enet_host_mtu(ENetHost* host, uint mtu)
         {
-            if (mtu > ENET_PROTOCOL_MAXIMUM_MTU)
-                return -1;
-
             if (mtu == 0)
                 mtu = ENET_HOST_DEFAULT_MTU;
+            else if (mtu < ENET_PROTOCOL_MINIMUM_MTU || mtu > ENET_PROTOCOL_MAXIMUM_MTU)
+                return -1;
 
             host->mtu = mtu;
             return 0;

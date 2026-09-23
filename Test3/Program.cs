@@ -56,14 +56,12 @@ namespace Test3
                     server.PollEvents(
                         static (host, uid, address, command, events) =>
                         {
-                            address.ToIpEndPoint(out var ipEndPoint);
-                            Console.WriteLine($"[Server] connected - Uid: {uid}, Address: {ipEndPoint}");
+                            Console.WriteLine($"[Server] connected - Uid: {uid}, Address: {address}");
                             return true;
                         },
                         static (host, uid, address, command, events) =>
                         {
-                            address.ToIpEndPoint(out var ipEndPoint);
-                            Console.WriteLine($"[Server] disconnected - Uid: {uid}, Address: {ipEndPoint}");
+                            Console.WriteLine($"[Server] disconnected - Uid: {uid}, Address: {address}");
                             return true;
                         },
                         static (host, uid, address, command, events) =>

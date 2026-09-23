@@ -57,8 +57,7 @@ namespace Test1
                             {
                                 case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                     peer = @event.peer;
-                                    peer->address.ToIpEndPoint(out var endPoint);
-                                    Console.WriteLine($"server Connected {endPoint}");
+                                    Console.WriteLine($"server Connected {peer->address}");
                                     break;
                                 case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                     peer = null;
@@ -122,8 +121,7 @@ namespace Test1
                             {
                                 case ENetEventType.ENET_EVENT_TYPE_CONNECT:
                                     connected = true;
-                                    @event.peer->address.ToIpEndPoint(out var endPoint);
-                                    Console.WriteLine($"client Connected {endPoint}");
+                                    Console.WriteLine($"client Connected {peer->address}");
                                     break;
                                 case ENetEventType.ENET_EVENT_TYPE_DISCONNECT:
                                     connected = false;
