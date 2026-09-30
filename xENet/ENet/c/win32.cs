@@ -2,8 +2,6 @@ using System;
 using System.Buffers;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using NativeSockets;
 using static enet.ENetSocketOption;
 using static enet.ENetSocketType;
@@ -28,13 +26,15 @@ namespace enet
         ///     Must be called prior to using any functions in ENet.
         /// </summary>
         /// <returns>0 on success, &lt; 0 on failure</returns>
-        public static int enet_initialize() => !NativeSocketPal.IsSupported ? -1 : NativeSocketPal.Startup() == SocketError.Success ? 0 : -1;
+        public static int enet_initialize() => (Socket.OSSupportsIPv4 || Socket.OSSupportsIPv6) ? 0 : -1;
 
         /// <summary>
         ///     Shuts down ENet globally.
         ///     Should be called when a program that has initialized ENet exits.
         /// </summary>
-        public static void enet_deinitialize() => NativeSocketPal.Cleanup();
+        public static void enet_deinitialize()
+        {
+        }
 
         /// <summary>
         ///     Returns a random seed derived from the current time for host initialization.
@@ -46,8 +46,8 @@ namespace enet
         ///     Returns the time in milliseconds elapsed since the time base was set.
         /// </summary>
         /// <returns>
-        ///     the wall-time in milliseconds.  Its initial value is unspecified
-        ///     unless otherwise set.
+        ///     the wall-time in milliseconds.
+        ///     Its initial value is unspecified unless otherwise set.
         /// </returns>
         public static uint enet_time_get() => (uint)timeGetTime() - timeBase;
 
@@ -70,6 +70,14 @@ namespace enet
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The socket address to receive the local name into.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
+        /// <remarks>
+        ///     This failure only occurs on .NET 8 and later, because the <c>SendTo</c> overload
+        ///     <c>SendTo(ReadOnlySpan&lt;byte&gt;, SocketFlags, SocketAddress)</c> added in .NET 8
+        ///     does not set the underlying <c>_rightEndPoint</c> field. After a <c>SendTo</c> that
+        ///     triggers an implicit bind, the socket is actually bound, but <c>LocalEndPoint</c>
+        ///     cannot be queried and throws. In that state this method reports an error even though
+        ///     the datagram was delivered successfully.
+        /// </remarks>
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().GetName(ref address->GetInner());
 
         /// <summary>
@@ -83,7 +91,7 @@ namespace enet
             if (type == ENET_SOCKET_TYPE_DATAGRAM)
             {
                 bool ipv6 = option == ENET_HOSTOPT_IPV6_ONLY || option == ENET_HOSTOPT_IPV6_DUALMODE;
-                SocketError error = NativeSocket.Create(ipv6, out NativeSocket socket);
+                SocketError error = VirtualSocket.Create(ipv6, out VirtualSocket socket);
 
                 if (error != SocketError.Success)
                     goto error;
@@ -104,7 +112,7 @@ namespace enet
             }
 
             error:
-            return new ENetSocket(new NativeSocket(INVALID_SOCKET, AddressFamily.Unspecified));
+            return new ENetSocket(new VirtualSocket());
         }
 
         /// <summary>
@@ -117,83 +125,33 @@ namespace enet
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value)
         {
             int result = SOCKET_ERROR;
-            ReadOnlySpan<byte> optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<int, byte>(ref value), 4);
             switch (option)
             {
                 case ENET_SOCKOPT_NONBLOCK:
                     result = (int)socket.GetInner().SetBlocking(value == 0);
                     break;
-                case ENET_SOCKOPT_BROADCAST:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, optionValue);
-                    break;
                 case ENET_SOCKOPT_RCVBUF:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, optionValue);
+                    result = (int)socket.GetInner().SetReceiveBufferSize(value);
                     break;
                 case ENET_SOCKOPT_SNDBUF:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, optionValue);
+                    result = (int)socket.GetInner().SetSendBufferSize(value);
                     break;
                 case ENET_SOCKOPT_REUSEADDR:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, optionValue);
+                    result = (int)socket.GetInner().SetReuseAddress(value != 0);
                     break;
                 case ENET_SOCKOPT_RCVTIMEO:
-                case ENET_SOCKOPT_SNDTIMEO:
-                    if (!IsWindows())
-                    {
-                        nint* timeval = stackalloc nint[2];
-                        int seconds = Math.DivRem(value, 1000, out int milliseconds);
-                        timeval[0] = seconds;
-                        timeval[1] = milliseconds * 1000;
-                        optionValue = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef<byte>(timeval), 2 * sizeof(nint));
-                    }
-
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, option == ENET_SOCKOPT_RCVTIMEO ? SocketOptionName.ReceiveTimeout : SocketOptionName.SendTimeout, optionValue);
+                    result = (int)socket.GetInner().SetReceiveTimeout(value);
                     break;
-                case ENET_SOCKOPT_ERROR:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.Socket, SocketOptionName.Error, optionValue);
+                case ENET_SOCKOPT_SNDTIMEO:
+                    result = (int)socket.GetInner().SetSendTimeout(value);
                     break;
                 case ENET_SOCKOPT_TTL:
-                    result = (int)(socket.IsIpv6 ? socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.HopLimit, optionValue) : socket.GetInner().SetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, optionValue));
+                    result = (int)socket.GetInner().SetTtl(value);
                     break;
                 case ENET_SOCKOPT_IPV6_ONLY:
-                    result = (int)socket.GetInner().SetOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, optionValue);
+                    result = (int)socket.GetInner().SetDualMode(value == 0);
                     break;
             }
-
-            return result == 0 ? 0 : -1;
-
-            static bool IsWindows() =>
-#if NET5_0_OR_GREATER
-                OperatingSystem.IsWindows();
-#else
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#endif
-        }
-
-        /// <summary>
-        ///     Gets a socket option.
-        /// </summary>
-        /// <param name="socket">The socket handle.</param>
-        /// <param name="option">The option to retrieve.</param>
-        /// <param name="value">Receives the option value.</param>
-        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
-        public static int enet_socket_get_option(ENetSocket socket, ENetSocketOption option, out int value)
-        {
-            Unsafe.SkipInit(out value);
-
-            int result = SOCKET_ERROR;
-            Span<byte> optionValue = MemoryMarshal.AsBytes(stackalloc int[1]);
-            switch (option)
-            {
-                case ENET_SOCKOPT_ERROR:
-                    result = (int)socket.GetInner().GetOption(SocketOptionLevel.Socket, SocketOptionName.Error, ref optionValue);
-                    break;
-                case ENET_SOCKOPT_TTL:
-                    result = (int)(socket.IsIpv6 ? socket.GetInner().GetOption(SocketOptionLevel.IPv6, SocketOptionName.HopLimit, ref optionValue) : socket.GetInner().GetOption(SocketOptionLevel.IP, SocketOptionName.IpTimeToLive, ref optionValue));
-                    break;
-            }
-
-            if (result == 0)
-                value = Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(optionValue));
 
             return result == 0 ? 0 : -1;
         }
@@ -205,7 +163,7 @@ namespace enet
         public static void enet_socket_destroy(ENetSocket* socket)
         {
             socket->GetInner().Dispose();
-            *socket = new ENetSocket(new NativeSocket(INVALID_SOCKET, AddressFamily.Unspecified));
+            *socket = new ENetSocket(new VirtualSocket());
         }
 
         /// <summary>
@@ -222,17 +180,27 @@ namespace enet
         /// </exception>
         public static int enet_socket_send(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            int num;
+            if (!NativeSocketPal.IsSupported)
+            {
+                SocketError error = socket.GetInner().Poll(0, SelectMode.SelectWrite, out bool status);
+                if (error != SocketError.Success)
+                    return -1;
+
+                if (!status)
+                    return 0;
+            }
 
             NativeIoSlice[]? array = null;
             Span<NativeIoSlice> __buffers = bufferCount <= 32 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+
+            IoResult result;
 
             try
             {
                 for (int i = 0; i < (int)bufferCount; ++i)
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
 
-                num = address != null ? socket.GetInner().SendToVectored(__buffers, address->GetInner()) : socket.GetInner().SendVectored(__buffers);
+                result = address != null ? socket.GetInner().SendToVectored(__buffers, SocketFlags.None, address->GetInner()) : socket.GetInner().SendVectored(__buffers, SocketFlags.None);
             }
             finally
             {
@@ -240,15 +208,15 @@ namespace enet
                     ArrayPool<NativeIoSlice>.Shared.Return(array);
             }
 
-            if (num == -1)
+            if (result.BytesTransferred < 0)
             {
-                if (NativeSocketPal.GetLastSocketError() == SocketError.WouldBlock)
+                if (result.SocketError == SocketError.WouldBlock)
                     return 0;
 
                 return -1;
             }
 
-            return num;
+            return result.BytesTransferred;
         }
 
         /// <summary>
@@ -268,18 +236,27 @@ namespace enet
         /// </exception>
         public static int enet_socket_receive(ENetSocket socket, ENetAddress* address, ENetBuffer* buffers, nuint bufferCount)
         {
-            int num;
-            SocketFlags flags = 0;
+            if (!NativeSocketPal.IsSupported)
+            {
+                SocketError error = socket.GetInner().Poll(0, SelectMode.SelectRead, out bool status);
+                if (error != SocketError.Success)
+                    return -1;
+
+                if (!status)
+                    return 0;
+            }
 
             NativeIoSlice[]? array = null;
             Span<NativeIoSlice> __buffers = bufferCount <= 32 ? stackalloc NativeIoSlice[(int)bufferCount] : (array = ArrayPool<NativeIoSlice>.Shared.Rent((int)bufferCount)).AsSpan(0, (int)bufferCount);
+
+            IoResult result;
 
             try
             {
                 for (int i = 0; i < (int)bufferCount; ++i)
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
 
-                num = address != null ? socket.GetInner().ReceiveFromVectored(__buffers, ref flags, ref address->GetInner()) : socket.GetInner().ReceiveVectored(__buffers, ref flags);
+                result = address != null ? socket.GetInner().ReceiveFromVectored(__buffers, SocketFlags.None, ref address->GetInner()) : socket.GetInner().ReceiveVectored(__buffers, SocketFlags.None);
             }
             finally
             {
@@ -287,9 +264,9 @@ namespace enet
                     ArrayPool<NativeIoSlice>.Shared.Return(array);
             }
 
-            if (num == -1)
+            if (result.BytesTransferred < 0)
             {
-                switch (NativeSocketPal.GetLastSocketError())
+                switch (result.SocketError)
                 {
                     case SocketError.WouldBlock:
                     case SocketError.ConnectionReset:
@@ -297,7 +274,6 @@ namespace enet
 
                     case SocketError.Interrupted:
                     case SocketError.MessageSize:
-                    case SocketError.Success when (flags & SocketFlags.Partial) != 0:
                         return -2;
 
                     default:
@@ -305,7 +281,7 @@ namespace enet
                 }
             }
 
-            return num;
+            return result.BytesTransferred;
         }
 
         /// <summary>

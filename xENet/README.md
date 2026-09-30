@@ -2,6 +2,8 @@ This project is a pure C# translation of [enet](https://github.com/lsalzman/enet
 
 Where udp implementation: [NativeSockets](https://www.nuget.org/packages/NativeSockets).
 
+When `NativeSockets` is not supported, it falls back to `System.Net.Sockets.Socket`.
+
 **It is fully wire‑compatible with the original C library.**
 
 ## Why?

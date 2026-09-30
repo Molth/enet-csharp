@@ -16,16 +16,6 @@ namespace enet
         public const int SOCKET_ERROR = -1;
 
         /// <summary>
-        ///     The sentinel value representing an invalid native socket handle.
-        /// </summary>
-        public const nint INVALID_SOCKET = ~0;
-
-        /// <summary>
-        ///     The sentinel value used to indicate the absence of a socket.
-        /// </summary>
-        public const nint ENET_SOCKET_NULL = INVALID_SOCKET;
-
-        /// <summary>
         ///     Converts a 16-bit host-order value to network byte order (big endian).
         /// </summary>
         /// <param name="host">The host-order value to convert.</param>
@@ -78,25 +68,25 @@ namespace enet
         /// <summary>
         ///     Gets the handle to the underlying object.
         /// </summary>
-        private readonly NativeSocket _handle;
+        private readonly VirtualSocket _handle;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ENetSocket" /> structure.
         /// </summary>
         /// <param name="handle">The native socket handle.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ENetSocket(NativeSocket handle) => _handle = handle;
+        internal ENetSocket(VirtualSocket handle) => _handle = handle;
 
         /// <summary>
         ///     Gets the handle to the underlying object.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal NativeSocket GetInner() => _handle;
+        internal VirtualSocket GetInner() => _handle;
 
         /// <summary>
-        ///     Gets the native socket handle.
+        ///     Gets a value that indicates whether this has been allocated or initialized.
         /// </summary>
-        public nint Handle => _handle.Handle;
+        public bool IsCreated => _handle.IsCreated;
 
         /// <summary>
         ///     Gets the address family of the socket.
@@ -112,14 +102,6 @@ namespace enet
         ///     Gets a value indicating whether the socket uses Ipv6.
         /// </summary>
         public bool IsIpv6 => _handle.IsIpv6;
-
-        /// <summary>
-        ///     Implicitly converts a <see cref="ENetSocket" /> to its native handle.
-        /// </summary>
-        /// <param name="socket">The socket to convert.</param>
-        /// <returns>The native socket handle.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator nint(ENetSocket socket) => socket.Handle;
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object.

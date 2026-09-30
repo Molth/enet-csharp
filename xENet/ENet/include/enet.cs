@@ -135,11 +135,6 @@ namespace enet
         ENET_SOCKOPT_NONBLOCK = 1,
 
         /// <summary>
-        ///     Enables or disables broadcast on the socket.
-        /// </summary>
-        ENET_SOCKOPT_BROADCAST = 2,
-
-        /// <summary>
         ///     Sets the receive buffer size of the socket.
         /// </summary>
         ENET_SOCKOPT_RCVBUF = 3,
@@ -163,11 +158,6 @@ namespace enet
         ///     Sets the send timeout of the socket.
         /// </summary>
         ENET_SOCKOPT_SNDTIMEO = 7,
-
-        /// <summary>
-        ///     Retrieves the last error of the socket.
-        /// </summary>
-        ENET_SOCKOPT_ERROR = 8,
 
         /// <summary>
         ///     Sets the time to live of packets sent on the socket.

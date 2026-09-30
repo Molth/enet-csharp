@@ -90,6 +90,14 @@ namespace enet
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The socket address to receive the local name into.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
+        /// <remarks>
+        ///     This failure only occurs on .NET 8 and later, because the <c>SendTo</c> overload
+        ///     <c>SendTo(ReadOnlySpan&lt;byte&gt;, SocketFlags, SocketAddress)</c> added in .NET 8
+        ///     does not set the underlying <c>_rightEndPoint</c> field. After a <c>SendTo</c> that
+        ///     triggers an implicit bind, the socket is actually bound, but <c>LocalEndPoint</c>
+        ///     cannot be queried and throws. In that state this method reports an error even though
+        ///     the datagram was delivered successfully.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => ENet.enet_socket_get_address(socket, address);
 
@@ -145,16 +153,6 @@ namespace enet
         /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int enet_socket_set_option(ENetSocket socket, ENetSocketOption option, int value) => ENet.enet_socket_set_option(socket, option, value);
-
-        /// <summary>
-        ///     Gets a socket option.
-        /// </summary>
-        /// <param name="socket">The socket handle.</param>
-        /// <param name="option">The option to retrieve.</param>
-        /// <param name="value">Receives the option value.</param>
-        /// <returns>0 on success, -1 on failure or for unsupported options.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int enet_socket_get_option(ENetSocket socket, ENetSocketOption option, out int value) => ENet.enet_socket_get_option(socket, option, out value);
 
         /// <summary>
         ///     Closes and invalidates the given socket.

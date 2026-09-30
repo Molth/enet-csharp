@@ -257,9 +257,9 @@ namespace enet
 
             host->socket = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, option);
 
-            if (host->socket == ENET_SOCKET_NULL || (address != null && enet_socket_bind(host->socket, address) < 0))
+            if (!host->socket.IsCreated || (address != null && enet_socket_bind(host->socket, address) < 0))
             {
-                if (host->socket != ENET_SOCKET_NULL)
+                if (host->socket.IsCreated)
                     enet_socket_destroy(&host->socket);
 
                 enet_free(host->peers);
@@ -269,7 +269,6 @@ namespace enet
             }
 
             enet_socket_set_option(host->socket, ENET_SOCKOPT_NONBLOCK, 1);
-            enet_socket_set_option(host->socket, ENET_SOCKOPT_BROADCAST, 1);
             enet_socket_set_option(host->socket, ENET_SOCKOPT_RCVBUF, (int)ENET_HOST_RECEIVE_BUFFER_SIZE);
             enet_socket_set_option(host->socket, ENET_SOCKOPT_SNDBUF, (int)ENET_HOST_SEND_BUFFER_SIZE);
 
