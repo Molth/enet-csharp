@@ -62,7 +62,7 @@ namespace enet
         /// <param name="socket">The socket handle.</param>
         /// <param name="address">The socket address to bind to.</param>
         /// <returns>0 on success, SOCKET_ERROR on failure.</returns>
-        public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().Bind(address->GetInner());
+        public static int enet_socket_bind(ENetSocket socket, ENetAddress* address) => socket.GetInner().Bind(address->GetInner()) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Gets the local name (socket address) of a socket.
@@ -78,7 +78,7 @@ namespace enet
         ///     cannot be queried and throws. In that state this method reports an error even though
         ///     the datagram was delivered successfully.
         /// </remarks>
-        public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => (int)socket.GetInner().GetName(ref address->GetInner());
+        public static int enet_socket_get_address(ENetSocket socket, ENetAddress* address) => socket.GetInner().GetName(out address->GetInner()) == SocketError.Success ? 0 : -1;
 
         /// <summary>
         ///     Creates a native socket of the requested type and addressing mode.
@@ -256,7 +256,7 @@ namespace enet
                 for (int i = 0; i < (int)bufferCount; ++i)
                     __buffers[i] = new NativeIoSlice(buffers[i].data, (int)buffers[i].dataLength);
 
-                result = address != null ? socket.GetInner().ReceiveFromVectored(__buffers, SocketFlags.None, ref address->GetInner()) : socket.GetInner().ReceiveVectored(__buffers, SocketFlags.None);
+                result = address != null ? socket.GetInner().ReceiveFromVectored(__buffers, SocketFlags.None, out address->GetInner()) : socket.GetInner().ReceiveVectored(__buffers, SocketFlags.None);
             }
             finally
             {
